@@ -1,0 +1,43 @@
+/* TradingDashboard.css */
+
+.dashboard-container {
+  background-color: #111827; /* bg-gray-900 */
+  min-height: 100vh;
+}
+
+.sidebar {
+  width: 16rem; /* w-64 */
+  background-color: #111827; /* bg-gray-900 */
+  height: 100vh;
+  position: fixed;
+  left: 0;
+  top: 0;
+  border-right: 1px solid #1f2937; /* border-gray-800 */
+}
+
+.header {
+  margin-left: 16rem;
+  background-color: #111827;
+  border-bottom: 1px solid #1f2937;
+  padding: 1rem 1.5rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.search-input {
+  background-color: #1f2937;
+  border: 1px solid #374151;
+  border-radius: 0.5rem;
+  padding: 0.5rem 1rem 0.5rem 2.5rem;
+  color: white;
+}
+
+.search-input::placeholder {
+  color: #9ca3af;
+}
+
+.section-content {
+  margin-left: 16rem;
+  padding: 1.5rem;
+}
