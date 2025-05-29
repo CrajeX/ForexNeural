@@ -1,0 +1,58 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* === NEUMORPHIC CARD === */
+.nexus-card {
+  @apply bg-gradient-to-br from-slate-800/90 to-slate-900/90 backdrop-blur-xl rounded-3xl border border-slate-700/50 shadow-2xl transition-all duration-500;
+}
+.nexus-card-hover {
+  @apply hover:scale-[1.02] hover:shadow-3xl;
+}
+.nexus-card-glow {
+  @apply shadow-blue-500/10;
+}
+
+/* === GLOWING ORB === */
+.nexus-orb {
+  @apply rounded-full relative;
+}
+.nexus-orb-ping {
+  @apply absolute inset-0 rounded-full animate-ping opacity-75;
+}
+.nexus-orb-blur {
+  @apply absolute inset-0 rounded-full blur-sm opacity-60;
+}
+
+/* === CONNECTION STATUS === */
+.nexus-status {
+  @apply flex items-center gap-2 px-4 py-2 bg-slate-800/80 backdrop-blur-xl rounded-full border border-slate-700/50;
+}
+.nexus-status-text {
+  @apply text-sm font-medium;
+}
+
+/* === HEADER CARD === */
+.nexus-header {
+  @apply sticky top-0 z-10 mb-8;
+}
+.nexus-header-card {
+  @apply p-6;
+}
+.nexus-header-icon-bg {
+  @apply w-14 h-14 bg-gradient-to-br from-blue-500 via-purple-500 to-pink-500 rounded-2xl flex items-center justify-center;
+}
+.nexus-header-glow {
+  @apply absolute -inset-1 bg-gradient-to-br from-blue-500/20 to-purple-500/20 rounded-2xl blur-lg;
+}
+.nexus-header-title {
+  @apply text-3xl font-bold bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 bg-clip-text text-transparent;
+}
+.nexus-header-subtitle {
+  @apply text-slate-400 text-sm;
+}
+
+/* === BUTTON === */
+.nexus-button {
+  @apply w-full py-3 bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 rounded-xl text-white font-semibold transition-all duration-300 transform group-hover:scale-105 shadow-lg;
+}

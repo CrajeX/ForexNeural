@@ -1,18 +1,20 @@
-/* TradingDashboard.css */
+
+
+/* TradingDashboard.css
 
 .dashboard-container {
-  background-color: #111827; /* bg-gray-900 */
+  background-color: #111827;
   min-height: 100vh;
 }
 
 .sidebar {
-  width: 16rem; /* w-64 */
-  background-color: #111827; /* bg-gray-900 */
+  width: 16rem; 
+  background-color: #111827;
   height: 100vh;
   position: fixed;
   left: 0;
   top: 0;
-  border-right: 1px solid #1f2937; /* border-gray-800 */
+  border-right: 1px solid #1f2937; 
 }
 
 .header {
@@ -40,4 +42,4 @@
 .section-content {
   margin-left: 16rem;
   padding: 1.5rem;
-}
+} */
