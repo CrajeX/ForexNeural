@@ -399,7 +399,7 @@
 import React, { useState, useEffect } from 'react';
 import { TrendingUp, TrendingDown, BarChart3, Activity, Shield, Globe, Calendar, Bell, Settings, User, Search, Star, Eye, Target } from 'lucide-react';
 import './TradingDashboard.css';
-
+import SimpleForexChart from './components/SimpleForexChart';
 // Constants
 const NAVIGATION_ITEMS = [
   { id: 'dashboard', label: 'Dashboard', icon: BarChart3 },
@@ -730,11 +730,13 @@ const TradingDashboard = () => {
       <WelcomeSection />
       <KeyMetrics />
       <TopSetups />
+      <SimpleForexChart base="USD" target="EUR" />
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <MarketSentiment />
         <AIInsights />
       </div>
     </div>
+    
   );
 
   const LoadingScreen = () => (
