@@ -399,6 +399,7 @@
 import React, { useState,useRef,useEffect } from 'react';
 import { Settings, Maximize2, ZoomIn, ZoomOut, Move, Clock, TrendingUp, TrendingDown, BarChart3, ActivityIcon,Activity, Shield, Globe, Calendar, Bell, User, Search, Star, Eye, Target } from 'lucide-react';
 import DukascopyChart from "./components/DukascopyChart"; 
+import DukascopyNewsWidget from './components/DukascopyNewsWidget';
 // ===== CONSTANTS SECTION =====
 // Duplicate this section when creating new functions
 const NAVIGATION_ITEMS = [
@@ -1235,7 +1236,8 @@ const TradingDashboard = () => {
         <Header />
         <main style={styles.main}>
        {activeSection === 'dashboard' ? <DashboardContent /> : 
- activeSection === 'charts' ? <DukascopyChart /> : 
+ activeSection === 'charts' ? <DukascopyChart /> :
+  activeSection === 'alerts' ? <DukascopyNewsWidget /> : 
  <PlaceholderSection />}
 
         </main>
