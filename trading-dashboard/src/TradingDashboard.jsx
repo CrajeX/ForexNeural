@@ -397,9 +397,9 @@
 
 // export default TradingDashboard;
 import React, { useState,useRef,useEffect } from 'react';
-import { Settings, Maximize2, ZoomIn, ZoomOut, Move, Clock, TrendingUp, TrendingDown, BarChart3, ActivityIcon,Activity, Shield, Globe, Calendar, Bell, User, Search, Star, Eye, Target } from 'lucide-react';
+import { FilePenLine,FileSpreadsheetIcon,Settings, Maximize2, ZoomIn, ZoomOut, Move, Clock, TrendingUp, TrendingDown, BarChart3, ActivityIcon,Activity, Shield, Globe, Calendar, Bell, User, Search, Star, Eye, Target } from 'lucide-react';
 import DukascopyChart from "./components/DukascopyChart"; 
-import DukascopyNewsWidget from './components/DukascopyNewsWidget';
+import DukascopyNewsWidget from './components/DukascopyNewsWidget'; 
 // ===== CONSTANTS SECTION =====
 // Duplicate this section when creating new functions
 const NAVIGATION_ITEMS = [
@@ -408,7 +408,8 @@ const NAVIGATION_ITEMS = [
   { id: 'sentiment', label: 'Market Sentiment', icon: Activity },
   { id: 'risk', label: 'Risk Management', icon: Shield },
   { id: 'economic', label: 'Economic Calendar', icon: Calendar },
-  { id: 'seasonality', label: 'Seasonality', icon: Globe },
+  // { id: 'seasonality', label: 'Seasonality', icon: Globe },
+  { id: 'dataentry', label: 'Data Entry', icon: FilePenLine },
   { id: 'alerts', label: 'Alerts', icon: Bell },
   { id: 'charts', label: 'Charts', icon: ActivityIcon}
 ];
