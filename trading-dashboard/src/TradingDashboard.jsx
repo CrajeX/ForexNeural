@@ -396,9 +396,9 @@
 // };
 
 // export default TradingDashboard;
-import React, { useState } from 'react';
-import { TrendingUp, TrendingDown, BarChart3, Activity, Shield, Globe, Calendar, Bell, Settings, User, Search, Star, Eye, Target } from 'lucide-react';
-
+import React, { useState,useRef,useEffect } from 'react';
+import { Settings, Maximize2, ZoomIn, ZoomOut, Move, Clock, TrendingUp, TrendingDown, BarChart3, ActivityIcon,Activity, Shield, Globe, Calendar, Bell, User, Search, Star, Eye, Target } from 'lucide-react';
+import DukascopyChart from "./components/DukascopyChart"; 
 // ===== CONSTANTS SECTION =====
 // Duplicate this section when creating new functions
 const NAVIGATION_ITEMS = [
@@ -408,7 +408,8 @@ const NAVIGATION_ITEMS = [
   { id: 'risk', label: 'Risk Management', icon: Shield },
   { id: 'economic', label: 'Economic Calendar', icon: Calendar },
   { id: 'seasonality', label: 'Seasonality', icon: Globe },
-  { id: 'alerts', label: 'Alerts', icon: Bell }
+  { id: 'alerts', label: 'Alerts', icon: Bell },
+  { id: 'charts', label: 'Charts', icon: ActivityIcon}
 ];
 
 // Static market data - replace with API calls when implementing functions
@@ -447,6 +448,27 @@ const AI_INSIGHTS = [
 
 // ===== STYLES OBJECT =====
 const styles = {
+    title: {
+      fontSize: '24px',
+      fontWeight: 'bold',
+      padding: '20px',
+      color: '#374151',
+      textAlign: 'center',
+      backgroundColor: '#f8f9fa',
+      borderBottom: '1px solid #e5e7eb',
+      margin: '0'
+    },
+    chartWrapper: {
+      width: '100%',
+      flex: '1',
+      overflow: 'hidden'
+    },
+    iframe: {
+      width: '100%',
+      height: '100%',
+      border: '0',
+      display: 'block'
+    },
   container: {
     display: 'flex',
     minHeight: '100vh',
@@ -1082,13 +1104,13 @@ const TradingDashboard = () => {
       </div>
     </div>
   );
-
+  const successRate = '';
   const KeyMetrics = () => (
     <div style={styles.metricsGrid}>
       <MetricCard
         icon={Target}
         title="Success Rate"
-        value="87.3%"
+        value={successRate}
         subtitle="Last 30 days"
         color="#10b981"
       />
@@ -1165,6 +1187,7 @@ const TradingDashboard = () => {
 
   const DashboardContent = () => (
     <div>
+      <h1>Market Data</h1>
       <WelcomeSection />
       <KeyMetrics />
       <TopSetups />
@@ -1174,6 +1197,12 @@ const TradingDashboard = () => {
       </div>
     </div>
   );
+
+
+  // CHART SECTION
+ 
+
+
 
   const PlaceholderSection = () => (
     <div style={styles.placeholderSection}>
@@ -1197,12 +1226,18 @@ const TradingDashboard = () => {
 
   // ===== MAIN RENDER =====
   return (
+     
+     
     <div style={styles.container}>
+       
       <Sidebar />
       <div style={styles.mainContent}>
         <Header />
         <main style={styles.main}>
-          {activeSection === 'dashboard' ? <DashboardContent /> : <PlaceholderSection />}
+       {activeSection === 'dashboard' ? <DashboardContent /> : 
+ activeSection === 'charts' ? <DukascopyChart /> : 
+ <PlaceholderSection />}
+
         </main>
       </div>
     </div>
