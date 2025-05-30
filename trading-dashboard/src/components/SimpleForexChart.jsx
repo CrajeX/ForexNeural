@@ -529,523 +529,523 @@
 // };
 
 // export default SimpleForexChart;
-import React, { useEffect, useState, useCallback, useRef } from 'react';
-import { ComposedChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, Cell } from 'recharts';
+// import React, { useEffect, useState, useCallback, useRef } from 'react';
+// import { ComposedChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, Cell } from 'recharts';
 
-const SimpleForexChart = ({ instrument: initialInstrument = 'EUR_USD' }) => {
-  const [selectedInstrument, setSelectedInstrument] = useState(initialInstrument);
-  const [selectedTimeframe, setSelectedTimeframe] = useState('1M');
-  const [data, setData] = useState([]);
-  const [currentCandle, setCurrentCandle] = useState(null);
-  const [priceChange, setPriceChange] = useState(0);
-  const [isLive, setIsLive] = useState(true);
-  const [showAnatomy, setShowAnatomy] = useState(false);
-  const intervalRef = useRef(null);
-  const lastPriceRef = useRef(0);
-  const volatilityRef = useRef(0.0001);
-  const trendRef = useRef(0);
-  const momentumRef = useRef(0);
-  const currentCandleRef = useRef(null);
+// const SimpleForexChart = ({ instrument: initialInstrument = 'EUR_USD' }) => {
+//   const [selectedInstrument, setSelectedInstrument] = useState(initialInstrument);
+//   const [selectedTimeframe, setSelectedTimeframe] = useState('1M');
+//   const [data, setData] = useState([]);
+//   const [currentCandle, setCurrentCandle] = useState(null);
+//   const [priceChange, setPriceChange] = useState(0);
+//   const [isLive, setIsLive] = useState(true);
+//   const [showAnatomy, setShowAnatomy] = useState(false);
+//   const intervalRef = useRef(null);
+//   const lastPriceRef = useRef(0);
+//   const volatilityRef = useRef(0.0001);
+//   const trendRef = useRef(0);
+//   const momentumRef = useRef(0);
+//   const currentCandleRef = useRef(null);
 
-  // Timeframe configurations (minimum 1 minute)
-  const timeframes = {
-    '1M': { interval: 60000, label: '1 Minute', maxCandles: 50 },
-    '5M': { interval: 300000, label: '5 Minutes', maxCandles: 50 },
-    '15M': { interval: 900000, label: '15 Minutes', maxCandles: 50 },
-    '1H': { interval: 3600000, label: '1 Hour', maxCandles: 50 },
-    '4H': { interval: 14400000, label: '4 Hours', maxCandles: 50 },
-    '1D': { interval: 86400000, label: '1 Day', maxCandles: 50 }
-  };
+//   // Timeframe configurations (minimum 1 minute)
+//   const timeframes = {
+//     '1M': { interval: 60000, label: '1 Minute', maxCandles: 50 },
+//     '5M': { interval: 300000, label: '5 Minutes', maxCandles: 50 },
+//     '15M': { interval: 900000, label: '15 Minutes', maxCandles: 50 },
+//     '1H': { interval: 3600000, label: '1 Hour', maxCandles: 50 },
+//     '4H': { interval: 14400000, label: '4 Hours', maxCandles: 50 },
+//     '1D': { interval: 86400000, label: '1 Day', maxCandles: 50 }
+//   };
 
-  // Realistic forex pair configurations
-  const forexConfig = {
-    'EUR_USD': { base: 1.0850, volatility: 0.0002, spread: 0.00015, name: 'EUR/USD', flag: '🇪🇺/🇺🇸' },
-    'GBP_USD': { base: 1.2650, volatility: 0.0003, spread: 0.00020, name: 'GBP/USD', flag: '🇬🇧/🇺🇸' },
-    'USD_JPY': { base: 150.25, volatility: 0.05, spread: 0.02, name: 'USD/JPY', flag: '🇺🇸/🇯🇵' },
-    'AUD_USD': { base: 0.6650, volatility: 0.0003, spread: 0.00018, name: 'AUD/USD', flag: '🇦🇺/🇺🇸' },
-    'USD_CHF': { base: 0.8750, volatility: 0.0002, spread: 0.00016, name: 'USD/CHF', flag: '🇺🇸/🇨🇭' },
-    'EUR_GBP': { base: 0.8580, volatility: 0.0002, spread: 0.00014, name: 'EUR/GBP', flag: '🇪🇺/🇬🇧' },
-    'USD_CAD': { base: 1.3450, volatility: 0.0002, spread: 0.00017, name: 'USD/CAD', flag: '🇺🇸/🇨🇦' },
-    'NZD_USD': { base: 0.6150, volatility: 0.0004, spread: 0.00022, name: 'NZD/USD', flag: '🇳🇿/🇺🇸' },
-    'EUR_JPY': { base: 162.50, volatility: 0.08, spread: 0.025, name: 'EUR/JPY', flag: '🇪🇺/🇯🇵' },
-    'GBP_JPY': { base: 190.15, volatility: 0.12, spread: 0.035, name: 'GBP/JPY', flag: '🇬🇧/🇯🇵' }
-  };
+//   // Realistic forex pair configurations
+//   const forexConfig = {
+//     'EUR_USD': { base: 1.0850, volatility: 0.0002, spread: 0.00015, name: 'EUR/USD', flag: '🇪🇺/🇺🇸' },
+//     'GBP_USD': { base: 1.2650, volatility: 0.0003, spread: 0.00020, name: 'GBP/USD', flag: '🇬🇧/🇺🇸' },
+//     'USD_JPY': { base: 150.25, volatility: 0.05, spread: 0.02, name: 'USD/JPY', flag: '🇺🇸/🇯🇵' },
+//     'AUD_USD': { base: 0.6650, volatility: 0.0003, spread: 0.00018, name: 'AUD/USD', flag: '🇦🇺/🇺🇸' },
+//     'USD_CHF': { base: 0.8750, volatility: 0.0002, spread: 0.00016, name: 'USD/CHF', flag: '🇺🇸/🇨🇭' },
+//     'EUR_GBP': { base: 0.8580, volatility: 0.0002, spread: 0.00014, name: 'EUR/GBP', flag: '🇪🇺/🇬🇧' },
+//     'USD_CAD': { base: 1.3450, volatility: 0.0002, spread: 0.00017, name: 'USD/CAD', flag: '🇺🇸/🇨🇦' },
+//     'NZD_USD': { base: 0.6150, volatility: 0.0004, spread: 0.00022, name: 'NZD/USD', flag: '🇳🇿/🇺🇸' },
+//     'EUR_JPY': { base: 162.50, volatility: 0.08, spread: 0.025, name: 'EUR/JPY', flag: '🇪🇺/🇯🇵' },
+//     'GBP_JPY': { base: 190.15, volatility: 0.12, spread: 0.035, name: 'GBP/JPY', flag: '🇬🇧/🇯🇵' }
+//   };
 
-  const config = forexConfig[selectedInstrument] || forexConfig['EUR_USD'];
-  const timeframeConfig = timeframes[selectedTimeframe];
+//   const config = forexConfig[selectedInstrument] || forexConfig['EUR_USD'];
+//   const timeframeConfig = timeframes[selectedTimeframe];
 
-  // Generate realistic price movement
-  const generateRealisticPrice = useCallback((lastPrice) => {
-    const noise = (Math.random() - 0.5) * config.volatility * 2;
+//   // Generate realistic price movement
+//   const generateRealisticPrice = useCallback((lastPrice) => {
+//     const noise = (Math.random() - 0.5) * config.volatility * 2;
     
-    if (Math.random() < 0.05) {
-      trendRef.current = (Math.random() - 0.5) * config.volatility * 0.5;
-    }
+//     if (Math.random() < 0.05) {
+//       trendRef.current = (Math.random() - 0.5) * config.volatility * 0.5;
+//     }
     
-    momentumRef.current *= 0.95;
-    momentumRef.current += trendRef.current * 0.1;
+//     momentumRef.current *= 0.95;
+//     momentumRef.current += trendRef.current * 0.1;
     
-    const meanReversion = (config.base - lastPrice) * 0.001;
+//     const meanReversion = (config.base - lastPrice) * 0.001;
     
-    if (Math.random() < 0.02) {
-      volatilityRef.current = Math.min(volatilityRef.current * 1.5, config.volatility * 3);
-    } else {
-      volatilityRef.current = Math.max(volatilityRef.current * 0.99, config.volatility);
-    }
+//     if (Math.random() < 0.02) {
+//       volatilityRef.current = Math.min(volatilityRef.current * 1.5, config.volatility * 3);
+//     } else {
+//       volatilityRef.current = Math.max(volatilityRef.current * 0.99, config.volatility);
+//     }
     
-    const priceChange = noise + momentumRef.current + meanReversion;
-    const newPrice = lastPrice + priceChange * (1 + volatilityRef.current / config.volatility);
+//     const priceChange = noise + momentumRef.current + meanReversion;
+//     const newPrice = lastPrice + priceChange * (1 + volatilityRef.current / config.volatility);
     
-    const maxDeviation = config.base * 0.02;
-    return Math.max(
-      config.base - maxDeviation,
-      Math.min(config.base + maxDeviation, newPrice)
-    );
-  }, [config]);
+//     const maxDeviation = config.base * 0.02;
+//     return Math.max(
+//       config.base - maxDeviation,
+//       Math.min(config.base + maxDeviation, newPrice)
+//     );
+//   }, [config]);
 
-  // Create candlestick data
-  const createCandle = useCallback((startTime, endTime, startPrice) => {
-    const tickCount = Math.max(10, Math.floor(timeframeConfig.interval / 5000)); // At least 10 ticks per candle
-    let open = startPrice;
-    let high = startPrice;
-    let low = startPrice;
-    let close = startPrice;
-    let currentPrice = startPrice;
+//   // Create candlestick data
+//   const createCandle = useCallback((startTime, endTime, startPrice) => {
+//     const tickCount = Math.max(10, Math.floor(timeframeConfig.interval / 5000)); // At least 10 ticks per candle
+//     let open = startPrice;
+//     let high = startPrice;
+//     let low = startPrice;
+//     let close = startPrice;
+//     let currentPrice = startPrice;
 
-    for (let i = 0; i < tickCount; i++) {
-      currentPrice = generateRealisticPrice(currentPrice);
-      high = Math.max(high, currentPrice);
-      low = Math.min(low, currentPrice);
-    }
-    close = currentPrice;
+//     for (let i = 0; i < tickCount; i++) {
+//       currentPrice = generateRealisticPrice(currentPrice);
+//       high = Math.max(high, currentPrice);
+//       low = Math.min(low, currentPrice);
+//     }
+//     close = currentPrice;
 
-    const precision = selectedInstrument.includes('JPY') ? 2 : 5;
+//     const precision = selectedInstrument.includes('JPY') ? 2 : 5;
     
-    return {
-      time: startTime,
-      timestamp: startTime,
-      open: parseFloat(open.toFixed(precision)),
-      high: parseFloat(high.toFixed(precision)),
-      low: parseFloat(low.toFixed(precision)),
-      close: parseFloat(close.toFixed(precision)),
-      // For recharts bar chart representation
-      body: Math.abs(close - open),
-      bodyStart: Math.min(open, close),
-      upperWick: high - Math.max(open, close),
-      lowerWick: Math.min(open, close) - low,
-      isGreen: close >= open
-    };
-  }, [generateRealisticPrice, selectedInstrument, timeframeConfig.interval]);
+//     return {
+//       time: startTime,
+//       timestamp: startTime,
+//       open: parseFloat(open.toFixed(precision)),
+//       high: parseFloat(high.toFixed(precision)),
+//       low: parseFloat(low.toFixed(precision)),
+//       close: parseFloat(close.toFixed(precision)),
+//       // For recharts bar chart representation
+//       body: Math.abs(close - open),
+//       bodyStart: Math.min(open, close),
+//       upperWick: high - Math.max(open, close),
+//       lowerWick: Math.min(open, close) - low,
+//       isGreen: close >= open
+//     };
+//   }, [generateRealisticPrice, selectedInstrument, timeframeConfig.interval]);
 
-  // Initialize chart with historical candlestick data
-  const initializeData = useCallback(() => {
-    const initialData = [];
-    const now = new Date();
-    let price = config.base;
-    lastPriceRef.current = price;
+//   // Initialize chart with historical candlestick data
+//   const initializeData = useCallback(() => {
+//     const initialData = [];
+//     const now = new Date();
+//     let price = config.base;
+//     lastPriceRef.current = price;
 
-    // Generate historical candles
-    for (let i = timeframeConfig.maxCandles - 1; i >= 0; i--) {
-      const candleStartTime = now.getTime() - i * timeframeConfig.interval;
-      const candle = createCandle(candleStartTime, candleStartTime + timeframeConfig.interval, price);
-      price = candle.close;
-      initialData.push(candle);
-    }
+//     // Generate historical candles
+//     for (let i = timeframeConfig.maxCandles - 1; i >= 0; i--) {
+//       const candleStartTime = now.getTime() - i * timeframeConfig.interval;
+//       const candle = createCandle(candleStartTime, candleStartTime + timeframeConfig.interval, price);
+//       price = candle.close;
+//       initialData.push(candle);
+//     }
 
-    setData(initialData);
-    setCurrentCandle(null);
-    lastPriceRef.current = price;
-    currentCandleRef.current = null;
-  }, [config, createCandle, timeframeConfig]);
+//     setData(initialData);
+//     setCurrentCandle(null);
+//     lastPriceRef.current = price;
+//     currentCandleRef.current = null;
+//   }, [config, createCandle, timeframeConfig]);
 
-  // Update current candle or create new one
-  const updateCandles = useCallback(() => {
-    if (!isLive) return;
+//   // Update current candle or create new one
+//   const updateCandles = useCallback(() => {
+//     if (!isLive) return;
 
-    const now = new Date();
-    const currentTime = now.getTime();
+//     const now = new Date();
+//     const currentTime = now.getTime();
     
-    setData(prevData => {
-      const lastCandle = prevData[prevData.length - 1];
-      const timeSinceLastCandle = currentTime - lastCandle.timestamp;
+//     setData(prevData => {
+//       const lastCandle = prevData[prevData.length - 1];
+//       const timeSinceLastCandle = currentTime - lastCandle.timestamp;
       
-      if (timeSinceLastCandle >= timeframeConfig.interval) {
-        // Create new candle
-        const newCandle = createCandle(currentTime, currentTime + timeframeConfig.interval, lastPriceRef.current);
-        lastPriceRef.current = newCandle.close;
+//       if (timeSinceLastCandle >= timeframeConfig.interval) {
+//         // Create new candle
+//         const newCandle = createCandle(currentTime, currentTime + timeframeConfig.interval, lastPriceRef.current);
+//         lastPriceRef.current = newCandle.close;
         
-        // Remove oldest candle and add new one
-        const newData = [...prevData.slice(1), newCandle];
-        currentCandleRef.current = newCandle;
-        setCurrentCandle(newCandle);
-        setPriceChange(newCandle.close - newCandle.open);
+//         // Remove oldest candle and add new one
+//         const newData = [...prevData.slice(1), newCandle];
+//         currentCandleRef.current = newCandle;
+//         setCurrentCandle(newCandle);
+//         setPriceChange(newCandle.close - newCandle.open);
         
-        return newData;
-      } else {
-        // Update current candle
-        const updatedCandle = createCandle(lastCandle.timestamp, lastCandle.timestamp + timeframeConfig.interval, lastCandle.open);
-        lastPriceRef.current = updatedCandle.close;
+//         return newData;
+//       } else {
+//         // Update current candle
+//         const updatedCandle = createCandle(lastCandle.timestamp, lastCandle.timestamp + timeframeConfig.interval, lastCandle.open);
+//         lastPriceRef.current = updatedCandle.close;
         
-        const newData = [...prevData.slice(0, -1), updatedCandle];
-        currentCandleRef.current = updatedCandle;
-        setCurrentCandle(updatedCandle);
-        setPriceChange(updatedCandle.close - updatedCandle.open);
+//         const newData = [...prevData.slice(0, -1), updatedCandle];
+//         currentCandleRef.current = updatedCandle;
+//         setCurrentCandle(updatedCandle);
+//         setPriceChange(updatedCandle.close - updatedCandle.open);
         
-        return newData;
-      }
-    });
-  }, [createCandle, isLive, timeframeConfig.interval]);
+//         return newData;
+//       }
+//     });
+//   }, [createCandle, isLive, timeframeConfig.interval]);
 
-  // Handle live updates
-  useEffect(() => {
-    if (!isLive) {
-      if (intervalRef.current) {
-        clearInterval(intervalRef.current);
-        intervalRef.current = null;
-      }
-      return;
-    }
+//   // Handle live updates
+//   useEffect(() => {
+//     if (!isLive) {
+//       if (intervalRef.current) {
+//         clearInterval(intervalRef.current);
+//         intervalRef.current = null;
+//       }
+//       return;
+//     }
 
-    intervalRef.current = setInterval(updateCandles, 1000); // Update every second
+//     intervalRef.current = setInterval(updateCandles, 1000); // Update every second
     
-    return () => {
-      if (intervalRef.current) {
-        clearInterval(intervalRef.current);
-        intervalRef.current = null;
-      }
-    };
-  }, [isLive, updateCandles]);
+//     return () => {
+//       if (intervalRef.current) {
+//         clearInterval(intervalRef.current);
+//         intervalRef.current = null;
+//       }
+//     };
+//   }, [isLive, updateCandles]);
 
-  // Initialize data when instrument or timeframe changes
-  useEffect(() => {
-    initializeData();
-  }, [selectedInstrument, selectedTimeframe]);
+//   // Initialize data when instrument or timeframe changes
+//   useEffect(() => {
+//     initializeData();
+//   }, [selectedInstrument, selectedTimeframe]);
 
-  // Handle instrument change
-  const handleInstrumentChange = (newInstrument) => {
-    setSelectedInstrument(newInstrument);
-    volatilityRef.current = forexConfig[newInstrument].volatility;
-    trendRef.current = 0;
-    momentumRef.current = 0;
-  };
+//   // Handle instrument change
+//   const handleInstrumentChange = (newInstrument) => {
+//     setSelectedInstrument(newInstrument);
+//     volatilityRef.current = forexConfig[newInstrument].volatility;
+//     trendRef.current = 0;
+//     momentumRef.current = 0;
+//   };
 
-  // Handle timeframe change
-  const handleTimeframeChange = (newTimeframe) => {
-    setSelectedTimeframe(newTimeframe);
-  };
+//   // Handle timeframe change
+//   const handleTimeframeChange = (newTimeframe) => {
+//     setSelectedTimeframe(newTimeframe);
+//   };
 
-  // Toggle live updates
-  const toggleLiveUpdates = useCallback(() => {
-    setIsLive(prev => !prev);
-  }, []);
+//   // Toggle live updates
+//   const toggleLiveUpdates = useCallback(() => {
+//     setIsLive(prev => !prev);
+//   }, []);
 
-  // Custom candlestick chart component using bars
-  const CandlestickBar = (props) => {
-    const { payload, x, width } = props;
-    if (!payload) return null;
+//   // Custom candlestick chart component using bars
+//   const CandlestickBar = (props) => {
+//     const { payload, x, width } = props;
+//     if (!payload) return null;
 
-    const { open, high, low, close, isGreen } = payload;
-    const candleWidth = Math.max(width * 0.6, 3);
-    const wickWidth = Math.max(1, candleWidth * 0.1);
+//     const { open, high, low, close, isGreen } = payload;
+//     const candleWidth = Math.max(width * 0.6, 3);
+//     const wickWidth = Math.max(1, candleWidth * 0.1);
     
-    // Scale values to chart coordinates
-    const yScale = props.yScale || ((val) => val);
+//     // Scale values to chart coordinates
+//     const yScale = props.yScale || ((val) => val);
     
-    const openY = yScale(open);
-    const closeY = yScale(close);
-    const highY = yScale(high);
-    const lowY = yScale(low);
+//     const openY = yScale(open);
+//     const closeY = yScale(close);
+//     const highY = yScale(high);
+//     const lowY = yScale(low);
     
-    const bodyTop = Math.min(openY, closeY);
-    const bodyHeight = Math.abs(openY - closeY);
+//     const bodyTop = Math.min(openY, closeY);
+//     const bodyHeight = Math.abs(openY - closeY);
     
-    const color = isGreen ? '#10B981' : '#EF4444';
-    const wickColor = isGreen ? '#059669' : '#DC2626';
+//     const color = isGreen ? '#10B981' : '#EF4444';
+//     const wickColor = isGreen ? '#059669' : '#DC2626';
     
-    return (
-      <g>
-        {/* Upper wick */}
-        <line
-          x1={x + width / 2}
-          y1={highY}
-          x2={x + width / 2}
-          y2={Math.min(openY, closeY)}
-          stroke={wickColor}
-          strokeWidth={wickWidth}
-        />
-        {/* Lower wick */}
-        <line
-          x1={x + width / 2}
-          y1={Math.max(openY, closeY)}
-          x2={x + width / 2}
-          y2={lowY}
-          stroke={wickColor}
-          strokeWidth={wickWidth}
-        />
-        {/* Body */}
-        <rect
-          x={x + (width - candleWidth) / 2}
-          y={bodyTop}
-          width={candleWidth}
-          height={Math.max(bodyHeight, 1)}
-          fill={color}
-          stroke={color}
-          strokeWidth={0.5}
-        />
-      </g>
-    );
-  };
+//     return (
+//       <g>
+//         {/* Upper wick */}
+//         <line
+//           x1={x + width / 2}
+//           y1={highY}
+//           x2={x + width / 2}
+//           y2={Math.min(openY, closeY)}
+//           stroke={wickColor}
+//           strokeWidth={wickWidth}
+//         />
+//         {/* Lower wick */}
+//         <line
+//           x1={x + width / 2}
+//           y1={Math.max(openY, closeY)}
+//           x2={x + width / 2}
+//           y2={lowY}
+//           stroke={wickColor}
+//           strokeWidth={wickWidth}
+//         />
+//         {/* Body */}
+//         <rect
+//           x={x + (width - candleWidth) / 2}
+//           y={bodyTop}
+//           width={candleWidth}
+//           height={Math.max(bodyHeight, 1)}
+//           fill={color}
+//           stroke={color}
+//           strokeWidth={0.5}
+//         />
+//       </g>
+//     );
+//   };
 
-  // Custom tooltip
-  const customTooltip = ({ active, payload }) => {
-    if (active && payload && payload.length) {
-      const data = payload[0].payload;
-      const timeStr = new Date(data.timestamp).toLocaleString('en-US', {
-        month: 'short',
-        day: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit'
-      });
+//   // Custom tooltip
+//   const customTooltip = ({ active, payload }) => {
+//     if (active && payload && payload.length) {
+//       const data = payload[0].payload;
+//       const timeStr = new Date(data.timestamp).toLocaleString('en-US', {
+//         month: 'short',
+//         day: 'numeric',
+//         hour: '2-digit',
+//         minute: '2-digit'
+//       });
       
-      return (
-        <div className="bg-gray-800/95 text-white p-4 border border-gray-600/50 rounded shadow-lg text-sm backdrop-blur-sm">
-          <p className="font-medium mb-2">{timeStr}</p>
-          <div className="space-y-1">
-            <p><span className="text-blue-400">Open:</span> {data.open}</p>
-            <p><span className="text-green-400">High:</span> {data.high}</p>
-            <p><span className="text-red-400">Low:</span> {data.low}</p>
-            <p><span className="text-yellow-400">Close:</span> {data.close}</p>
-            <p><span className="text-gray-400">Change:</span> 
-              <span className={data.isGreen ? 'text-green-400' : 'text-red-400'}>
-                {' '}{(data.close - data.open).toFixed(selectedInstrument.includes('JPY') ? 2 : 5)}
-              </span>
-            </p>
-          </div>
-        </div>
-      );
-    }
-    return null;
-  };
+//       return (
+//         <div className="bg-gray-800/95 text-white p-4 border border-gray-600/50 rounded shadow-lg text-sm backdrop-blur-sm">
+//           <p className="font-medium mb-2">{timeStr}</p>
+//           <div className="space-y-1">
+//             <p><span className="text-blue-400">Open:</span> {data.open}</p>
+//             <p><span className="text-green-400">High:</span> {data.high}</p>
+//             <p><span className="text-red-400">Low:</span> {data.low}</p>
+//             <p><span className="text-yellow-400">Close:</span> {data.close}</p>
+//             <p><span className="text-gray-400">Change:</span> 
+//               <span className={data.isGreen ? 'text-green-400' : 'text-red-400'}>
+//                 {' '}{(data.close - data.open).toFixed(selectedInstrument.includes('JPY') ? 2 : 5)}
+//               </span>
+//             </p>
+//           </div>
+//         </div>
+//       );
+//     }
+//     return null;
+//   };
 
-  // Calculate price statistics
-  const rates = data.map(d => [d.open, d.high, d.low, d.close]).flat();
-  const minRate = Math.min(...rates);
-  const maxRate = Math.max(...rates);
-  const yAxisPadding = (maxRate - minRate) * 0.1 || 0.001;
+//   // Calculate price statistics
+//   const rates = data.map(d => [d.open, d.high, d.low, d.close]).flat();
+//   const minRate = Math.min(...rates);
+//   const maxRate = Math.max(...rates);
+//   const yAxisPadding = (maxRate - minRate) * 0.1 || 0.001;
 
-  // Price change styling
-  const priceChangeClass = priceChange > 0 ? 'text-green-500' : 
-                          priceChange < 0 ? 'text-red-500' : 'text-gray-500';
-  const priceChangeIcon = priceChange > 0 ? '↗' : 
-                         priceChange < 0 ? '↘' : '→';
+//   // Price change styling
+//   const priceChangeClass = priceChange > 0 ? 'text-green-500' : 
+//                           priceChange < 0 ? 'text-red-500' : 'text-gray-500';
+//   const priceChangeIcon = priceChange > 0 ? '↗' : 
+//                          priceChange < 0 ? '↘' : '→';
 
-  // Anatomy overlay component
-  const AnatomyOverlay = () => {
-    if (!showAnatomy || data.length < 2) return null;
+//   // Anatomy overlay component
+//   const AnatomyOverlay = () => {
+//     if (!showAnatomy || data.length < 2) return null;
     
-    const sampleCandle = data[Math.floor(data.length * 0.7)]; // Use a candle from 70% of the way through
+//     const sampleCandle = data[Math.floor(data.length * 0.7)]; // Use a candle from 70% of the way through
     
-    return (
-      <div className="absolute inset-0 bg-black/80 flex items-center justify-center z-10 backdrop-blur-sm">
-        <div className="bg-gray-800 rounded-lg p-6 max-w-md mx-4 border border-gray-600">
-          <h3 className="text-xl font-bold mb-4 text-center">Candlestick Anatomy</h3>
+//     return (
+//       <div className="absolute inset-0 bg-black/80 flex items-center justify-center z-10 backdrop-blur-sm">
+//         <div className="bg-gray-800 rounded-lg p-6 max-w-md mx-4 border border-gray-600">
+//           <h3 className="text-xl font-bold mb-4 text-center">Candlestick Anatomy</h3>
           
-          {/* Visual representation */}
-          <div className="flex justify-center mb-6">
-            <svg width="120" height="200" viewBox="0 0 120 200">
-              {/* Sample candlestick */}
-              <line x1="60" y1="20" x2="60" y2="60" stroke="#059669" strokeWidth="2"/>
-              <rect x="45" y="60" width="30" height="80" fill="#10B981" stroke="#059669"/>
-              <line x1="60" y1="140" x2="60" y2="180" stroke="#059669" strokeWidth="2"/>
+//           {/* Visual representation */}
+//           <div className="flex justify-center mb-6">
+//             <svg width="120" height="200" viewBox="0 0 120 200">
+//               {/* Sample candlestick */}
+//               <line x1="60" y1="20" x2="60" y2="60" stroke="#059669" strokeWidth="2"/>
+//               <rect x="45" y="60" width="30" height="80" fill="#10B981" stroke="#059669"/>
+//               <line x1="60" y1="140" x2="60" y2="180" stroke="#059669" strokeWidth="2"/>
               
-              {/* Labels */}
-              <text x="80" y="25" fill="white" fontSize="12">High</text>
-              <text x="80" y="105" fill="white" fontSize="12">Open/Close</text>
-              <text x="80" y="185" fill="white" fontSize="12">Low</text>
+//               {/* Labels */}
+//               <text x="80" y="25" fill="white" fontSize="12">High</text>
+//               <text x="80" y="105" fill="white" fontSize="12">Open/Close</text>
+//               <text x="80" y="185" fill="white" fontSize="12">Low</text>
               
-              {/* Arrows */}
-              <line x1="75" y1="40" x2="65" y2="40" stroke="white" strokeWidth="1"/>
-              <line x1="75" y1="100" x2="75" y2="100" stroke="white" strokeWidth="1"/>
-              <line x1="75" y1="165" x2="65" y2="165" stroke="white" strokeWidth="1"/>
-            </svg>
-          </div>
+//               {/* Arrows */}
+//               <line x1="75" y1="40" x2="65" y2="40" stroke="white" strokeWidth="1"/>
+//               <line x1="75" y1="100" x2="75" y2="100" stroke="white" strokeWidth="1"/>
+//               <line x1="75" y1="165" x2="65" y2="165" stroke="white" strokeWidth="1"/>
+//             </svg>
+//           </div>
           
-          {/* Explanation */}
-          <div className="space-y-3 text-sm">
-            <div className="flex items-center space-x-2">
-              <div className="w-4 h-4 bg-green-500 rounded"></div>
-              <span><strong>Green/Bullish:</strong> Close {">"} Open (Price went up)</span>
-            </div>
-            <div className="flex items-center space-x-2">
-              <div className="w-4 h-4 bg-red-500 rounded"></div>
-              <span><strong>Red/Bearish:</strong> Close {"<"} Open (Price went down)</span>
-            </div>
-            <div className="flex items-center space-x-2">
-              <div className="w-4 h-1 bg-gray-400"></div>
-              <span><strong>Wicks/Shadows:</strong> Show price extremes</span>
-            </div>
-            <div className="mt-4 p-3 bg-gray-700 rounded">
-              <p className="text-xs text-gray-300">
-                Each candle represents price action over {timeframeConfig.label.toLowerCase()}. 
-                The body shows open-to-close movement, while wicks show the full price range.
-              </p>
-            </div>
-          </div>
+//           {/* Explanation */}
+//           <div className="space-y-3 text-sm">
+//             <div className="flex items-center space-x-2">
+//               <div className="w-4 h-4 bg-green-500 rounded"></div>
+//               <span><strong>Green/Bullish:</strong> Close {">"} Open (Price went up)</span>
+//             </div>
+//             <div className="flex items-center space-x-2">
+//               <div className="w-4 h-4 bg-red-500 rounded"></div>
+//               <span><strong>Red/Bearish:</strong> Close {"<"} Open (Price went down)</span>
+//             </div>
+//             <div className="flex items-center space-x-2">
+//               <div className="w-4 h-1 bg-gray-400"></div>
+//               <span><strong>Wicks/Shadows:</strong> Show price extremes</span>
+//             </div>
+//             <div className="mt-4 p-3 bg-gray-700 rounded">
+//               <p className="text-xs text-gray-300">
+//                 Each candle represents price action over {timeframeConfig.label.toLowerCase()}. 
+//                 The body shows open-to-close movement, while wicks show the full price range.
+//               </p>
+//             </div>
+//           </div>
           
-          <button
-            onClick={() => setShowAnatomy(false)}
-            className="w-full mt-4 bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded transition-colors"
-          >
-            Got it!
-          </button>
-        </div>
-      </div>
-    );
-  };
+//           <button
+//             onClick={() => setShowAnatomy(false)}
+//             className="w-full mt-4 bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded transition-colors"
+//           >
+//             Got it!
+//           </button>
+//         </div>
+//       </div>
+//     );
+//   };
 
-  return (
-    <div className="w-full bg-gray-900 text-white rounded-lg shadow-2xl overflow-hidden relative">
-      <AnatomyOverlay />
+//   return (
+//     <div className="w-full bg-gray-900 text-white rounded-lg shadow-2xl overflow-hidden relative">
+//       <AnatomyOverlay />
       
-      {/* Header */}
-      <div className="bg-gray-800/90 backdrop-blur-sm px-6 py-4 border-b border-gray-700/50">
-        <div className="flex justify-between items-center">
-          <div className="flex items-center space-x-4">
-            <h1 className="text-2xl font-bold">{config.flag} {config.name}</h1>
-            <div className="flex items-center space-x-2">
-              <div className={`w-2 h-2 rounded-full ${isLive ? 'bg-green-500 animate-pulse' : 'bg-red-500'}`}></div>
-              <span className="text-sm text-gray-400">{isLive ? 'LIVE' : 'PAUSED'}</span>
-            </div>
-          </div>
+//       {/* Header */}
+//       <div className="bg-gray-800/90 backdrop-blur-sm px-6 py-4 border-b border-gray-700/50">
+//         <div className="flex justify-between items-center">
+//           <div className="flex items-center space-x-4">
+//             <h1 className="text-2xl font-bold">{config.flag} {config.name}</h1>
+//             <div className="flex items-center space-x-2">
+//               <div className={`w-2 h-2 rounded-full ${isLive ? 'bg-green-500 animate-pulse' : 'bg-red-500'}`}></div>
+//               <span className="text-sm text-gray-400">{isLive ? 'LIVE' : 'PAUSED'}</span>
+//             </div>
+//           </div>
           
-          <div className="flex items-center space-x-3">
-            {/* Timeframe Selector */}
-            <select
-              value={selectedTimeframe}
-              onChange={(e) => handleTimeframeChange(e.target.value)}
-              className="bg-gray-700 text-white px-3 py-2 rounded text-sm border border-gray-600 focus:border-blue-500 focus:outline-none"
-            >
-              {Object.entries(timeframes).map(([key, value]) => (
-                <option key={key} value={key}>
-                  {value.label}
-                </option>
-              ))}
-            </select>
+//           <div className="flex items-center space-x-3">
+//             {/* Timeframe Selector */}
+//             <select
+//               value={selectedTimeframe}
+//               onChange={(e) => handleTimeframeChange(e.target.value)}
+//               className="bg-gray-700 text-white px-3 py-2 rounded text-sm border border-gray-600 focus:border-blue-500 focus:outline-none"
+//             >
+//               {Object.entries(timeframes).map(([key, value]) => (
+//                 <option key={key} value={key}>
+//                   {value.label}
+//                 </option>
+//               ))}
+//             </select>
             
-            {/* Currency Pair Selector */}
-            <select
-              value={selectedInstrument}
-              onChange={(e) => handleInstrumentChange(e.target.value)}
-              className="bg-gray-700 text-white px-3 py-2 rounded text-sm border border-gray-600 focus:border-blue-500 focus:outline-none"
-            >
-              {Object.entries(forexConfig).map(([key, value]) => (
-                <option key={key} value={key}>
-                  {value.flag} {value.name}
-                </option>
-              ))}
-            </select>
+//             {/* Currency Pair Selector */}
+//             <select
+//               value={selectedInstrument}
+//               onChange={(e) => handleInstrumentChange(e.target.value)}
+//               className="bg-gray-700 text-white px-3 py-2 rounded text-sm border border-gray-600 focus:border-blue-500 focus:outline-none"
+//             >
+//               {Object.entries(forexConfig).map(([key, value]) => (
+//                 <option key={key} value={key}>
+//                   {value.flag} {value.name}
+//                 </option>
+//               ))}
+//             </select>
             
-            {/* Anatomy Button */}
-            <button
-              onClick={() => setShowAnatomy(true)}
-              className="px-3 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded text-sm font-medium transition-colors"
-            >
-              📚 Anatomy
-            </button>
+//             {/* Anatomy Button */}
+//             <button
+//               onClick={() => setShowAnatomy(true)}
+//               className="px-3 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded text-sm font-medium transition-colors"
+//             >
+//               📚 Anatomy
+//             </button>
             
-            <button
-              onClick={toggleLiveUpdates}
-              className={`px-4 py-2 rounded text-sm font-medium transition-colors ${
-                isLive 
-                  ? 'bg-red-600 hover:bg-red-700 text-white' 
-                  : 'bg-green-600 hover:bg-green-700 text-white'
-              }`}
-            >
-              {isLive ? 'PAUSE' : 'START'}
-            </button>
-          </div>
-        </div>
+//             <button
+//               onClick={toggleLiveUpdates}
+//               className={`px-4 py-2 rounded text-sm font-medium transition-colors ${
+//                 isLive 
+//                   ? 'bg-red-600 hover:bg-red-700 text-white' 
+//                   : 'bg-green-600 hover:bg-green-700 text-white'
+//               }`}
+//             >
+//               {isLive ? 'PAUSE' : 'START'}
+//             </button>
+//           </div>
+//         </div>
         
-        {/* Price Display */}
-        <div className="mt-4 flex items-center space-x-6">
-          <div className="text-3xl font-mono font-bold">
-            {currentCandle ? currentCandle.close.toFixed(selectedInstrument.includes('JPY') ? 2 : 5) : '--'}
-          </div>
-          <div className={`text-lg font-medium ${priceChangeClass} flex items-center space-x-1 transition-all duration-300`}>
-            <span className="text-2xl">{priceChangeIcon}</span>
-            <span>{Math.abs(priceChange).toFixed(selectedInstrument.includes('JPY') ? 2 : 5)}</span>
-          </div>
-          <div className="text-sm text-gray-400">
-            <div>Timeframe: <span className="text-blue-400">{timeframeConfig.label}</span></div>
-            <div>Spread: {config.spread.toFixed(selectedInstrument.includes('JPY') ? 2 : 5)}</div>
-          </div>
-        </div>
-      </div>
+//         {/* Price Display */}
+//         <div className="mt-4 flex items-center space-x-6">
+//           <div className="text-3xl font-mono font-bold">
+//             {currentCandle ? currentCandle.close.toFixed(selectedInstrument.includes('JPY') ? 2 : 5) : '--'}
+//           </div>
+//           <div className={`text-lg font-medium ${priceChangeClass} flex items-center space-x-1 transition-all duration-300`}>
+//             <span className="text-2xl">{priceChangeIcon}</span>
+//             <span>{Math.abs(priceChange).toFixed(selectedInstrument.includes('JPY') ? 2 : 5)}</span>
+//           </div>
+//           <div className="text-sm text-gray-400">
+//             <div>Timeframe: <span className="text-blue-400">{timeframeConfig.label}</span></div>
+//             <div>Spread: {config.spread.toFixed(selectedInstrument.includes('JPY') ? 2 : 5)}</div>
+//           </div>
+//         </div>
+//       </div>
 
-      {/* Chart */}
-      <div className="p-6 bg-black/20 backdrop-blur-sm">
-        <ResponsiveContainer width="100%" height={450}>
-          <ComposedChart 
-            data={data} 
-            margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
-          >
-            <CartesianGrid strokeDasharray="2 2" stroke="#374151" opacity={0.3} />
-            <XAxis 
-              dataKey="timestamp"
-              tick={{ fontSize: 12, fill: '#9CA3AF' }}
-              tickFormatter={(value) => {
-                const date = new Date(value);
-                if (selectedTimeframe === '1D') {
-                  return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-                }
-                return date.toLocaleTimeString('en-US', { 
-                  hour: '2-digit', 
-                  minute: '2-digit',
-                  hour12: false 
-                });
-              }}
-              stroke="#4B5563"
-            />
-            <YAxis 
-              domain={[minRate - yAxisPadding, maxRate + yAxisPadding]}
-              tick={{ fontSize: 12, fill: '#9CA3AF' }}
-              tickFormatter={(value) => value.toFixed(selectedInstrument.includes('JPY') ? 2 : 5)}
-              stroke="#4B5563"
-            />
-            <Tooltip content={customTooltip} />
+//       {/* Chart */}
+//       <div className="p-6 bg-black/20 backdrop-blur-sm">
+//         <ResponsiveContainer width="100%" height={450}>
+//           <ComposedChart 
+//             data={data} 
+//             margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
+//           >
+//             <CartesianGrid strokeDasharray="2 2" stroke="#374151" opacity={0.3} />
+//             <XAxis 
+//               dataKey="timestamp"
+//               tick={{ fontSize: 12, fill: '#9CA3AF' }}
+//               tickFormatter={(value) => {
+//                 const date = new Date(value);
+//                 if (selectedTimeframe === '1D') {
+//                   return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+//                 }
+//                 return date.toLocaleTimeString('en-US', { 
+//                   hour: '2-digit', 
+//                   minute: '2-digit',
+//                   hour12: false 
+//                 });
+//               }}
+//               stroke="#4B5563"
+//             />
+//             <YAxis 
+//               domain={[minRate - yAxisPadding, maxRate + yAxisPadding]}
+//               tick={{ fontSize: 12, fill: '#9CA3AF' }}
+//               tickFormatter={(value) => value.toFixed(selectedInstrument.includes('JPY') ? 2 : 5)}
+//               stroke="#4B5563"
+//             />
+//             <Tooltip content={customTooltip} />
             
-            {/* Render candlesticks using custom shape */}
-            <Bar
-              dataKey="close"
-              shape={(props) => <CandlestickBar {...props} yScale={(val) => {
-                const chartHeight = 450 - 40; // Approximate chart height minus margins
-                const range = (maxRate + yAxisPadding) - (minRate - yAxisPadding);
-                return 20 + (chartHeight * ((maxRate + yAxisPadding) - val) / range);
-              }} />}
-            />
-          </ComposedChart>
-        </ResponsiveContainer>
-      </div>
+//             {/* Render candlesticks using custom shape */}
+//             <Bar
+//               dataKey="close"
+//               shape={(props) => <CandlestickBar {...props} yScale={(val) => {
+//                 const chartHeight = 450 - 40; // Approximate chart height minus margins
+//                 const range = (maxRate + yAxisPadding) - (minRate - yAxisPadding);
+//                 return 20 + (chartHeight * ((maxRate + yAxisPadding) - val) / range);
+//               }} />}
+//             />
+//           </ComposedChart>
+//         </ResponsiveContainer>
+//       </div>
 
-      {/* Market Info */}
-      <div className="bg-gray-800/90 backdrop-blur-sm px-6 py-3 text-xs text-gray-400 border-t border-gray-700/50">
-        <div className="flex justify-between items-center">
-          <div className="flex space-x-4">
-            <span>Market Hours: 24/5</span>
-            <span>Timeframe: {timeframeConfig.label}</span>
-            <span className="text-green-400">
-              Last Update: {currentCandle ? new Date(currentCandle.timestamp).toLocaleTimeString() : '--:--:--'}
-            </span>
-          </div>
-          <div className="flex space-x-4">
-            <span>High: {maxRate.toFixed(selectedInstrument.includes('JPY') ? 2 : 5)}</span>
-            <span>Low: {minRate.toFixed(selectedInstrument.includes('JPY') ? 2 : 5)}</span>
-            <span>Candles: {data.length}</span>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-};
+//       {/* Market Info */}
+//       <div className="bg-gray-800/90 backdrop-blur-sm px-6 py-3 text-xs text-gray-400 border-t border-gray-700/50">
+//         <div className="flex justify-between items-center">
+//           <div className="flex space-x-4">
+//             <span>Market Hours: 24/5</span>
+//             <span>Timeframe: {timeframeConfig.label}</span>
+//             <span className="text-green-400">
+//               Last Update: {currentCandle ? new Date(currentCandle.timestamp).toLocaleTimeString() : '--:--:--'}
+//             </span>
+//           </div>
+//           <div className="flex space-x-4">
+//             <span>High: {maxRate.toFixed(selectedInstrument.includes('JPY') ? 2 : 5)}</span>
+//             <span>Low: {minRate.toFixed(selectedInstrument.includes('JPY') ? 2 : 5)}</span>
+//             <span>Candles: {data.length}</span>
+//           </div>
+//         </div>
+//       </div>
+//     </div>
+//   );
+// };
 
-export default SimpleForexChart;
+// export default SimpleForexChart;
