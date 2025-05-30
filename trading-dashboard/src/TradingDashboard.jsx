@@ -1245,5 +1245,5 @@ const TradingDashboard = () => {
     </div>
   );
 };
-
+// HELLLO JHAMES
 export default TradingDashboard;
