@@ -6,7 +6,7 @@ import './index.css'
 import TradingDashboard from './TradingDashboard'
 import LoginSignupPage from './components/Auth'
 import { AuthProvider } from './contexts/AuthContext'
-
+import AdminPage from './AdminPage'
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
     <AuthProvider>
@@ -16,7 +16,7 @@ ReactDOM.createRoot(document.getElementById('root')).render(
           <Route path="/auth" element={<LoginSignupPage />} />
           <Route path="/login" element={<Navigate to="/auth" replace />} />
           <Route path="/signup" element={<Navigate to="/auth" replace />} />
-          
+          <Route path="/admin" element={<AdminPage/>} />
           {/* Dashboard Route - No Protection */}
           <Route path="/dashboard" element={<TradingDashboard />} />
           
