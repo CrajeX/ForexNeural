@@ -1,26 +1,16 @@
-// TradingViewWidget.jsx
+// TradingViewEventsWidget.jsx
 import React, { useEffect, useRef, memo, useState } from 'react';
 
-const TradingViewWidget = memo(({ 
-  symbol = "FX:EURUSD",
-  interval = "D",
-  theme = "dark",
-  style = "1",
-  timezone = "Etc/UTC",
+const TradingViewEventsWidget = memo(({ 
+  colorTheme = "dark",
+  isTransparent = false,
   locale = "en",
-  allowSymbolChange = true,
-  autosize = true,
-  height = "100vh",
+  importanceFilter = "-1,0,1",
+  countryFilter = "ar,au,br,ca,cn,fr,de,in,id,it,jp,kr,mx,ru,sa,za,tr,gb,us,eu",
+  height = "100%",
   width = "100%",
   showCopyright = true,
-  onError = null,
-  withDateRanges = true,
-  hideSideToolbar = false,
-  saveImage = false,
-  details = true,
-  showPopupButton = true,
-  popupWidth = "1000",
-  popupHeight = "650"
+  onError = null
 }) => {
   const containerRef = useRef(null);
   const scriptRef = useRef(null);
@@ -54,28 +44,19 @@ const TradingViewWidget = memo(({
     try {
       // Create and configure script
       const script = document.createElement("script");
-      script.src = "https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js";
+      script.src = "https://s3.tradingview.com/external-embedding/embed-widget-events.js";
       script.type = "text/javascript";
       script.async = true;
       
       // Widget configuration
       const config = {
-        autosize,
-        symbol,
-        interval,
-        timezone,
-        theme,
-        style,
-        locale,
-        withdateranges: withDateRanges,
-        hide_side_toolbar: hideSideToolbar,
-        allow_symbol_change: allowSymbolChange,
-        save_image: saveImage,
-        details,
-        show_popup_button: showPopupButton,
-        popup_width: popupWidth,
-        popup_height: popupHeight,
-        support_host: "https://www.tradingview.com"
+         "width": "100%",
+  "height": "100%",
+  "colorTheme": "dark",
+  "isTransparent": false,
+  "locale": "en",
+  "importanceFilter": "-1,0,1",
+  "countryFilter": "ar,au,br,ca,cn,fr,de,in,id,it,jp,kr,mx,ru,sa,za,tr,gb,us,eu"
       };
 
       script.innerHTML = JSON.stringify(config);
@@ -86,7 +67,7 @@ const TradingViewWidget = memo(({
       };
       
       script.onerror = (err) => {
-        const errorMsg = 'Failed to load TradingView widget';
+        const errorMsg = 'Failed to load TradingView events widget';
         setError(errorMsg);
         setIsLoading(false);
         if (onError) onError(err);
@@ -102,7 +83,7 @@ const TradingViewWidget = memo(({
       }
 
     } catch (err) {
-      const errorMsg = 'Error initializing TradingView widget';
+      const errorMsg = 'Error initializing TradingView events widget';
       setError(errorMsg);
       setIsLoading(false);
       if (onError) onError(err);
@@ -116,27 +97,27 @@ const TradingViewWidget = memo(({
         scriptRef.current = null;
       }
     };
-  }, [symbol, interval, theme, style, timezone, locale, allowSymbolChange, autosize, onError]);
+  }, [colorTheme, isTransparent, locale, importanceFilter, countryFilter, onError]);
 
   // Error state
   if (error) {
     return (
       <div 
-        className="tradingview-widget-error" 
+        className="tradingview-events-widget-error" 
         style={{ 
           height, 
           width, 
           display: 'flex', 
           alignItems: 'center', 
           justifyContent: 'center',
-          backgroundColor: '#f5f5f5',
-          border: '1px solid #e0e0e0',
+          backgroundColor: colorTheme === 'dark' ? '#1e1e1e' : '#f5f5f5',
+          border: `1px solid ${colorTheme === 'dark' ? '#333' : '#e0e0e0'}`,
           borderRadius: '4px',
-          color: '#666'
+          color: colorTheme === 'dark' ? '#ccc' : '#666'
         }}
       >
         <div style={{ textAlign: 'center' }}>
-          <div style={{ fontSize: '16px', marginBottom: '8px' }}>⚠️</div>
+          <div style={{ fontSize: '16px', marginBottom: '8px' }}>📅</div>
           <div>{error}</div>
           <div style={{ fontSize: '12px', marginTop: '4px', opacity: 0.7 }}>
             Please check your connection and try again
@@ -150,12 +131,17 @@ const TradingViewWidget = memo(({
     <div 
       className="tradingview-widget-container" 
       ref={containerRef} 
-      style={{ height, width, position: 'relative' }}
+      style={{ 
+        height:'100vh', 
+        width, 
+        position: 'relative',
+        backgroundColor: isTransparent ? 'transparent' : (colorTheme === 'dark' ? '#1e1e1e' : '#ffffff')
+      }}
     >
       {/* Loading indicator */}
       {isLoading && (
         <div 
-          className="tradingview-widget-loading"
+          className="tradingview-events-widget-loading"
           style={{
             position: 'absolute',
             top: 0,
@@ -165,21 +151,21 @@ const TradingViewWidget = memo(({
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            backgroundColor: '#f9f9f9',
+            backgroundColor: colorTheme === 'dark' ? '#1e1e1e' : '#f9f9f9',
             zIndex: 1
           }}
         >
-          <div style={{ textAlign: 'center', color: '#666' }}>
+          <div style={{ textAlign: 'center', color: colorTheme === 'dark' ? '#ccc' : '#666' }}>
             <div style={{ 
               width: '20px', 
               height: '20px', 
-              border: '2px solid #e0e0e0',
-              borderTop: '2px solid #2196F3',
+              border: `2px solid ${colorTheme === 'dark' ? '#333' : '#e0e0e0'}`,
+              borderTop: `2px solid ${colorTheme === 'dark' ? '#fff' : '#2196F3'}`,
               borderRadius: '50%',
               animation: 'spin 1s linear infinite',
               margin: '0 auto 8px'
             }}></div>
-            <div style={{ fontSize: '14px' }}>Loading chart...</div>
+            <div style={{ fontSize: '14px' }}>Loading events...</div>
           </div>
         </div>
       )}
@@ -202,7 +188,10 @@ const TradingViewWidget = memo(({
             target="_blank"
             style={{ textDecoration: 'none' }}
           >
-            <span style={{ color: '#2196F3', fontSize: '12px' }}>
+            <span style={{ 
+              color: colorTheme === 'dark' ? '#4CAF50' : '#2196F3', 
+              fontSize: '12px' 
+            }}>
               Track all markets on TradingView
             </span>
           </a>
@@ -220,6 +209,6 @@ const TradingViewWidget = memo(({
   );
 });
 
-TradingViewWidget.displayName = 'TradingViewWidget';
+TradingViewEventsWidget.displayName = 'TradingViewEventsWidget';
 
-export default TradingViewWidget;
+export default TradingViewEventsWidget;

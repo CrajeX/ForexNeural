@@ -398,8 +398,11 @@
 // export default TradingDashboard;
 import React, { useState,useRef,useEffect } from 'react';
 import { FilePenLine,FileSpreadsheetIcon,Settings, Maximize2, ZoomIn, ZoomOut, Move, Clock, TrendingUp, TrendingDown, BarChart3, ActivityIcon,Activity, Shield, Globe, Calendar, Bell, User, Search, Star, Eye, Target } from 'lucide-react';
-import DukascopyChart from "./components/DukascopyChart"; 
-import DukascopyNewsWidget from './components/DukascopyNewsWidget'; 
+import TradingViewWidget from './components/DukascopyChart'
+import TradingViewNewsWidget from './components/DukascopyNewsWidget'; 
+import TradingViewEventsWidget from './components/EconomicCalendar';
+import UserButtonWithPopup from './components/UserIcon';
+import { useNavigate } from 'react-router-dom';
 // ===== CONSTANTS SECTION =====
 // Duplicate this section when creating new functions
 const NAVIGATION_ITEMS = [
@@ -1056,7 +1059,6 @@ const TradingDashboard = () => {
       </div>
     </div>
   );
-
   const Header = () => (
     <div style={styles.header}>
       <div style={styles.headerContent}>
@@ -1082,11 +1084,7 @@ const TradingDashboard = () => {
             onMouseLeave={(e) => e.target.style.color = '#9ca3af'}>
             <Settings size={20} />
           </button>
-          <button style={styles.headerButton}
-            onMouseEnter={(e) => e.target.style.color = '#ffffff'}
-            onMouseLeave={(e) => e.target.style.color = '#9ca3af'}>
-            <User size={20} />
-          </button>
+          <UserButtonWithPopup/>  
         </div>
       </div>
     </div>
@@ -1237,8 +1235,9 @@ const TradingDashboard = () => {
         <Header />
         <main style={styles.main}>
        {activeSection === 'dashboard' ? <DashboardContent /> : 
- activeSection === 'charts' ? <DukascopyChart /> :
-  activeSection === 'alerts' ? <DukascopyNewsWidget /> : 
+ activeSection === 'charts' ? <TradingViewWidget /> :
+  activeSection === 'alerts' ? <TradingViewNewsWidget /> : 
+  activeSection === 'economic' ? <TradingViewEventsWidget /> : 
  <PlaceholderSection />}
 
         </main>
