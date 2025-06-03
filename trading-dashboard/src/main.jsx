@@ -7,6 +7,9 @@ import TradingDashboard from './TradingDashboard'
 import LoginSignupPage from './components/Auth'
 import { AuthProvider } from './contexts/AuthContext'
 import AdminPage from './AdminPage'
+import SettingsDemo from './components/settings'
+import SettingsWindow from './components/settings'
+import ProfilePage from './components/Profile'
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
     <AuthProvider>
@@ -19,7 +22,8 @@ ReactDOM.createRoot(document.getElementById('root')).render(
           <Route path="/admin" element={<AdminPage/>} />
           {/* Dashboard Route - No Protection */}
           <Route path="/dashboard" element={<TradingDashboard />} />
-          
+            <Route path="/profile" element={<ProfilePage/>} />
+          <Route path="/settings" element={<SettingsWindow/>} />
           {/* Default Route */}
           <Route path="/" element={<Navigate to="/auth" replace />} />
           

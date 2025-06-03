@@ -1,0 +1,39 @@
+{
+  "_id": "ObjectId",
+  "userId": "ObjectId (reference to users collection)",
+  "personalInfo": {
+    "firstName": "John",
+    "lastName": "Doe",
+    "middleName": "Michael",
+    "dateOfBirth": "1995-05-15",
+    "gender": "Male",
+    "nationality": "American"
+  },
+  "contactInfo": {
+    "primaryEmail": "john@example.com",
+    "alternateEmail": "john.doe@gmail.com",
+    "primaryPhone": "+1234567890",
+    "alternatePhone": "+0987654321",
+    "address": {
+      "street": "123 Main St",
+      "city": "New York",
+      "state": "NY",
+      "zipCode": "10001",
+      "country": "USA"
+    }
+  },
+  "academicInfo": {
+    "enrollmentDate": "2021-08-15",
+    "expectedGraduation": "2025-05-15",
+    "gpa": 3.75,
+    "credits": 90,
+    "advisor": "Dr. Jane Smith"
+  },
+  "socialLinks": {
+    "linkedin": "https://linkedin.com/in/johndoe",
+    "github": "https://github.com/johndoe",
+    "portfolio": "https://johndoe.dev"
+  },
+  "createdAt": "2024-01-01T00:00:00.000Z",
+  "updatedAt": "2024-01-01T00:00:00.000Z"
+}

@@ -1,0 +1,13 @@
+{
+  "_id": "ObjectId",
+  "userId": "ObjectId (reference to users)",
+  "sessionToken": "unique_session_token",
+  "deviceInfo": {
+    "userAgent": "Mozilla/5.0...",
+    "ip": "192.168.1.1",
+    "device": "Desktop"
+  },
+  "isActive": true,
+  "expiresAt": "2024-01-02T00:00:00.000Z",
+  "createdAt": "2024-01-01T00:00:00.000Z"
+}
