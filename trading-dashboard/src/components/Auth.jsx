@@ -1592,10 +1592,564 @@
 // };
 
 // export default LoginSignupPage;
-import React, { useState } from 'react';
-import { Eye, EyeOff, Mail, Lock, ArrowRight } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+// import React, { useState } from 'react';
+// import { Eye, EyeOff, Mail, Lock, ArrowRight } from 'lucide-react';
+// import { useNavigate } from 'react-router-dom';
 
+// // Logo Component
+// const Logo = () => {
+//   return (
+//     <div style={{
+//       display: 'flex',
+//       alignItems: 'center',
+//       gap: '8px'
+//     }}>
+//       <img src='8Con Loco.png' style={{height:'5rem'}} alt="8ConEdge Logo" />
+//       <div>
+//         <h1 style={{
+//           fontSize: '24px',
+//           fontWeight: 'bold',
+//           background: 'linear-gradient(to right, #111827, #6b7280)',
+//           WebkitBackgroundClip: 'text',
+//           WebkitTextFillColor: 'transparent',
+//           backgroundClip: 'text',
+//           margin: 0
+//         }}>
+//           8ConEdge
+//         </h1>
+//         <p style={{
+//           fontSize: '12px',
+//           color: '#6b7280',
+//           margin: '0',
+//           marginTop: '-4px'
+//         }}>Confluence is Confidence</p>
+//       </div>
+//     </div>
+//   );
+// };
+
+// // Simplified Footer Component
+// const Footer = () => {
+//   return (
+//     <footer style={{
+//       backgroundColor: '#f9fafb',
+//       borderTop: '1px solid #e5e7eb',
+//       padding: '32px 24px'
+//     }}>
+//       <div style={{
+//         maxWidth: '1152px',
+//         margin: '0 auto',
+//         display: 'flex',
+//         justifyContent: 'center'
+//       }}>
+//         <Logo />
+//       </div>
+//     </footer>
+//   );
+// };
+
+// // Main Login Page Component
+// const LoginSignupPage = () => {
+//   const [showPassword, setShowPassword] = useState(false);
+//   const [loading, setLoading] = useState(false);
+//   const [error, setError] = useState('');
+//   const [formData, setFormData] = useState({
+//     email: '',
+//     password: ''
+//   });
+//   const navigate = useNavigate();
+
+//   const handleInputChange = (e) => {
+//     setFormData({
+//       ...formData,
+//       [e.target.name]: e.target.value
+//     });
+//   };
+
+//   const handleSubmit = async (e) => {
+//     if (e && e.preventDefault) {
+//       e.preventDefault();
+//     }
+//     setLoading(true);
+//     setError('');
+    
+//     if (!formData.email || !formData.password) {
+//       setError('Please fill in all fields');
+//       setLoading(false);
+//       return;
+//     }
+    
+//     try {
+//       // Make API call to your Express backend
+//       const response = await fetch('http://localhost:3000/api/login', {
+//         method: 'POST',
+//         headers: {
+//           'Content-Type': 'application/json',
+//         },
+//         credentials: 'include', // required for cookies/session
+//         body: JSON.stringify({
+//           email: formData.email,
+//           password: formData.password
+//         })
+//       });
+      
+//       const data = await response.json();
+      
+//       if (response.ok && data.success) {
+//         console.log('Login successful:', data);
+        
+//         // Enhanced user data storage with more comprehensive information
+//         const userProfile = {
+//           // Core user information
+//           id: data.user._id || data.user.id,
+//           email: data.user.email,
+//           username: data.user.username,
+//           name: data.user.name || data.user.fullName,
+//           roles: data.user.roles || data.user.role,
+          
+//           // Profile information
+//           avatar: data.user.avatar || data.user.profilePicture,
+//           phone: data.user.phone || data.user.phoneNumber,
+//           location: data.user.location || data.user.address,
+//           bio: data.user.bio || data.user.description,
+          
+//           // Academic information (for students)
+//           studentId: data.user.studentId,
+//           course: data.user.course || data.user.program,
+//           yearLevel: data.user.yearLevel || data.user.year,
+//           department: data.user.department,
+          
+//           // Professional information (for faculty/staff)
+//           employeeId: data.user.employeeId,
+//           position: data.user.position || data.user.title,
+          
+//           // Account status and timestamps
+//           status: data.user.status || 'active',
+//           isVerified: data.user.isVerified || false,
+//           createdAt: data.user.createdAt,
+//           updatedAt: data.user.updatedAt,
+//           lastLogin: new Date().toISOString(),
+          
+//           // Additional metadata
+//           preferences: data.user.preferences || {},
+//           permissions: data.user.permissions || []
+//         };
+        
+//         // Save comprehensive user data to sessionStorage
+//         sessionStorage.setItem('isAuthenticated', 'true');
+//         sessionStorage.setItem('user', JSON.stringify(userProfile));
+//         sessionStorage.setItem('authToken', data.token || ''); // If using JWT tokens
+//         sessionStorage.setItem('loginTime', new Date().toISOString());
+        
+//         // Log what was saved for debugging
+//         console.log('✅ Saved to sessionStorage:', {
+//           isAuthenticated: sessionStorage.getItem('isAuthenticated'),
+//           user: JSON.parse(sessionStorage.getItem('user') || 'null'),
+//           hasToken: !!sessionStorage.getItem('authToken')
+//         });
+        
+//         // Success message with personalized greeting
+//         const welcomeName = userProfile.name || userProfile.username || 'User';
+//         alert(`Login successful! Welcome back, ${welcomeName}!`);
+        
+//         // Role-based navigation
+//         switch(userProfile.roles) {
+//           case 'student':
+//             navigate('/dashboard');
+//             break;
+//           case 'teacher':
+//           case 'faculty':
+//             navigate('/teacher-dashboard');
+//             break;
+//           case 'admin':
+//             navigate('/admin-dashboard');
+//             break;
+//           default:
+//             navigate('/dashboard');
+//         }
+        
+//         // Reset form
+//         setFormData({ email: '', password: '' });
+        
+//       } else {
+//         console.error('Login failed:', data.error);
+//         setError(data.error || 'Login failed. Please try again.');
+//       }
+      
+//     } catch (error) {
+//       console.error('Login error:', error);
+//       setError('Network error. Please check your connection and try again.');
+//     } finally {
+//       setLoading(false);
+//     }
+//   };
+
+//   // Enhanced helper function to get user data (export this for use in other components)
+//   const getUserFromSession = () => {
+//     try {
+//       const userData = JSON.parse(sessionStorage.getItem('user') || 'null');
+//       const isAuthenticated = sessionStorage.getItem('isAuthenticated') === 'true';
+//       const authToken = sessionStorage.getItem('authToken');
+//       const loginTime = sessionStorage.getItem('loginTime');
+      
+//       return {
+//         user: userData,
+//         isAuthenticated: isAuthenticated && userData !== null,
+//         token: authToken,
+//         loginTime: loginTime,
+//         // Check if session is still valid (optional: implement session timeout)
+//         isSessionValid: () => {
+//           if (!loginTime) return false;
+//           const sessionAge = Date.now() - new Date(loginTime).getTime();
+//           const maxAge = 24 * 60 * 60 * 1000; // 24 hours
+//           return sessionAge < maxAge;
+//         }
+//       };
+//     } catch (error) {
+//       console.error('Error reading from sessionStorage:', error);
+//       return {
+//         user: null,
+//         isAuthenticated: false,
+//         token: null,
+//         loginTime: null,
+//         isSessionValid: () => false
+//       };
+//     }
+//   };
+
+//   // Logout function (can be used in other components)
+//   const logout = () => {
+//     sessionStorage.removeItem('isAuthenticated');
+//     sessionStorage.removeItem('user');
+//     sessionStorage.removeItem('authToken');
+//     sessionStorage.removeItem('loginTime');
+//     navigate('/login');
+//   };
+
+//   // Component styles (same as before)
+//   const inputStyle = {
+//     width: '100%',
+//     paddingLeft: '40px',
+//     paddingRight: '12px',
+//     paddingTop: '12px',
+//     paddingBottom: '12px',
+//     border: '1px solid #d1d5db',
+//     borderRadius: '12px',
+//     fontSize: '16px',
+//     outline: 'none',
+//     transition: 'all 0.2s',
+//     backgroundColor: 'rgba(255, 255, 255, 0.5)',
+//     boxSizing: 'border-box'
+//   };
+
+//   const inputFocusStyle = {
+//     ...inputStyle,
+//     borderColor: '#3b82f6',
+//     boxShadow: '0 0 0 2px rgba(59, 130, 246, 0.1)'
+//   };
+
+//   const buttonStyle = {
+//     width: '100%',
+//     display: 'flex',
+//     alignItems: 'center',
+//     justifyContent: 'center',
+//     padding: '12px 16px',
+//     border: 'none',
+//     fontSize: '16px',
+//     fontWeight: '500',
+//     borderRadius: '12px',
+//     color: 'white',
+//     background: loading ? '#9ca3af' : 'linear-gradient(to right, #2563eb, #9333ea)',
+//     cursor: loading ? 'not-allowed' : 'pointer',
+//     transition: 'all 0.2s',
+//     boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
+//     transform: 'translateY(0)'
+//   };
+
+//   const buttonHoverStyle = {
+//     ...buttonStyle,
+//     background: 'linear-gradient(to right, #1d4ed8, #7c3aed)',
+//     boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
+//     transform: 'translateY(-2px)'
+//   };
+
+//   return (
+//     <>
+//       {/* CSS Animation for spinner */}
+//       <style>
+//         {`
+//           @keyframes spin {
+//             0% { transform: rotate(0deg); }
+//             100% { transform: rotate(360deg); }
+//           }
+//           .spinner {
+//             width: 20px;
+//             height: 20px;
+//             border: 2px solid transparent;
+//             border-top: 2px solid white;
+//             border-radius: 50%;
+//             animation: spin 1s linear infinite;
+//             margin-right: 8px;
+//           }
+//         `}
+//       </style>
+      
+//       <div style={{
+//         minHeight: '100vh',
+//         background: 'linear-gradient(135deg, #dbeafe, #ffffff, #faf5ff)',
+//         display: 'flex',
+//         flexDirection: 'column',
+//         fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif'
+//       }}>
+//         {/* Header */}
+//         <header style={{ padding: '24px' }}>
+//           <Logo />
+//         </header>
+
+//         {/* Main Content */}
+//         <div style={{
+//           flex: 1,
+//           display: 'flex',
+//           alignItems: 'center',
+//           justifyContent: 'center',
+//           padding: '24px',
+//           paddingTop: '0.1rem',
+//           paddingBottom: '48px'
+//         }}>
+//           <div style={{ width: '100%', maxWidth: '448px' }}>
+//             {/* Floating Card */}
+//             <div style={{
+//               backgroundColor: 'rgba(255, 255, 255, 0.8)',
+//               backdropFilter: 'blur(16px)',
+//               borderRadius: '24px',
+//               boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
+//               border: '1px solid rgba(255, 255, 255, 0.2)',
+//               padding: '32px'
+//             }}>
+//               <div style={{ textAlign: 'center', marginBottom: '32px' }}>
+//                 <h2 style={{
+//                   fontSize: '30px',
+//                   fontWeight: 'bold',
+//                   color: '#111827',
+//                   marginBottom: '8px',
+//                   margin: 0
+//                 }}>
+//                   Welcome Back
+//                 </h2>
+//                 <p style={{
+//                   color: '#6b7280',
+//                   margin: 0,
+//                   marginTop: '8px',
+//                   lineHeight: '1.5'
+//                 }}>
+//                   Sign in to continue to your account
+//                 </p>
+//               </div>
+
+//               {/* Login Form */}
+//               <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+//                 {/* Error Message */}
+//                 {error && (
+//                   <div style={{
+//                     backgroundColor: '#fef2f2',
+//                     border: '1px solid #fecaca',
+//                     borderRadius: '12px',
+//                     padding: '16px'
+//                   }}>
+//                     <p style={{
+//                       color: '#991b1b',
+//                       fontSize: '14px',
+//                       margin: 0
+//                     }}>{error}</p>
+//                   </div>
+//                 )}
+
+//                 {/* Email Field */}
+//                 <div style={{ position: 'relative' }}>
+//                   <div style={{
+//                     position: 'absolute',
+//                     left: '12px',
+//                     top: '50%',
+//                     transform: 'translateY(-50%)',
+//                     pointerEvents: 'none'
+//                   }}>
+//                     <Mail size={20} color="#9ca3af" />
+//                   </div>
+//                   <input
+//                     type="email"
+//                     name="email"
+//                     value={formData.email}
+//                     onChange={handleInputChange}
+//                     style={inputStyle}
+//                     placeholder="Email Address"
+//                     required
+//                     disabled={loading}
+//                     onFocus={(e) => Object.assign(e.target.style, inputFocusStyle)}
+//                     onBlur={(e) => Object.assign(e.target.style, inputStyle)}
+//                   />
+//                 </div>
+
+//                 {/* Password Field */}
+//                 <div style={{ position: 'relative' }}>
+//                   <div style={{
+//                     position: 'absolute',
+//                     left: '12px',
+//                     top: '50%',
+//                     transform: 'translateY(-50%)',
+//                     pointerEvents: 'none'
+//                   }}>
+//                     <Lock size={20} color="#9ca3af" />
+//                   </div>
+//                   <input
+//                     type={showPassword ? "text" : "password"}
+//                     name="password"
+//                     value={formData.password}
+//                     onChange={handleInputChange}
+//                     style={{...inputStyle, paddingRight: '48px'}}
+//                     placeholder="Password"
+//                     required
+//                     disabled={loading}
+//                     onFocus={(e) => Object.assign(e.target.style, {...inputFocusStyle, paddingRight: '48px'})}
+//                     onBlur={(e) => Object.assign(e.target.style, {...inputStyle, paddingRight: '48px'})}
+//                   />
+//                   <button
+//                     type="button"
+//                     onClick={() => setShowPassword(!showPassword)}
+//                     style={{
+//                       position: 'absolute',
+//                       right: '12px',
+//                       top: '50%',
+//                       transform: 'translateY(-50%)',
+//                       background: 'none',
+//                       border: 'none',
+//                       cursor: 'pointer',
+//                       padding: '4px'
+//                     }}
+//                     disabled={loading}
+//                   >
+//                     {showPassword ? (
+//                       <EyeOff size={20} color="#9ca3af" />
+//                     ) : (
+//                       <Eye size={20} color="#9ca3af" />
+//                     )}
+//                   </button>
+//                 </div>
+
+//                 {/* Remember Me / Forgot Password */}
+//                 <div style={{
+//                   display: 'flex',
+//                   alignItems: 'center',
+//                   justifyContent: 'space-between'
+//                 }}>
+//                   <label style={{
+//                     display: 'flex',
+//                     alignItems: 'center',
+//                     cursor: loading ? 'not-allowed' : 'pointer'
+//                   }}>
+//                     <input 
+//                       type="checkbox" 
+//                       style={{
+//                         marginRight: '8px',
+//                         accentColor: '#2563eb'
+//                       }}
+//                       disabled={loading}
+//                     />
+//                     <span style={{
+//                       fontSize: '14px',
+//                       color: '#6b7280'
+//                     }}>Remember me</span>
+//                   </label>
+//                   <a href="#" style={{
+//                     fontSize: '14px',
+//                     color: '#2563eb',
+//                     textDecoration: 'none',
+//                     transition: 'color 0.2s'
+//                   }}
+//                   onMouseEnter={(e) => e.target.style.color = '#1d4ed8'}
+//                   onMouseLeave={(e) => e.target.style.color = '#2563eb'}>
+//                     Forgot password?
+//                   </a>
+//                 </div>
+
+//                 {/* Submit Button */}
+//                 <button
+//                   type="button"
+//                   onClick={handleSubmit}
+//                   disabled={loading}
+//                   style={buttonStyle}
+//                   onMouseEnter={(e) => !loading && Object.assign(e.target.style, buttonHoverStyle)}
+//                   onMouseLeave={(e) => !loading && Object.assign(e.target.style, buttonStyle)}
+//                 >
+//                   {loading ? (
+//                     <>
+//                       <div className="spinner"></div>
+//                       Signing In...
+//                     </>
+//                   ) : (
+//                     <>
+//                       Sign In
+//                       <ArrowRight size={20} style={{ marginLeft: '8px' }} />
+//                     </>
+//                   )}
+//                 </button>
+//               </div>
+//             </div>
+//           </div>
+//         </div>
+                  
+//         {/* Footer */}
+//         <Footer />
+//       </div>
+//     </>
+//   );
+// };
+
+// // Export utility functions for use in other components
+// export const authUtils = {
+//   getUserFromSession: () => {
+//     try {
+//       const userData = JSON.parse(sessionStorage.getItem('user') || 'null');
+//       const isAuthenticated = sessionStorage.getItem('isAuthenticated') === 'true';
+//       const authToken = sessionStorage.getItem('authToken');
+//       const loginTime = sessionStorage.getItem('loginTime');
+      
+//       return {
+//         user: userData,
+//         isAuthenticated: isAuthenticated && userData !== null,
+//         token: authToken,
+//         loginTime: loginTime,
+//         isSessionValid: () => {
+//           if (!loginTime) return false;
+//           const sessionAge = Date.now() - new Date(loginTime).getTime();
+//           const maxAge = 24 * 60 * 60 * 1000; // 24 hours
+//           return sessionAge < maxAge;
+//         }
+//       };
+//     } catch (error) {
+//       console.error('Error reading from sessionStorage:', error);
+//       return {
+//         user: null,
+//         isAuthenticated: false,
+//         token: null,
+//         loginTime: null,
+//         isSessionValid: () => false
+//       };
+//     }
+//   },
+  
+//   logout: (navigate) => {
+//     sessionStorage.removeItem('isAuthenticated');
+//     sessionStorage.removeItem('user');
+//     sessionStorage.removeItem('authToken');
+//     sessionStorage.removeItem('loginTime');
+//     if (navigate) navigate('/login');
+//   }
+// };
+
+// export default LoginSignupPage;
+import React, { useState, useEffect } from 'react';
+import { Eye, EyeOff, Mail, Lock, ArrowRight, RefreshCw } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 // Logo Component
 const Logo = () => {
   return (
@@ -1653,11 +2207,43 @@ const LoginSignupPage = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
+  const [sessionInfo, setSessionInfo] = useState(null);
   const [formData, setFormData] = useState({
     email: '',
     password: ''
   });
-  const navigate = useNavigate();
+
+  // Check for existing authentication on component mount
+  useEffect(() => {
+    checkExistingAuth();
+  }, []);
+
+  const checkExistingAuth = async () => {
+    try {
+      const response = await fetch('http://localhost:3000/api/check-auth', {
+        method: 'GET',
+        credentials: 'include'
+      });
+      
+      const data = await response.json();
+      
+      if (data.authenticated && data.user) {
+        console.log('✅ Found existing authentication:', data.user);
+        
+        // Save to memory state (since we can't use sessionStorage in artifacts)
+        setSessionInfo({
+          user: data.user,
+          sessionInfo: data.sessionInfo,
+          isAuthenticated: true
+        });
+        
+        setSuccess(`Welcome back, ${data.user.name || data.user.username}! Your session is still active.`);
+      }
+    } catch (error) {
+      console.log('ℹ️ No existing authentication found:', error.message);
+    }
+  };
 
   const handleInputChange = (e) => {
     setFormData({
@@ -1665,13 +2251,14 @@ const LoginSignupPage = () => {
       [e.target.name]: e.target.value
     });
   };
-
+  const navigate = useNavigate();
   const handleSubmit = async (e) => {
     if (e && e.preventDefault) {
       e.preventDefault();
     }
     setLoading(true);
     setError('');
+    setSuccess('');
     
     if (!formData.email || !formData.password) {
       setError('Please fill in all fields');
@@ -1698,79 +2285,58 @@ const LoginSignupPage = () => {
       if (response.ok && data.success) {
         console.log('Login successful:', data);
         
-        // Enhanced user data storage with more comprehensive information
-        const userProfile = {
-          // Core user information
-          id: data.user._id || data.user.id,
-          email: data.user.email,
-          username: data.user.username,
-          name: data.user.name || data.user.fullName,
-          roles: data.user.roles || data.user.role,
-          
-          // Profile information
-          avatar: data.user.avatar || data.user.profilePicture,
-          phone: data.user.phone || data.user.phoneNumber,
-          location: data.user.location || data.user.address,
-          bio: data.user.bio || data.user.description,
-          
-          // Academic information (for students)
-          studentId: data.user.studentId,
-          course: data.user.course || data.user.program,
-          yearLevel: data.user.yearLevel || data.user.year,
-          department: data.user.department,
-          
-          // Professional information (for faculty/staff)
-          employeeId: data.user.employeeId,
-          position: data.user.position || data.user.title,
-          
-          // Account status and timestamps
-          status: data.user.status || 'active',
-          isVerified: data.user.isVerified || false,
-          createdAt: data.user.createdAt,
-          updatedAt: data.user.updatedAt,
-          lastLogin: new Date().toISOString(),
-          
-          // Additional metadata
-          preferences: data.user.preferences || {},
-          permissions: data.user.permissions || []
+        // Store user data in component state (simulating sessionStorage)
+        const sessionData = {
+          user: data.user,
+          name: data.username,
+          sessionInfo: data.sessionInfo,
+          isAuthenticated: true,
+          loginTime: new Date().toISOString()
         };
         
-        // Save comprehensive user data to sessionStorage
-        sessionStorage.setItem('isAuthenticated', 'true');
-        sessionStorage.setItem('user', JSON.stringify(userProfile));
-        sessionStorage.setItem('authToken', data.token || ''); // If using JWT tokens
-        sessionStorage.setItem('loginTime', new Date().toISOString());
+        setSessionInfo(sessionData);
         
-        // Log what was saved for debugging
-        console.log('✅ Saved to sessionStorage:', {
-          isAuthenticated: sessionStorage.getItem('isAuthenticated'),
-          user: JSON.parse(sessionStorage.getItem('user') || 'null'),
-          hasToken: !!sessionStorage.getItem('authToken')
-        });
+        // Success message with session info
+        let message = `Login successful! Welcome back, ${data.user.name || data.user.username}!`;
         
-        // Success message with personalized greeting
-        const welcomeName = userProfile.name || userProfile.username || 'User';
-        alert(`Login successful! Welcome back, ${welcomeName}!`);
-        
-        // Role-based navigation
-        switch(userProfile.roles) {
-          case 'student':
-            navigate('/dashboard');
-            break;
-          case 'teacher':
-          case 'faculty':
-            navigate('/teacher-dashboard');
-            break;
-          case 'admin':
-            navigate('/admin-dashboard');
-            break;
-          default:
-            navigate('/dashboard');
+        if (data.sessionInfo?.isExistingSession) {
+          message += ` Your previous session from ${new Date(data.sessionInfo.createdAt).toLocaleString()} has been restored.`;
+        } else {
+          message += ` New session created.`;
         }
+        
+        setSuccess(message);
         
         // Reset form
         setFormData({ email: '', password: '' });
         
+        // In a real app, you would navigate here
+        console.log('✅ Ready to navigate based on role:', data.user.roles);
+        const response = await fetch('http://localhost:3000/api/register', {
+         method: 'POST',
+  headers: {
+    'Content-Type': 'application/json'
+  },
+  credentials: 'include',
+  body: JSON.stringify({
+    account_id: sessionData.account_id,
+    student_id: sessionData.student_id,
+    name: sessionData.name,
+    username: sessionData.username,
+    email: formData.email,
+    roles: sessionData.roles,
+    password: formData.password // or a random strong one if not from user
+  })
+      });
+                // ✅ Save to sessionStorage
+          sessionStorage.setItem('isAuthenticated', 'true');
+          sessionStorage.setItem('user', JSON.stringify(data.user));
+
+          // Update state
+          setSessionInfo(sessionData);
+          setSuccess(`Welcome back, ${data.user.name || data.user.username}!`);
+
+          navigate('/dashboard');
       } else {
         console.error('Login failed:', data.error);
         setError(data.error || 'Login failed. Please try again.');
@@ -1778,239 +2344,248 @@ const LoginSignupPage = () => {
       
     } catch (error) {
       console.error('Login error:', error);
-      setError('Network error. Please check your connection and try again.');
+      setError('Connection error. Please check if the server is running on http://localhost:3000');
     } finally {
       setLoading(false);
     }
   };
 
-  // Enhanced helper function to get user data (export this for use in other components)
-  const getUserFromSession = () => {
+  const handleLogout = async () => {
     try {
-      const userData = JSON.parse(sessionStorage.getItem('user') || 'null');
-      const isAuthenticated = sessionStorage.getItem('isAuthenticated') === 'true';
-      const authToken = sessionStorage.getItem('authToken');
-      const loginTime = sessionStorage.getItem('loginTime');
+      const response = await fetch('http://localhost:3000/api/logout', {
+        method: 'POST',
+        credentials: 'include'
+      });
       
-      return {
-        user: userData,
-        isAuthenticated: isAuthenticated && userData !== null,
-        token: authToken,
-        loginTime: loginTime,
-        // Check if session is still valid (optional: implement session timeout)
-        isSessionValid: () => {
-          if (!loginTime) return false;
-          const sessionAge = Date.now() - new Date(loginTime).getTime();
-          const maxAge = 24 * 60 * 60 * 1000; // 24 hours
-          return sessionAge < maxAge;
-        }
-      };
+      if (response.ok) {
+        setSessionInfo(null);
+        setSuccess('Logged out successfully');
+        setFormData({ email: '', password: '' });
+      }
     } catch (error) {
-      console.error('Error reading from sessionStorage:', error);
-      return {
-        user: null,
-        isAuthenticated: false,
-        token: null,
-        loginTime: null,
-        isSessionValid: () => false
-      };
+      console.error('Logout error:', error);
+      setError('Error during logout');
     }
   };
 
-  // Logout function (can be used in other components)
-  const logout = () => {
-    sessionStorage.removeItem('isAuthenticated');
-    sessionStorage.removeItem('user');
-    sessionStorage.removeItem('authToken');
-    sessionStorage.removeItem('loginTime');
-    navigate('/login');
-  };
-
-  // Component styles (same as before)
-  const inputStyle = {
-    width: '100%',
-    paddingLeft: '40px',
-    paddingRight: '12px',
-    paddingTop: '12px',
-    paddingBottom: '12px',
-    border: '1px solid #d1d5db',
-    borderRadius: '12px',
-    fontSize: '16px',
-    outline: 'none',
-    transition: 'all 0.2s',
-    backgroundColor: 'rgba(255, 255, 255, 0.5)',
-    boxSizing: 'border-box'
-  };
-
-  const inputFocusStyle = {
-    ...inputStyle,
-    borderColor: '#3b82f6',
-    boxShadow: '0 0 0 2px rgba(59, 130, 246, 0.1)'
-  };
-
-  const buttonStyle = {
-    width: '100%',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: '12px 16px',
-    border: 'none',
-    fontSize: '16px',
-    fontWeight: '500',
-    borderRadius: '12px',
-    color: 'white',
-    background: loading ? '#9ca3af' : 'linear-gradient(to right, #2563eb, #9333ea)',
-    cursor: loading ? 'not-allowed' : 'pointer',
-    transition: 'all 0.2s',
-    boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
-    transform: 'translateY(0)'
-  };
-
-  const buttonHoverStyle = {
-    ...buttonStyle,
-    background: 'linear-gradient(to right, #1d4ed8, #7c3aed)',
-    boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
-    transform: 'translateY(-2px)'
-  };
-
   return (
-    <>
-      {/* CSS Animation for spinner */}
-      <style>
-        {`
-          @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-          }
-          .spinner {
-            width: 20px;
-            height: 20px;
-            border: 2px solid transparent;
-            border-top: 2px solid white;
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-            margin-right: 8px;
-          }
-        `}
-      </style>
-      
+    <div style={{
+      minHeight: '100vh',
+      display: 'flex',
+      flexDirection: 'column',
+      backgroundColor: '#f9fafb'
+    }}>
+      {/* Header */}
       <div style={{
-        minHeight: '100vh',
-        background: 'linear-gradient(135deg, #dbeafe, #ffffff, #faf5ff)',
-        display: 'flex',
-        flexDirection: 'column',
-        fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif'
+        backgroundColor: 'white',
+        borderBottom: '1px solid #e5e7eb',
+        padding: '16px 24px'
       }}>
-        {/* Header */}
-        <header style={{ padding: '24px' }}>
-          <Logo />
-        </header>
-
-        {/* Main Content */}
         <div style={{
-          flex: 1,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          padding: '24px',
-          paddingTop: '0.1rem',
-          paddingBottom: '48px'
+          maxWidth: '1152px',
+          margin: '0 auto'
         }}>
-          <div style={{ width: '100%', maxWidth: '448px' }}>
-            {/* Floating Card */}
-            <div style={{
-              backgroundColor: 'rgba(255, 255, 255, 0.8)',
-              backdropFilter: 'blur(16px)',
-              borderRadius: '24px',
-              boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
-              border: '1px solid rgba(255, 255, 255, 0.2)',
-              padding: '32px'
+          <Logo />
+        </div>
+      </div>
+
+      {/* Main Content */}
+      <div style={{
+        flex: 1,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: '48px 24px'
+      }}>
+        <div style={{
+          backgroundColor: 'white',
+          padding: '48px',
+          borderRadius: '12px',
+          boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1)',
+          width: '100%',
+          maxWidth: '400px'
+        }}>
+          <div style={{ textAlign: 'center', marginBottom: '32px' }}>
+            <h2 style={{
+              fontSize: '32px',
+              fontWeight: 'bold',
+              color: '#111827',
+              margin: '0 0 8px 0'
             }}>
-              <div style={{ textAlign: 'center', marginBottom: '32px' }}>
-                <h2 style={{
-                  fontSize: '30px',
-                  fontWeight: 'bold',
-                  color: '#111827',
-                  marginBottom: '8px',
-                  margin: 0
-                }}>
-                  Welcome Back
-                </h2>
-                <p style={{
-                  color: '#6b7280',
-                  margin: 0,
-                  marginTop: '8px',
-                  lineHeight: '1.5'
-                }}>
-                  Sign in to continue to your account
+              {sessionInfo ? 'Dashboard' : 'Welcome Back'}
+            </h2>
+            <p style={{
+              color: '#6b7280',
+              margin: 0
+            }}>
+              {sessionInfo ? 'You are successfully logged in' : 'Sign in to your 8ConEdge account'}
+            </p>
+          </div>
+
+          {/* Session Info Display */}
+          {sessionInfo && (
+            <div style={{
+              backgroundColor: '#f0f9ff',
+              border: '1px solid #0ea5e9',
+              borderRadius: '8px',
+              padding: '16px',
+              marginBottom: '24px'
+            }}>
+              <h3 style={{
+                fontSize: '16px',
+                fontWeight: '600',
+                color: '#0c4a6e',
+                margin: '0 0 8px 0'
+              }}>
+                Session Active
+              </h3>
+              <div style={{ fontSize: '14px', color: '#075985' }}>
+                <p style={{ margin: '4px 0' }}>
+                  <strong>User:</strong> {sessionInfo.user.name || sessionInfo.user.username}
+                </p>
+                <p style={{ margin: '4px 0' }}>
+                  <strong>Email:</strong> {sessionInfo.user.email}
+                </p>
+                <p style={{ margin: '4px 0' }}>
+                  <strong>Role:</strong> {sessionInfo.user.roles?.[0] || 'User'}
+                </p>
+                <p style={{ margin: '4px 0' }}>
+                  <strong>Login Time:</strong> {new Date(sessionInfo.loginTime).toLocaleString()}
                 </p>
               </div>
+              <button
+                onClick={handleLogout}
+                style={{
+                  marginTop: '12px',
+                  backgroundColor: '#dc2626',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '6px',
+                  padding: '8px 16px',
+                  fontSize: '14px',
+                  cursor: 'pointer'
+                }}
+              >
+                Logout
+              </button>
+            </div>
+          )}
 
-              {/* Login Form */}
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-                {/* Error Message */}
-                {error && (
-                  <div style={{
-                    backgroundColor: '#fef2f2',
-                    border: '1px solid #fecaca',
-                    borderRadius: '12px',
-                    padding: '16px'
-                  }}>
-                    <p style={{
-                      color: '#991b1b',
-                      fontSize: '14px',
-                      margin: 0
-                    }}>{error}</p>
-                  </div>
-                )}
+          {/* Error Message */}
+          {error && (
+            <div style={{
+              backgroundColor: '#fee2e2',
+              border: '1px solid #fca5a5',
+              color: '#dc2626',
+              padding: '12px',
+              borderRadius: '8px',
+              marginBottom: '16px',
+              fontSize: '14px'
+            }}>
+              {error}
+            </div>
+          )}
 
-                {/* Email Field */}
+          {/* Success Message */}
+          {success && (
+            <div style={{
+              backgroundColor: '#d1fae5',
+              border: '1px solid #86efac',
+              color: '#059669',
+              padding: '12px',
+              borderRadius: '8px',
+              marginBottom: '16px',
+              fontSize: '14px'
+            }}>
+              {success}
+            </div>
+          )}
+
+          {/* Login Form - Only show if not logged in */}
+          {!sessionInfo && (
+            <div>
+              {/* Email Input */}
+              <div style={{ marginBottom: '16px' }}>
+                <label style={{
+                  display: 'block',
+                  fontSize: '14px',
+                  fontWeight: '500',
+                  color: '#374151',
+                  marginBottom: '8px'
+                }}>
+                  Email
+                </label>
                 <div style={{ position: 'relative' }}>
-                  <div style={{
+                  <Mail style={{
                     position: 'absolute',
                     left: '12px',
                     top: '50%',
                     transform: 'translateY(-50%)',
-                    pointerEvents: 'none'
-                  }}>
-                    <Mail size={20} color="#9ca3af" />
-                  </div>
+                    width: '20px',
+                    height: '20px',
+                    color: '#9ca3af'
+                  }} />
                   <input
                     type="email"
                     name="email"
                     value={formData.email}
                     onChange={handleInputChange}
-                    style={inputStyle}
-                    placeholder="Email Address"
-                    required
-                    disabled={loading}
-                    onFocus={(e) => Object.assign(e.target.style, inputFocusStyle)}
-                    onBlur={(e) => Object.assign(e.target.style, inputStyle)}
+                    placeholder="Enter your email"
+                    style={{
+                      width: '100%',
+                      padding: '12px 12px 12px 44px',
+                      border: '1px solid #d1d5db',
+                      borderRadius: '8px',
+                      fontSize: '16px',
+                      outline: 'none',
+                      transition: 'border-color 0.2s',
+                      boxSizing: 'border-box'
+                    }}
+                    onFocus={(e) => e.target.style.borderColor = '#3b82f6'}
+                    onBlur={(e) => e.target.style.borderColor = '#d1d5db'}
                   />
                 </div>
+              </div>
 
-                {/* Password Field */}
+              {/* Password Input */}
+              <div style={{ marginBottom: '24px' }}>
+                <label style={{
+                  display: 'block',
+                  fontSize: '14px',
+                  fontWeight: '500',
+                  color: '#374151',
+                  marginBottom: '8px'
+                }}>
+                  Password
+                </label>
                 <div style={{ position: 'relative' }}>
-                  <div style={{
+                  <Lock style={{
                     position: 'absolute',
                     left: '12px',
                     top: '50%',
                     transform: 'translateY(-50%)',
-                    pointerEvents: 'none'
-                  }}>
-                    <Lock size={20} color="#9ca3af" />
-                  </div>
+                    width: '20px',
+                    height: '20px',
+                    color: '#9ca3af'
+                  }} />
                   <input
-                    type={showPassword ? "text" : "password"}
+                    type={showPassword ? 'text' : 'password'}
                     name="password"
                     value={formData.password}
                     onChange={handleInputChange}
-                    style={{...inputStyle, paddingRight: '48px'}}
-                    placeholder="Password"
-                    required
-                    disabled={loading}
-                    onFocus={(e) => Object.assign(e.target.style, {...inputFocusStyle, paddingRight: '48px'})}
-                    onBlur={(e) => Object.assign(e.target.style, {...inputStyle, paddingRight: '48px'})}
+                    placeholder="Enter your password"
+                    style={{
+                      width: '100%',
+                      padding: '12px 44px 12px 44px',
+                      border: '1px solid #d1d5db',
+                      borderRadius: '8px',
+                      fontSize: '16px',
+                      outline: 'none',
+                      transition: 'border-color 0.2s',
+                      boxSizing: 'border-box'
+                    }}
+                    onFocus={(e) => e.target.style.borderColor = '#3b82f6'}
+                    onBlur={(e) => e.target.style.borderColor = '#d1d5db'}
                   />
                   <button
                     type="button"
@@ -2023,127 +2598,86 @@ const LoginSignupPage = () => {
                       background: 'none',
                       border: 'none',
                       cursor: 'pointer',
+                      color: '#9ca3af',
                       padding: '4px'
                     }}
-                    disabled={loading}
                   >
-                    {showPassword ? (
-                      <EyeOff size={20} color="#9ca3af" />
-                    ) : (
-                      <Eye size={20} color="#9ca3af" />
-                    )}
+                    {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
                   </button>
                 </div>
+              </div>
 
-                {/* Remember Me / Forgot Password */}
-                <div style={{
+              {/* Login Button */}
+              <button
+                type="submit"
+                disabled={loading}
+                onClick={handleSubmit}
+                style={{
+                  width: '100%',
+                  backgroundColor: loading ? '#9ca3af' : '#3b82f6',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '8px',
+                  padding: '12px',
+                  fontSize: '16px',
+                  fontWeight: '500',
+                  cursor: loading ? 'not-allowed' : 'pointer',
                   display: 'flex',
                   alignItems: 'center',
-                  justifyContent: 'space-between'
-                }}>
-                  <label style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    cursor: loading ? 'not-allowed' : 'pointer'
-                  }}>
-                    <input 
-                      type="checkbox" 
-                      style={{
-                        marginRight: '8px',
-                        accentColor: '#2563eb'
-                      }}
-                      disabled={loading}
-                    />
-                    <span style={{
-                      fontSize: '14px',
-                      color: '#6b7280'
-                    }}>Remember me</span>
-                  </label>
-                  <a href="#" style={{
-                    fontSize: '14px',
-                    color: '#2563eb',
-                    textDecoration: 'none',
-                    transition: 'color 0.2s'
-                  }}
-                  onMouseEnter={(e) => e.target.style.color = '#1d4ed8'}
-                  onMouseLeave={(e) => e.target.style.color = '#2563eb'}>
-                    Forgot password?
-                  </a>
-                </div>
-
-                {/* Submit Button */}
-                <button
-                  type="button"
-                  onClick={handleSubmit}
-                  disabled={loading}
-                  style={buttonStyle}
-                  onMouseEnter={(e) => !loading && Object.assign(e.target.style, buttonHoverStyle)}
-                  onMouseLeave={(e) => !loading && Object.assign(e.target.style, buttonStyle)}
-                >
-                  {loading ? (
-                    <>
-                      <div className="spinner"></div>
-                      Signing In...
-                    </>
-                  ) : (
-                    <>
-                      Sign In
-                      <ArrowRight size={20} style={{ marginLeft: '8px' }} />
-                    </>
-                  )}
-                </button>
-              </div>
+                  justifyContent: 'center',
+                  gap: '8px',
+                  transition: 'background-color 0.2s'
+                }}
+                onMouseOver={(e) => {
+                  if (!loading) e.target.style.backgroundColor = '#2563eb';
+                }}
+                onMouseOut={(e) => {
+                  if (!loading) e.target.style.backgroundColor = '#3b82f6';
+                }}
+              >
+                {loading ? (
+                  <>
+                    <RefreshCw size={20} style={{ animation: 'spin 1s linear infinite' }} />
+                    Signing In...
+                  </>
+                ) : (
+                  <>
+                    Sign In
+                    <ArrowRight size={20} />
+                  </>
+                )}
+              </button>
             </div>
+          )}
+
+          {/* Additional Links */}
+          <div style={{
+            marginTop: '24px',
+            textAlign: 'center',
+            fontSize: '14px',
+            color: '#6b7280'
+          }}>
+            <a href="#" style={{ color: '#3b82f6', textDecoration: 'none' }}>
+              Forgot your password?
+            </a>
           </div>
         </div>
-                  
-        {/* Footer */}
-        <Footer />
       </div>
-    </>
-  );
-};
 
-// Export utility functions for use in other components
-export const authUtils = {
-  getUserFromSession: () => {
-    try {
-      const userData = JSON.parse(sessionStorage.getItem('user') || 'null');
-      const isAuthenticated = sessionStorage.getItem('isAuthenticated') === 'true';
-      const authToken = sessionStorage.getItem('authToken');
-      const loginTime = sessionStorage.getItem('loginTime');
-      
-      return {
-        user: userData,
-        isAuthenticated: isAuthenticated && userData !== null,
-        token: authToken,
-        loginTime: loginTime,
-        isSessionValid: () => {
-          if (!loginTime) return false;
-          const sessionAge = Date.now() - new Date(loginTime).getTime();
-          const maxAge = 24 * 60 * 60 * 1000; // 24 hours
-          return sessionAge < maxAge;
-        }
-      };
-    } catch (error) {
-      console.error('Error reading from sessionStorage:', error);
-      return {
-        user: null,
-        isAuthenticated: false,
-        token: null,
-        loginTime: null,
-        isSessionValid: () => false
-      };
-    }
-  },
-  
-  logout: (navigate) => {
-    sessionStorage.removeItem('isAuthenticated');
-    sessionStorage.removeItem('user');
-    sessionStorage.removeItem('authToken');
-    sessionStorage.removeItem('loginTime');
-    if (navigate) navigate('/login');
-  }
+      {/* Footer */}
+      <Footer />
+
+      {/* CSS for spin animation */}
+      <style>
+        {`
+          @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+          }
+        `}
+      </style>
+    </div>
+  );
 };
 
 export default LoginSignupPage;

@@ -2081,28 +2081,28 @@ const WelcomeSection = () => {
  });
 
  useEffect(() => {
-   try {
-     const authStatus = sessionStorage.getItem('isAuthenticated');
-     const userData = JSON.parse(sessionStorage.getItem('user') || 'null');
-     const username = userData?.username;
-     const email = userData?.email;
-     
-     setSessionData({
-       isAuthenticated: authStatus === 'true',
-       user: userData || null,
-       username,
-       email,
-       loading: false
-     });
-   } catch (error) {
-     console.error('Error reading session data:', error);
-     setSessionData({
-       isAuthenticated: false,
-       user: null,
-       loading: false
-     });
-   }
- }, []);
+    try {
+    const authStatus = sessionStorage.getItem('isAuthenticated');
+    const userData = JSON.parse(sessionStorage.getItem('user') || 'null');
+
+    setSessionData({
+      isAuthenticated: authStatus === 'true',
+      user: userData,
+      username: userData?.name || userData?.username || null,
+      email: userData?.email || null,
+      loading: false
+    });
+  } catch (error) {
+    console.error('Error reading session data:', error);
+    setSessionData({
+      isAuthenticated: false,
+      user: null,
+      username: null,
+      email: null,
+      loading: false
+    });
+  }
+}, []);
 
  if (!dashboardSettings.showWelcomeCard) return null;
 
@@ -2126,7 +2126,7 @@ const WelcomeSection = () => {
            marginBottom: '8px',
            margin: 0
          }}>
-           Welcome back, {sessionData.username || 'Trader'}!
+           Welcome back, {sessionData.username|| 'Trader'}!
          </h2>
          <p style={{ color: '#bfdbfe', margin: '8px 0 0 0' }}>
            Your AI-powered trading companion is ready. Let's make confident decisions together.
