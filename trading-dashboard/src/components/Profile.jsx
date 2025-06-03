@@ -128,37 +128,30 @@ const ProfilePage = () => {
   };
 
   // Get user data from session storage (from login)
-  useEffect(() => {
-    const getUserFromSession = () => {
-      try {
-        // Simulate user data for demo purposes
-        const userData = {
-          id: '1',
-          name: 'John Doe',
-          username: 'johndoe',
-          email: 'john.doe@example.com',
-          phone: '+1 (555) 123-4567',
-          location: 'New York, NY',
-          avatar: '/api/placeholder/150/150',
-          roles: 'student',
-          studentId: 'STU2024001',
-          course: 'Computer Science',
-          yearLevel: '3rd Year',
-          status: 'Active',
-          createdAt: '2024-01-15T00:00:00Z'
-        };
-        
-        setUser(userData);
-        setEditedUser(userData);
-        setLoading(false);
-      } catch (error) {
-        console.error('Error reading user from session:', error);
-        setLoading(false);
-      }
-    };
+ const getUserFromSession = () => {
+  try {
+    const storedUser = sessionStorage.getItem('user');
+    const userData = storedUser ? JSON.parse(storedUser) : null;
 
-    getUserFromSession();
-  }, []);
+    if (!userData) {
+      console.warn('No user found in sessionStorage');
+      setLoading(false);
+      return;
+    }
+
+    setUser(userData);
+    setEditedUser(userData);
+  } catch (error) {
+    console.error('Error reading user from session:', error);
+  } finally {
+    setLoading(false);
+  }
+};
+
+useEffect(() => {
+  getUserFromSession();
+}, []);
+
 
   // Handle field changes during editing
   const handleFieldChange = (field, value) => {
@@ -798,7 +791,7 @@ const ProfilePage = () => {
                   <div className="profile-fields">
                     <ProfileField
                       label="Student ID"
-                      value={user.studentId}
+                      value={user.student_id}
                       isEditing={false}
                       icon={<User size={18} />}
                     />

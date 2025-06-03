@@ -10,6 +10,7 @@ import AdminPage from './AdminPage'
 import SettingsDemo from './components/settings'
 import SettingsWindow from './components/settings'
 import ProfilePage from './components/Profile'
+
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
     <AuthProvider>
