@@ -1670,7 +1670,7 @@ const ProfilePage = () => {
       {/* Header */}
       <div className="profile-header">
         <div className="profile-header-content">
-          <h1 className="profile-title">My Profile</h1>
+          <h1 className="profile-title">Profile Dashboard</h1>
           <div className="header-actions">
             <button
               onClick={navigateToDashboard}
