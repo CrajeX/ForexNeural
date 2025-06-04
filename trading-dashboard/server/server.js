@@ -1356,52 +1356,112 @@ mongoose.connect(process.env.MONGODB_URI || 'mongodb+srv://staff8conacademy:8Con
 // SCHEMA START   _____________________________________________________________________________________________________________________________________-
 // MongoDB User Schema
 const userSchema = new mongoose.Schema({
-    email: { type: String, required: true, unique: true },
-    password: { type: String, required: true },
-    username: { type: String, unique: true },
-    name: String,
-    roles: { type: String, enum: ['student', 'teacher', 'admin'], default: 'student' },
-    account_id: String,
-    student_id: String,
-    name: String,
-    username: String,
-    email: String,
-    roles: String,
-    authenticated: { type: Boolean, default: true },
-    loginTime: { type: Date, default: Date.now },
-    // Profile Information
-    avatar: String,
-    phone: String,
-    location: String,
-    bio: String,
-    
-    // Academic Information
-    studentId: { type: String, unique: true, sparse: true },
-    course: String,
-    yearLevel: String,
-    department: String,
-    
-    // Professional Information
-    employeeId: { type: String, unique: true, sparse: true },
-    position: String,
-    
-    // Account Information
-    status: { type: String, enum: ['active', 'inactive', 'suspended'], default: 'active' },
-    isVerified: { type: Boolean, default: false },
-    preferences: {
-        theme: { type: String, default: 'light' },
-        notifications: { type: Boolean, default: true },
-        language: { type: String, default: 'en' }
-    },
-    permissions: [String],
-    
-    // Timestamps
-    lastLogin: Date
+  account_id: { type: String, required: true },
+  student_id: { type: String, required: true, unique: true },
+  name: { type: String, required: true },
+  username: { type: String, required: true, unique: true },
+  email: { type: String, required: true, unique: true },
+  roles: { type: String, enum: ['student', 'teacher', 'admin'], default: 'student' },
+
+  // Authentication
+  authenticated: { type: Boolean, default: true },
+  loginTime: { type: Date, default: Date.now },
+
+  // Additional Student Info
+  address: String,
+  birth_place: String,
+  phone_no: String,
+  trading_level: { type: String, enum: ['Beginner', 'Intermediate', 'Advanced'], default: 'beginner' },
+  gender: { type: String, enum: ['male', 'female', 'other'] },
+  birth_date: Date,
+
+  // Optional System Info
+  status: { type: String, enum: ['active', 'inactive', 'suspended'], default: 'active' },
+  isVerified: { type: Boolean, default: false },
+  preferences: {
+    theme: { type: String, default: 'light' },
+    notifications: { type: Boolean, default: true },
+    language: { type: String, default: 'en' }
+  },
+  permissions: [String],
+  lastLogin: Date
 }, {
-    timestamps: true // Automatically adds createdAt and updatedAt
+  timestamps: true // createdAt and updatedAt
 });
 
 const User = mongoose.model('users', userSchema);
+
+const profileSchema = new mongoose.Schema({
+  account_id: {
+    type: Number,
+    required: true,
+    unique: true,
+    index: true
+  },
+  student_id: {
+    type: String,
+    required: true,
+    unique: true
+  },
+  avatar: {
+    type: String
+  },
+  name: {
+    type: String,
+    required: true
+  },
+  username: {
+    type: String,
+    required: true
+  },
+  email: {
+    type: String,
+    required: true
+  },
+  roles: {
+    type: String,
+    enum: ['student', 'teacher', 'admin'],
+    default: 'student'
+  },
+  address: {
+    type: String,
+    default: ''
+  },
+  birth_place: {
+    type: String,
+    default: ''
+  },
+  phone_no: {
+    type: String,
+    default: ''
+  },
+  trading_level: {
+    type: String,
+    enum: ['Beginner', 'Intermediate', 'Advanced'],
+    default: 'beginner'
+  },
+  gender: {
+    type: String,
+    enum: ['male', 'female', 'other'],
+    default: 'other'
+  },
+  birth_date: {
+    type: Date
+  },
+  authenticated: {
+    type: Boolean,
+    default: true
+  },
+  loginTime: {
+    type: Date,
+    default: Date.now
+  }
+}, {
+  timestamps: true // Adds createdAt and updatedAt fields automatically
+});
+
+const Profile = mongoose.model('profiles', profileSchema);
+
 
 // NEW: MongoDB Session Schema to store session data
 const sessionSchema = new mongoose.Schema({
@@ -1434,7 +1494,7 @@ const sessionSchema = new mongoose.Schema({
 // Index for automatic cleanup of expired sessions
 sessionSchema.index({ expiresAt: 1 }, { expireAfterSeconds: 0 });
 
-const SessionData = mongoose.model('SessionData', sessionSchema);
+const SessionData = mongoose.model('sessions', sessionSchema);
 
 // File upload configuration
 const storage = multer.diskStorage({
@@ -1741,7 +1801,7 @@ app.post('/api/login', async (req, res) => {
 
     // STEP 1: Get student info from MySQL
     const [studentRows] = await pool.execute(
-      "SELECT account_id, name, student_id FROM students WHERE email = ?",
+      "SELECT account_id, name, student_id, birth_place, birth_date, address, phone_no, learning_style, trading_level, age, gender FROM students WHERE email = ?",
       [trimmedEmail]
     );
 
@@ -1785,6 +1845,12 @@ app.post('/api/login', async (req, res) => {
       username: account.username,
       email: trimmedEmail,
       roles: account.roles,
+      address: student.address,
+      birth_place: student.birth_place,
+      phone_no: student.phone_no,
+      trading_level: student.trading_level,
+      gender: student.gender,
+      birth_date: student.birth_date,
       authenticated: true,
       loginTime: new Date().toISOString()
     };
@@ -1835,15 +1901,20 @@ app.post('/api/login', async (req, res) => {
 
     if (!mongoUserExists) {
       const mongoUser = new User({
-        account_id: account.account_id,
-        student_id: student.student_id,
-        name: student.name,
-        username: account.username,
-        email: trimmedEmail,
-        roles: account.roles,
-        authenticated: true,
-        loginTime: new Date(),
-        password: account.password // Optional: hash it here if needed
+       account_id: account.account_id,
+      student_id: student.student_id,
+      name: student.name,
+      username: account.username,
+      email: trimmedEmail,
+      roles: account.roles,
+      address: student.address,
+      birth_place: student.birth_place,
+      phone_no: student.phone_no,
+      trading_level: student.trading_level,
+      gender: student.gender,
+      birth_date: student.birth_date,
+      authenticated: true,
+      loginTime: new Date().toISOString()
       });
 
       await mongoUser.save();
@@ -2017,20 +2088,25 @@ app.post('/api/login-mongo', async (req, res) => {
 // Get User Profile Route (MongoDB-based)
 app.get('/api/user/profile', async (req, res) => {
     try {
-        // In a real app, you'd get userId from JWT token or session
-        const { userId } = req.query;
+        const { account_id } = req.query;
+
+        if (!account_id) {
+            return res.status(400).json({ success: false, error: 'Missing account_id' });
+        }
+
+        const user = await Profile.findOne({ account_id: Number(account_id) }).select('-password');
         
-        const user = await User.findById(userId).select('-password');
         if (!user) {
             return res.status(404).json({ success: false, error: 'User not found' });
         }
-        
+
         res.json({ success: true, user });
     } catch (error) {
         console.error('Get profile error:', error);
         res.status(500).json({ success: false, error: 'Server error' });
     }
 });
+
 
 // Update User Profile Route (MongoDB-based)
 app.put('/api/user/profile', async (req, res) => {
@@ -2194,7 +2270,335 @@ app.post('/api/register', async (req, res) => {
     res.status(500).json({ success: false, error: 'Server error' });
   }
 });
+// ====================
+// PROFILE API ROUTES
+// ====================
 
+// Get user profile by account_id
+app.get('/api/profile/:account_id', async (req, res) => {
+  try {
+    const { account_id } = req.params;
+    
+    console.log('🔍 Fetching profile for account_id:', account_id);
+    
+    let profile = await Profile.findOne({ account_id: parseInt(account_id) });
+    
+    
+    if (!profile) {
+  // If profile doesn't exist, create one from existing user data
+  console.log('📝 Profile not found, creating from user data...');
+
+  // Get student data using email
+  const [studentRows] = await pool.execute(
+    "SELECT account_id, name, student_id, birth_place, birth_date, address, phone_no, learning_style, trading_level, age, gender, email FROM students WHERE account_id = ?",
+     [account_id]
+  );
+
+  // Get account data using account_id (extracted from student row)
+  if (studentRows.length > 0) {
+    const student = studentRows[0];
+
+    const [accountRows] = await pool.execute(
+      "SELECT account_id, username, roles FROM accounts WHERE account_id = ?",
+      [account_id]
+    );
+
+    if (accountRows.length > 0) {
+      const account = accountRows[0];
+
+      const userData = {
+        account_id: account.account_id,
+        student_id: student.student_id,
+        avatar: null,
+        name: student.name,
+        username: account.username,
+        email: student.email,
+        roles: account.roles,
+        address: student.address,
+        birth_place: student.birth_place,
+        phone_no: student.phone_no,
+        trading_level: student.trading_level,
+        gender: student.gender,
+        birth_date: student.birth_date,
+        authenticated: true,
+        loginTime: new Date().toISOString()
+      };
+
+      // Create new profile with userData
+      profile = new Profile(userData);
+      await profile.save();
+
+      console.log('✅ New profile created');
+    } else {
+      return res.status(404).json({
+        success: false,
+        error: 'Account data not found'
+      });
+    }
+  } else {
+    return res.status(404).json({
+      success: false,
+      error: 'Student data not found'
+    });
+  }
+}
+
+    
+    res.json({
+      success: true,
+      profile: profile
+    });
+    
+  } catch (error) {
+    console.error('❌ Get profile error:', error);
+    res.status(500).json({ 
+      success: false, 
+      error: 'Server error fetching profile' 
+    });
+  }
+});
+
+// Update user profile
+app.put('/api/profile/:account_id', async (req, res) => {
+  try {
+    const { account_id } = req.params;
+    const updateData = req.body;
+    
+    console.log('🔄 Updating profile for account_id:', account_id);
+    console.log('📝 Update data:', updateData);
+    
+    // Remove sensitive fields that shouldn't be updated
+    delete updateData._id;
+    delete updateData.__v;
+    delete updateData.createdAt;
+    delete updateData.account_id; // Don't allow changing account_id
+    
+    // Add updated timestamp
+    updateData.updatedAt = new Date();
+    
+    const profile = await Profile.findOneAndUpdate(
+      { account_id: parseInt(account_id) },
+      updateData,
+      { 
+        new: true, 
+        runValidators: true,
+        upsert: true // Create if doesn't exist
+      }
+    );
+    
+    if (!profile) {
+      return res.status(404).json({ 
+        success: false, 
+        error: 'Profile not found' 
+      });
+    }
+    
+    console.log('✅ Profile updated successfully');
+    
+    res.json({
+      success: true,
+      profile: profile,
+      message: 'Profile updated successfully'
+    });
+    
+  } catch (error) {
+    console.error('❌ Update profile error:', error);
+    res.status(500).json({ 
+      success: false, 
+      error: 'Server error updating profile' 
+    });
+  }
+});
+
+// Upload profile avatar
+app.post('/api/profile/:account_id/avatar', upload.single('avatar'), async (req, res) => {
+  try {
+    const { account_id } = req.params;
+    
+    if (!req.file) {
+      return res.status(400).json({ 
+        success: false, 
+        error: 'No file uploaded' 
+      });
+    }
+    
+    console.log('📷 Uploading avatar for account_id:', account_id);
+    
+    const avatarUrl = `/uploads/avatars/${req.file.filename}`;
+    
+    const profile = await Profile.findOneAndUpdate(
+      { account_id: parseInt(account_id) },
+      { 
+        avatar: avatarUrl,
+        updatedAt: new Date()
+      },
+      { new: true }
+    );
+    
+    if (!profile) {
+      return res.status(404).json({ 
+        success: false, 
+        error: 'Profile not found' 
+      });
+    }
+    
+    console.log('✅ Avatar updated successfully');
+    
+    res.json({ 
+      success: true, 
+      avatarUrl: avatarUrl,
+      profile: profile,
+      message: 'Avatar updated successfully'
+    });
+    
+  } catch (error) {
+    console.error('❌ Upload avatar error:', error);
+    res.status(500).json({ 
+      success: false, 
+      error: 'Server error uploading avatar' 
+    });
+  }
+});
+
+// Get all profiles (admin endpoint)
+app.get('/api/profiles', async (req, res) => {
+  try {
+    const { page = 1, limit = 10, search = '' } = req.query;
+    
+    let query = {};
+    if (search) {
+      query = {
+        $or: [
+          { name: { $regex: search, $options: 'i' } },
+          { email: { $regex: search, $options: 'i' } },
+          { student_id: { $regex: search, $options: 'i' } }
+        ]
+      };
+    }
+    
+    const profiles = await Profile.find(query)
+      .limit(limit * 1)
+      .skip((page - 1) * limit)
+      .sort({ updatedAt: -1 });
+    
+    const total = await Profile.countDocuments(query);
+    
+    res.json({
+      success: true,
+      profiles: profiles,
+      pagination: {
+        current: page,
+        pages: Math.ceil(total / limit),
+        total: total
+      }
+    });
+    
+  } catch (error) {
+    console.error('❌ Get profiles error:', error);
+    res.status(500).json({ 
+      success: false, 
+      error: 'Server error fetching profiles' 
+    });
+  }
+});
+
+// Delete profile (admin endpoint)
+app.delete('/api/profile/:account_id', async (req, res) => {
+  try {
+    const { account_id } = req.params;
+    
+    console.log('🗑️ Deleting profile for account_id:', account_id);
+    
+    const profile = await Profile.findOneAndDelete({ 
+      account_id: parseInt(account_id) 
+    });
+    
+    if (!profile) {
+      return res.status(404).json({ 
+        success: false, 
+        error: 'Profile not found' 
+      });
+    }
+    
+    console.log('✅ Profile deleted successfully');
+    
+    res.json({
+      success: true,
+      message: 'Profile deleted successfully'
+    });
+    
+  } catch (error) {
+    console.error('❌ Delete profile error:', error);
+    res.status(500).json({ 
+      success: false, 
+      error: 'Server error deleting profile' 
+    });
+  }
+});
+
+// Sync all existing users to profiles collection
+app.post('/api/sync-profiles', async (req, res) => {
+  try {
+    console.log('🔄 Starting profile sync...');
+    
+    // Get all students from MySQL
+    const [students] = await pool.execute(`
+      SELECT s.account_id, s.name, s.student_id, s.email, a.roles, a.username
+      FROM students s 
+      JOIN accounts a ON s.account_id = a.account_id
+    `);
+    
+    let created = 0;
+    let updated = 0;
+    
+    for (const student of students) {
+      const existingProfile = await Profile.findOne({ 
+        account_id: student.account_id 
+      });
+      
+      if (existingProfile) {
+        // Update existing profile
+        await Profile.findOneAndUpdate(
+          { account_id: student.account_id },
+          {
+            name: student.name,
+            email: student.email,
+            student_id: student.student_id,
+            roles: student.roles,
+            updatedAt: new Date()
+          }
+        );
+        updated++;
+      } else {
+        // Create new profile
+        const newProfile = new Profile({
+          account_id: student.account_id,
+          name: student.name,
+          email: student.email,
+          student_id: student.student_id,
+          roles: student.roles
+        });
+        await newProfile.save();
+        created++;
+      }
+    }
+    
+    console.log(`✅ Profile sync complete: ${created} created, ${updated} updated`);
+    
+    res.json({
+      success: true,
+      message: `Profile sync complete: ${created} created, ${updated} updated`,
+      stats: { created, updated, total: students.length }
+    });
+    
+  } catch (error) {
+    console.error('❌ Profile sync error:', error);
+    res.status(500).json({ 
+      success: false, 
+      error: 'Server error syncing profiles' 
+    });
+  }
+});
 // Start server
 async function startServer() {
     const dbConnected = await initDatabase();

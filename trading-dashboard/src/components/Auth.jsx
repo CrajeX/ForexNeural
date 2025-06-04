@@ -2319,13 +2319,24 @@ const LoginSignupPage = () => {
   },
   credentials: 'include',
   body: JSON.stringify({
+   
     account_id: sessionData.account_id,
     student_id: sessionData.student_id,
     name: sessionData.name,
     username: sessionData.username,
     email: formData.email,
     roles: sessionData.roles,
-    password: formData.password // or a random strong one if not from user
+    password: formData.password,
+    address: sessionData.address,
+    birth_place: sessionData.birth_place,
+    phone_no: sessionData.phone_no,
+    trading_level: sessionData.trading_level,
+    gender: sessionData.gender,
+    birth_date: sessionData.birth_date,
+    authenticated: true,
+    loginTime: new Date().toISOString(),
+    
+   
   })
       });
                 // ✅ Save to sessionStorage
