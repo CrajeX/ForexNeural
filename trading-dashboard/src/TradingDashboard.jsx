@@ -925,7 +925,7 @@ const WelcomeSection = () => {
            marginBottom: '8px',
            margin: 0
          }}>
-           Welcome back, {sessionData.username|| 'Trader'}!
+           Welcome back, {sessionData.username || 'Trader'}!
          </h2>
          <p style={{ color: '#bfdbfe', margin: '8px 0 0 0' }}>
            Your AI-powered trading companion is ready. Let's make confident decisions together.
