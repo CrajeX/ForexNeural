@@ -4,7 +4,7 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "concurrently \"node C:\\maguate\\ForexNeural\\trading-dashboard\\server\\server.js\" \"vite\"",
+    "dev": "concurrently \"node .\\server\\server.js\" \"vite\"",
     "dev:backend": "node server.js",
     "dev:frontend": "vite",
     "build": "vite build",
@@ -32,6 +32,7 @@
     "react-dom": "^19.1.0",
     "react-financial-charts": "^2.0.1",
     "react-router-dom": "^7.6.1",
+    "recharts": "^2.15.3",
     "styled-components": "^6.1.18"
   },
   "devDependencies": {
@@ -46,7 +47,7 @@
     "globals": "^16.0.0",
     "nodemon": "^3.1.10",
     "postcss": "^8.5.3",
-    "tailwindcss": "^10.9.2",
+    "tailwindcss": "^4.1.7",
     "vite": "^6.3.5"
   },
   "main": "index.js",

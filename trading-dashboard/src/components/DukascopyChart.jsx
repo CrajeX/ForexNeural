@@ -1,10 +1,9 @@
-// TradingViewWidget.jsx
 import React, { useEffect, useRef, memo, useState } from 'react';
+import { getThemeColors, loadSettings } from '../contexts/themeConfig';
 
-const TradingViewWidget = memo(({ 
+const TradingViewWidget = memo(({
   symbol = "FX:EURUSD",
   interval = "D",
-  theme = "dark",
   style = "1",
   timezone = "Etc/UTC",
   locale = "en",
@@ -24,41 +23,49 @@ const TradingViewWidget = memo(({
 }) => {
   const containerRef = useRef(null);
   const scriptRef = useRef(null);
+
+  const [settings, setSettings] = useState(loadSettings());
+  const [widgetKey, setWidgetKey] = useState(0); // key to re-render script
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
 
+  const theme = getThemeColors(settings).chart;
+
+  // Update settings on external event
   useEffect(() => {
-    // Reset states
+    const handleSettingsChange = (e) => {
+      setSettings(e.detail);
+      setWidgetKey(prev => prev + 1); // trigger refresh
+    };
+    window.addEventListener('settingsChanged', handleSettingsChange);
+    return () => window.removeEventListener('settingsChanged', handleSettingsChange);
+  }, []);
+
+  // Refresh widget on key change
+  useEffect(() => {
     setIsLoading(true);
     setError(null);
 
-    // Check if container exists
-    if (!containerRef.current) {
-      setError('Container not found');
+    const container = containerRef.current;
+    if (!container) {
+      setError("Container not found");
       setIsLoading(false);
       return;
     }
 
-    // Clear previous content
-    const container = containerRef.current;
     const widgetContainer = container.querySelector('.tradingview-widget-container__widget');
-    if (widgetContainer) {
-      widgetContainer.innerHTML = '';
-    }
+    if (widgetContainer) widgetContainer.innerHTML = '';
 
-    // Remove existing script if any
     if (scriptRef.current) {
       scriptRef.current.remove();
     }
 
     try {
-      // Create and configure script
       const script = document.createElement("script");
       script.src = "https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js";
       script.type = "text/javascript";
       script.async = true;
-      
-      // Widget configuration
+
       const config = {
         autosize,
         symbol,
@@ -79,12 +86,7 @@ const TradingViewWidget = memo(({
       };
 
       script.innerHTML = JSON.stringify(config);
-      
-      // Handle script load events
-      script.onload = () => {
-        setIsLoading(false);
-      };
-      
+      script.onload = () => setIsLoading(false);
       script.onerror = (err) => {
         const errorMsg = 'Failed to load TradingView widget';
         setError(errorMsg);
@@ -93,14 +95,9 @@ const TradingViewWidget = memo(({
         console.error(errorMsg, err);
       };
 
-      // Store reference and append to container
       scriptRef.current = script;
-      if (widgetContainer) {
-        widgetContainer.appendChild(script);
-      } else {
-        container.appendChild(script);
-      }
-
+      if (widgetContainer) widgetContainer.appendChild(script);
+      else container.appendChild(script);
     } catch (err) {
       const errorMsg = 'Error initializing TradingView widget';
       setError(errorMsg);
@@ -109,32 +106,22 @@ const TradingViewWidget = memo(({
       console.error(errorMsg, err);
     }
 
-    // Cleanup function
     return () => {
       if (scriptRef.current) {
         scriptRef.current.remove();
         scriptRef.current = null;
       }
     };
-  }, [symbol, interval, theme, style, timezone, locale, allowSymbolChange, autosize, onError]);
+  }, [
+    widgetKey, symbol, interval, theme, style, timezone, locale,
+    allowSymbolChange, autosize, withDateRanges,
+    hideSideToolbar, saveImage, details,
+    showPopupButton, popupWidth, popupHeight
+  ]);
 
-  // Error state
   if (error) {
     return (
-      <div 
-        className="tradingview-widget-error" 
-        style={{ 
-          height, 
-          width, 
-          display: 'flex', 
-          alignItems: 'center', 
-          justifyContent: 'center',
-          backgroundColor: '#f5f5f5',
-          border: '1px solid #e0e0e0',
-          borderRadius: '4px',
-          color: '#666'
-        }}
-      >
+      <div style={{ height, width, display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: '#f5f5f5', border: '1px solid #e0e0e0', borderRadius: '4px', color: '#666' }}>
         <div style={{ textAlign: 'center' }}>
           <div style={{ fontSize: '16px', marginBottom: '8px' }}>⚠️</div>
           <div>{error}</div>
@@ -147,69 +134,28 @@ const TradingViewWidget = memo(({
   }
 
   return (
-    <div 
-      className="tradingview-widget-container" 
-      ref={containerRef} 
-      style={{ height, width, position: 'relative' }}
-    >
-      {/* Loading indicator */}
+    <div className="tradingview-widget-container" ref={containerRef} style={{ height, width, position: 'relative' }}>
       {isLoading && (
-        <div 
-          className="tradingview-widget-loading"
-          style={{
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            backgroundColor: '#f9f9f9',
-            zIndex: 1
-          }}
-        >
+        <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: '#f9f9f9', zIndex: 1 }}>
           <div style={{ textAlign: 'center', color: '#666' }}>
-            <div style={{ 
-              width: '20px', 
-              height: '20px', 
-              border: '2px solid #e0e0e0',
-              borderTop: '2px solid #2196F3',
-              borderRadius: '50%',
-              animation: 'spin 1s linear infinite',
-              margin: '0 auto 8px'
-            }}></div>
+            <div style={{ width: '20px', height: '20px', border: '2px solid #e0e0e0', borderTop: '2px solid #2196F3', borderRadius: '50%', animation: 'spin 1s linear infinite', margin: '0 auto 8px' }}></div>
             <div style={{ fontSize: '14px' }}>Loading chart...</div>
           </div>
         </div>
       )}
-      
-      {/* Widget container */}
-      <div 
-        className="tradingview-widget-container__widget" 
-        style={{ 
-          height: showCopyright ? "calc(100% - 32px)" : "100%", 
-          width: "100%" 
-        }}
-      />
-      
-      {/* Copyright notice */}
+
+      <div className="tradingview-widget-container__widget" style={{ height: showCopyright ? "calc(100% - 32px)" : "100%", width: "100%" }} />
+
       {showCopyright && (
         <div className="tradingview-widget-copyright">
-          <a 
-            href="https://www.tradingview.com/" 
-            rel="noopener nofollow" 
-            target="_blank"
-            style={{ textDecoration: 'none' }}
-          >
+          <a href="https://www.tradingview.com/" rel="noopener nofollow" target="_blank" style={{ textDecoration: 'none' }}>
             <span style={{ color: '#2196F3', fontSize: '12px' }}>
               Track all markets on TradingView
             </span>
           </a>
         </div>
       )}
-      
-      {/* CSS for loading animation */}
+
       <style jsx>{`
         @keyframes spin {
           0% { transform: rotate(0deg); }
@@ -221,5 +167,4 @@ const TradingViewWidget = memo(({
 });
 
 TradingViewWidget.displayName = 'TradingViewWidget';
-
 export default TradingViewWidget;

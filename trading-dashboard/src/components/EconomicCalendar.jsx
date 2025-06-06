@@ -1,71 +1,65 @@
-// TradingViewEventsWidget.jsx
 import React, { useEffect, useRef, memo, useState } from 'react';
+import { loadSettings, getThemeColors } from '../contexts/themeConfig';
 
-const TradingViewEventsWidget = memo(({ 
-  colorTheme = "dark",
-  isTransparent = false,
-  locale = "en",
-  importanceFilter = "-1,0,1",
-  countryFilter = "ar,au,br,ca,cn,fr,de,in,id,it,jp,kr,mx,ru,sa,za,tr,gb,us,eu",
+const TradingViewEventsWidget = memo(({
+  colorTheme: _ignoredTheme, // unused prop to maintain consistency
   height = "100%",
   width = "100%",
-  showCopyright = true,
+  locale = "en",
+  importance = "1,2,3",
   onError = null
 }) => {
   const containerRef = useRef(null);
   const scriptRef = useRef(null);
+
+  const [settings, setSettings] = useState(loadSettings());
+  const [widgetKey, setWidgetKey] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
 
+  const colorTheme = getThemeColors(settings).chart === 'dark' ? 'dark' : 'light';
+
   useEffect(() => {
-    // Reset states
+    const handleSettingsChange = (e) => {
+      setSettings(e.detail);
+      setWidgetKey(prev => prev + 1);
+    };
+    window.addEventListener('settingsChanged', handleSettingsChange);
+    return () => window.removeEventListener('settingsChanged', handleSettingsChange);
+  }, []);
+
+  useEffect(() => {
     setIsLoading(true);
     setError(null);
 
-    // Check if container exists
-    if (!containerRef.current) {
+    const container = containerRef.current;
+    if (!container) {
       setError('Container not found');
       setIsLoading(false);
       return;
     }
 
-    // Clear previous content
-    const container = containerRef.current;
     const widgetContainer = container.querySelector('.tradingview-widget-container__widget');
-    if (widgetContainer) {
-      widgetContainer.innerHTML = '';
-    }
-
-    // Remove existing script if any
-    if (scriptRef.current) {
-      scriptRef.current.remove();
-    }
+    if (widgetContainer) widgetContainer.innerHTML = '';
+    if (scriptRef.current) scriptRef.current.remove();
 
     try {
-      // Create and configure script
       const script = document.createElement("script");
       script.src = "https://s3.tradingview.com/external-embedding/embed-widget-events.js";
       script.type = "text/javascript";
       script.async = true;
-      
-      // Widget configuration
+
       const config = {
-         "width": "100%",
-  "height": "100%",
-  "colorTheme": "dark",
-  "isTransparent": false,
-  "locale": "en",
-  "importanceFilter": "-1,0,1",
-  "countryFilter": "ar,au,br,ca,cn,fr,de,in,id,it,jp,kr,mx,ru,sa,za,tr,gb,us,eu"
+        colorTheme,
+        isTransparent: false,
+        width: "100%",
+        height: "100%",
+        locale,
+        importance
       };
 
       script.innerHTML = JSON.stringify(config);
-      
-      // Handle script load events
-      script.onload = () => {
-        setIsLoading(false);
-      };
-      
+      script.onload = () => setIsLoading(false);
       script.onerror = (err) => {
         const errorMsg = 'Failed to load TradingView events widget';
         setError(errorMsg);
@@ -74,14 +68,9 @@ const TradingViewEventsWidget = memo(({
         console.error(errorMsg, err);
       };
 
-      // Store reference and append to container
       scriptRef.current = script;
-      if (widgetContainer) {
-        widgetContainer.appendChild(script);
-      } else {
-        container.appendChild(script);
-      }
-
+      if (widgetContainer) widgetContainer.appendChild(script);
+      else container.appendChild(script);
     } catch (err) {
       const errorMsg = 'Error initializing TradingView events widget';
       setError(errorMsg);
@@ -90,32 +79,26 @@ const TradingViewEventsWidget = memo(({
       console.error(errorMsg, err);
     }
 
-    // Cleanup function
     return () => {
       if (scriptRef.current) {
         scriptRef.current.remove();
         scriptRef.current = null;
       }
     };
-  }, [colorTheme, isTransparent, locale, importanceFilter, countryFilter, onError]);
+  }, [widgetKey, colorTheme, locale, importance, onError]);
 
-  // Error state
   if (error) {
     return (
-      <div 
-        className="tradingview-events-widget-error" 
-        style={{ 
-          height, 
-          width, 
-          display: 'flex', 
-          alignItems: 'center', 
-          justifyContent: 'center',
-          backgroundColor: colorTheme === 'dark' ? '#1e1e1e' : '#f5f5f5',
-          border: `1px solid ${colorTheme === 'dark' ? '#333' : '#e0e0e0'}`,
-          borderRadius: '4px',
-          color: colorTheme === 'dark' ? '#ccc' : '#666'
-        }}
-      >
+      <div style={{
+        height, width,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        backgroundColor: colorTheme === 'dark' ? '#1e1e1e' : '#f5f5f5',
+        border: `1px solid ${colorTheme === 'dark' ? '#333' : '#e0e0e0'}`,
+        borderRadius: '4px',
+        color: colorTheme === 'dark' ? '#ccc' : '#666'
+      }}>
         <div style={{ textAlign: 'center' }}>
           <div style={{ fontSize: '16px', marginBottom: '8px' }}>📅</div>
           <div>{error}</div>
@@ -128,37 +111,27 @@ const TradingViewEventsWidget = memo(({
   }
 
   return (
-    <div 
-      className="tradingview-widget-container" 
-      ref={containerRef} 
-      style={{ 
-        height:'100vh', 
-        width, 
+    <div
+      className="tradingview-widget-container"
+      ref={containerRef}
+      style={{
+        height,
+        width,
         position: 'relative',
-        backgroundColor: isTransparent ? 'transparent' : (colorTheme === 'dark' ? '#1e1e1e' : '#ffffff')
+        backgroundColor: colorTheme === 'dark' ? '#1e1e1e' : '#ffffff'
       }}
     >
-      {/* Loading indicator */}
       {isLoading && (
-        <div 
-          className="tradingview-events-widget-loading"
-          style={{
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            backgroundColor: colorTheme === 'dark' ? '#1e1e1e' : '#f9f9f9',
-            zIndex: 1
-          }}
-        >
+        <div style={{
+          position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          backgroundColor: colorTheme === 'dark' ? '#1e1e1e' : '#f9f9f9',
+          zIndex: 1
+        }}>
           <div style={{ textAlign: 'center', color: colorTheme === 'dark' ? '#ccc' : '#666' }}>
-            <div style={{ 
-              width: '20px', 
-              height: '20px', 
+            <div style={{
+              width: '20px',
+              height: '20px',
               border: `2px solid ${colorTheme === 'dark' ? '#333' : '#e0e0e0'}`,
               borderTop: `2px solid ${colorTheme === 'dark' ? '#fff' : '#2196F3'}`,
               borderRadius: '50%',
@@ -169,36 +142,9 @@ const TradingViewEventsWidget = memo(({
           </div>
         </div>
       )}
-      
-      {/* Widget container */}
-      <div 
-        className="tradingview-widget-container__widget" 
-        style={{ 
-          height: showCopyright ? "calc(100% - 32px)" : "100%", 
-          width: "100%" 
-        }}
-      />
-      
-      {/* Copyright notice */}
-      {showCopyright && (
-        <div className="tradingview-widget-copyright">
-          <a 
-            href="https://www.tradingview.com/" 
-            rel="noopener nofollow" 
-            target="_blank"
-            style={{ textDecoration: 'none' }}
-          >
-            <span style={{ 
-              color: colorTheme === 'dark' ? '#4CAF50' : '#2196F3', 
-              fontSize: '12px' 
-            }}>
-              Track all markets on TradingView
-            </span>
-          </a>
-        </div>
-      )}
-      
-      {/* CSS for loading animation */}
+
+      <div className="tradingview-widget-container__widget" style={{ height: '100%', width: '100%' }} />
+
       <style jsx>{`
         @keyframes spin {
           0% { transform: rotate(0deg); }
@@ -210,5 +156,4 @@ const TradingViewEventsWidget = memo(({
 });
 
 TradingViewEventsWidget.displayName = 'TradingViewEventsWidget';
-
 export default TradingViewEventsWidget;
