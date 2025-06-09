@@ -1,0 +1,374 @@
+import React, { useEffect, useRef, memo, useState } from 'react';
+// import { loadSettings, getThemeColors } from '../contexts/themeConfig';
+
+const WebWidget = memo(({
+  // Widget configuration props
+  src = "",
+  widgetType = "custom",
+  config = {},
+  
+  // Display props
+  height = "400px",
+  width = "100%",
+  isTransparent = false,
+  showCopyright = true,
+  
+  // Event handlers
+  onLoad = null,
+  onError = null,
+  onReady = null,
+  
+  // Theme integration
+  useTheme = true,
+  
+  // Custom styling
+  style = {},
+  className = ""
+}) => {
+  const containerRef = useRef(null);
+  const scriptRef = useRef(null);
+  const widgetRef = useRef(null);
+
+  // State management
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [widgetKey, setWidgetKey] = useState(0);
+  const [settings, setSettings] = useState({});
+
+  // Theme integration (replace with your theme system)
+  // const [settings, setSettings] = useState(loadSettings());
+  // const colorTheme = getThemeColors(settings).chart === 'dark' ? 'dark' : 'light';
+  const colorTheme = 'light'; // Placeholder
+
+  // Listen for theme changes
+  useEffect(() => {
+    if (!useTheme) return;
+    
+    const handleSettingsChange = (e) => {
+      setSettings(e.detail);
+      setWidgetKey(prev => prev + 1); // Force re-render widget
+    };
+    
+    window.addEventListener('settingsChanged', handleSettingsChange);
+    return () => window.removeEventListener('settingsChanged', handleSettingsChange);
+  }, [useTheme]);
+
+  // Widget loading and initialization
+  useEffect(() => {
+    if (!src) {
+      setError('Widget source URL is required');
+      setIsLoading(false);
+      return;
+    }
+
+    loadWidget();
+    
+    return cleanup;
+  }, [widgetKey, src, config, colorTheme]);
+
+  // Load the widget
+  const loadWidget = () => {
+    setIsLoading(true);
+    setError(null);
+
+    const container = containerRef.current;
+    if (!container) {
+      setError('Container not found');
+      setIsLoading(false);
+      return;
+    }
+
+    // Clear existing widget
+    cleanup();
+
+    try {
+      const script = document.createElement("script");
+      script.src = src;
+      script.type = "text/javascript";
+      script.async = true;
+
+      // Prepare widget configuration
+      const widgetConfig = {
+        ...config,
+        width: "100%",
+        height: "100%",
+        colorTheme: useTheme ? colorTheme : (config.colorTheme || 'light'),
+        isTransparent
+      };
+
+      // Set configuration as script content
+      if (Object.keys(widgetConfig).length > 0) {
+        script.innerHTML = JSON.stringify(widgetConfig);
+      }
+
+      // Event handlers
+      script.onload = () => {
+        setIsLoading(false);
+        if (onLoad) onLoad();
+        
+        // Notify when widget is ready
+        setTimeout(() => {
+          if (onReady) onReady(widgetRef.current);
+        }, 100);
+      };
+
+      script.onerror = (err) => {
+        const errorMsg = `Failed to load ${widgetType} widget`;
+        setError(errorMsg);
+        setIsLoading(false);
+        if (onError) onError(err);
+        console.error(errorMsg, err);
+      };
+
+      // Find widget container or use main container
+      const widgetContainer = container.querySelector('.widget-container') || container;
+      scriptRef.current = script;
+      widgetContainer.appendChild(script);
+
+    } catch (err) {
+      const errorMsg = `Error initializing ${widgetType} widget`;
+      setError(errorMsg);
+      setIsLoading(false);
+      if (onError) onError(err);
+      console.error(errorMsg, err);
+    }
+  };
+
+  // Cleanup function
+  const cleanup = () => {
+    if (scriptRef.current) {
+      try {
+        scriptRef.current.remove();
+      } catch (e) {
+        // Ignore removal errors
+      }
+      scriptRef.current = null;
+    }
+
+    // Clear widget container content
+    const container = containerRef.current;
+    if (container) {
+      const widgetContainer = container.querySelector('.widget-container');
+      if (widgetContainer) {
+        widgetContainer.innerHTML = '';
+      }
+    }
+  };
+
+  // Reload widget
+  const reloadWidget = () => {
+    setWidgetKey(prev => prev + 1);
+  };
+
+  // Expose methods to parent component
+  useEffect(() => {
+    widgetRef.current = {
+      reload: reloadWidget,
+      container: containerRef.current,
+      isLoading,
+      error
+    };
+  }, [isLoading, error]);
+
+  // Error display
+  if (error) {
+    return (
+      <div style={{
+        height, 
+        width,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        backgroundColor: colorTheme === 'dark' ? '#1e1e1e' : '#f5f5f5',
+        border: `1px solid ${colorTheme === 'dark' ? '#333' : '#e0e0e0'}`,
+        borderRadius: '8px',
+        color: colorTheme === 'dark' ? '#ccc' : '#666',
+        ...style
+      }}>
+        <div style={{ textAlign: 'center', padding: '20px' }}>
+          <div style={{ fontSize: '24px', marginBottom: '12px' }}>⚠️</div>
+          <div style={{ fontSize: '16px', marginBottom: '8px', fontWeight: '500' }}>
+            Widget Error
+          </div>
+          <div style={{ fontSize: '14px', marginBottom: '12px' }}>{error}</div>
+          <button
+            onClick={reloadWidget}
+            style={{
+              padding: '8px 16px',
+              backgroundColor: '#3b82f6',
+              color: 'white',
+              border: 'none',
+              borderRadius: '6px',
+              cursor: 'pointer',
+              fontSize: '14px'
+            }}
+          >
+            Retry
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // Main widget container
+  return (
+    <div
+      ref={containerRef}
+      className={`web-widget ${className}`}
+      style={{
+        height,
+        width,
+        position: 'relative',
+        backgroundColor: isTransparent ? 'transparent' : (colorTheme === 'dark' ? '#1e1e1e' : '#ffffff'),
+        borderRadius: '8px',
+        overflow: 'hidden',
+        ...style
+      }}
+    >
+      {/* Loading indicator */}
+      {isLoading && (
+        <div
+          style={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            backgroundColor: colorTheme === 'dark' ? '#1e1e1e' : '#f9f9f9',
+            zIndex: 1
+          }}
+        >
+          <div style={{ textAlign: 'center', color: colorTheme === 'dark' ? '#ccc' : '#666' }}>
+            <div style={{
+              width: '32px',
+              height: '32px',
+              border: `3px solid ${colorTheme === 'dark' ? '#333' : '#e0e0e0'}`,
+              borderTop: `3px solid ${colorTheme === 'dark' ? '#fff' : '#3b82f6'}`,
+              borderRadius: '50%',
+              animation: 'widget-spin 1s linear infinite',
+              margin: '0 auto 12px'
+            }}></div>
+            <div style={{ fontSize: '14px' }}>Loading {widgetType}...</div>
+          </div>
+        </div>
+      )}
+
+      {/* Widget container */}
+      <div
+        className="widget-container"
+        style={{ 
+          height: showCopyright ? "calc(100% - 32px)" : "100%", 
+          width: "100%" 
+        }}
+      />
+
+      {/* Copyright/Attribution */}
+      {showCopyright && (
+        <div 
+          className="widget-copyright"
+          style={{
+            height: '32px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            borderTop: `1px solid ${colorTheme === 'dark' ? '#333' : '#e0e0e0'}`,
+            backgroundColor: colorTheme === 'dark' ? '#1a1a1a' : '#f8f9fa'
+          }}
+        >
+          <span style={{ 
+            color: colorTheme === 'dark' ? '#888' : '#666', 
+            fontSize: '12px' 
+          }}>
+            Powered by {widgetType}
+          </span>
+        </div>
+      )}
+
+      {/* CSS Animations */}
+      <style jsx>{`
+        @keyframes widget-spin {
+          0% { transform: rotate(0deg); }
+          100% { transform: rotate(360deg); }
+        }
+        
+        .web-widget {
+          transition: all 0.3s ease;
+        }
+        
+        .web-widget:hover {
+          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+      `}</style>
+    </div>
+  );
+});
+
+// Widget configurations for common widget types
+export const WIDGET_CONFIGS = {
+  tradingview: {
+    news: {
+      src: "https://s3.tradingview.com/external-embedding/embed-widget-timeline.js",
+      defaultConfig: {
+        feedMode: "all_symbols",
+        displayMode: "regular",
+        locale: "en"
+      }
+    },
+    chart: {
+      src: "https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js",
+      defaultConfig: {
+        symbol: "NASDAQ:AAPL",
+        interval: "D",
+        timezone: "Etc/UTC",
+        theme: "light",
+        style: "1",
+        locale: "en",
+        toolbar_bg: "#f1f3f6",
+        enable_publishing: false,
+        allow_symbol_change: true
+      }
+    }
+  },
+  youtube: {
+    embed: {
+      src: "https://www.youtube.com/iframe_api",
+      defaultConfig: {
+        videoId: "",
+        playerVars: {
+          autoplay: 0,
+          controls: 1,
+          rel: 0
+        }
+      }
+    }
+  },
+  custom: {
+    iframe: {
+      defaultConfig: {
+        frameBorder: 0,
+        allowFullScreen: true
+      }
+    }
+  }
+};
+
+// Utility function to create widget with preset configuration
+export const createWidget = (type, subtype, customConfig = {}) => {
+  const config = WIDGET_CONFIGS[type]?.[subtype];
+  if (!config) {
+    console.warn(`Widget configuration not found for ${type}.${subtype}`);
+    return null;
+  }
+
+  return {
+    src: config.src,
+    config: { ...config.defaultConfig, ...customConfig },
+    widgetType: `${type}-${subtype}`
+  };
+};
+
+WebWidget.displayName = 'WebWidget';
+export default WebWidget;

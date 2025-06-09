@@ -1,0 +1,420 @@
+import React, { useState, useEffect } from 'react';
+import { 
+  Settings, 
+  X, 
+  Save, 
+  RotateCcw,
+  Palette,
+  Layout,
+  Bell,
+  Shield,
+  User
+} from 'lucide-react';
+
+// Import your theme utilities
+// import { getThemeColors, getThemeStyles, saveSettingsToStorage, DEFAULT_SETTINGS } from './themeConfig';
+
+const SettingsWindow = ({ 
+  isOpen, 
+  onClose, 
+  onApplySettings, 
+  currentSettings,
+  customTabs = [],
+  customSettings = {}
+}) => {
+  const [activeTab, setActiveTab] = useState('general');
+  const [settings, setSettings] = useState(currentSettings);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    setSettings(currentSettings);
+  }, [currentSettings]);
+
+  // Generic setting change handler
+  const handleSettingChange = (key, value) => {
+    setSettings(prev => ({
+      ...prev,
+      [key]: value
+    }));
+  };
+
+  // Nested setting change handler
+  const handleNestedSettingChange = (category, key, value) => {
+    setSettings(prev => ({
+      ...prev,
+      [category]: {
+        ...prev[category],
+        [key]: value
+      }
+    }));
+  };
+
+  // Save settings
+  const saveSettings = async () => {
+    setLoading(true);
+    try {
+      // Replace with your save logic
+      // const success = saveSettingsToStorage(settings);
+      const success = true; // Placeholder
+      
+      if (success) {
+        onApplySettings(settings);
+        onClose();
+      } else {
+        console.error('Failed to save settings');
+        // Add error handling UI
+      }
+    } catch (error) {
+      console.error('Save error:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Reset to defaults
+  const resetToDefaults = () => {
+    // setSettings(DEFAULT_SETTINGS);
+    setSettings({}); // Replace with your default settings
+  };
+
+  // Default tabs - customize as needed
+  const defaultTabs = [
+    { id: 'general', label: 'General', icon: Settings },
+    { id: 'appearance', label: 'Appearance', icon: Palette },
+    { id: 'layout', label: 'Layout', icon: Layout },
+    { id: 'notifications', label: 'Notifications', icon: Bell },
+    { id: 'account', label: 'Account', icon: User },
+    ...customTabs
+  ];
+
+  // Get theme colors and styles
+  // const colors = getThemeColors(settings);
+  // const themeStyles = getThemeStyles(settings);
+  
+  // Placeholder theme - replace with your theme system
+  const colors = {
+    background: '#ffffff',
+    cardBackground: '#f9fafb',
+    text: '#111827',
+    textSecondary: '#6b7280',
+    accent: '#3b82f6',
+    border: '#e5e7eb'
+  };
+
+  const themeStyles = {
+    card: {
+      backgroundColor: colors.cardBackground,
+      borderRadius: '12px',
+      padding: '24px',
+      border: `1px solid ${colors.border}`
+    },
+    button: {
+      backgroundColor: colors.accent,
+      color: '#ffffff',
+      border: 'none',
+      borderRadius: '8px',
+      padding: '10px 20px',
+      cursor: 'pointer'
+    },
+    buttonSecondary: {
+      backgroundColor: 'transparent',
+      color: colors.textSecondary,
+      border: `1px solid ${colors.border}`,
+      borderRadius: '8px',
+      padding: '10px 20px',
+      cursor: 'pointer'
+    }
+  };
+
+  // Tab content renderers
+  const renderGeneralTab = () => (
+    <div>
+      <h3 style={{ color: colors.text, marginBottom: '16px' }}>General Settings</h3>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+        {/* Add your general settings here */}
+        <div>
+          <label style={{ color: colors.textSecondary, fontSize: '14px', marginBottom: '8px', display: 'block' }}>
+            Sample Setting
+          </label>
+          <input
+            type="text"
+            value={settings.sampleSetting || ''}
+            onChange={(e) => handleSettingChange('sampleSetting', e.target.value)}
+            style={{
+              width: '100%',
+              padding: '8px 12px',
+              borderRadius: '6px',
+              border: `1px solid ${colors.border}`,
+              backgroundColor: colors.cardBackground,
+              color: colors.text
+            }}
+          />
+        </div>
+        
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <span style={{ color: colors.text }}>Enable Feature</span>
+          <ToggleSwitch
+            checked={settings.enableFeature || false}
+            onChange={(checked) => handleSettingChange('enableFeature', checked)}
+            colors={colors}
+          />
+        </div>
+      </div>
+    </div>
+  );
+
+  const renderAppearanceTab = () => (
+    <div>
+      <h3 style={{ color: colors.text, marginBottom: '16px' }}>Appearance Settings</h3>
+      {/* Add appearance-specific settings */}
+      <p style={{ color: colors.textSecondary }}>Appearance settings go here...</p>
+    </div>
+  );
+
+  const renderLayoutTab = () => (
+    <div>
+      <h3 style={{ color: colors.text, marginBottom: '16px' }}>Layout Settings</h3>
+      {/* Add layout-specific settings */}
+      <p style={{ color: colors.textSecondary }}>Layout settings go here...</p>
+    </div>
+  );
+
+  const renderNotificationsTab = () => (
+    <div>
+      <h3 style={{ color: colors.text, marginBottom: '16px' }}>Notification Settings</h3>
+      {/* Add notification-specific settings */}
+      <p style={{ color: colors.textSecondary }}>Notification settings go here...</p>
+    </div>
+  );
+
+  const renderAccountTab = () => (
+    <div>
+      <h3 style={{ color: colors.text, marginBottom: '16px' }}>Account Settings</h3>
+      {/* Add account-specific settings */}
+      <p style={{ color: colors.textSecondary }}>Account settings go here...</p>
+    </div>
+  );
+
+  // Custom tab renderer
+  const renderCustomTab = (tabId) => {
+    if (customSettings[tabId]) {
+      return customSettings[tabId](settings, handleSettingChange, colors);
+    }
+    return <div style={{ color: colors.text }}>Content for {tabId} tab</div>;
+  };
+
+  // Main tab content renderer
+  const renderTabContent = () => {
+    switch (activeTab) {
+      case 'general':
+        return renderGeneralTab();
+      case 'appearance':
+        return renderAppearanceTab();
+      case 'layout':
+        return renderLayoutTab();
+      case 'notifications':
+        return renderNotificationsTab();
+      case 'account':
+        return renderAccountTab();
+      default:
+        return renderCustomTab(activeTab);
+    }
+  };
+
+  if (!isOpen) return null;
+
+  const settingsStyles = {
+    overlay: {
+      position: 'fixed',
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
+      backgroundColor: 'rgba(0, 0, 0, 0.75)',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      zIndex: 1000,
+      backdropFilter: 'blur(4px)'
+    },
+    modal: {
+      ...themeStyles.card,
+      width: '90vw',
+      maxWidth: '900px',
+      height: '80vh',
+      maxHeight: '700px',
+      display: 'flex',
+      flexDirection: 'column',
+      boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)'
+    },
+    header: {
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      padding: '24px',
+      borderBottom: `1px solid ${colors.border}`
+    },
+    title: {
+      fontSize: '24px',
+      fontWeight: 'bold',
+      color: colors.text,
+      display: 'flex',
+      alignItems: 'center',
+      gap: '12px'
+    },
+    content: {
+      display: 'flex',
+      flex: 1,
+      overflow: 'hidden'
+    },
+    sidebar: {
+      width: '200px',
+      padding: '16px',
+      borderRight: `1px solid ${colors.border}`,
+      overflow: 'auto'
+    },
+    main: {
+      flex: 1,
+      padding: '24px',
+      overflow: 'auto'
+    },
+    footer: {
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      padding: '24px',
+      borderTop: `1px solid ${colors.border}`
+    }
+  };
+
+  return (
+    <div style={settingsStyles.overlay} onClick={onClose}>
+      <div style={settingsStyles.modal} onClick={(e) => e.stopPropagation()}>
+        {/* Header */}
+        <div style={settingsStyles.header}>
+          <h2 style={settingsStyles.title}>
+            <Settings size={24} />
+            Settings
+          </h2>
+          <button
+            onClick={onClose}
+            style={{
+              padding: '8px',
+              borderRadius: '8px',
+              border: 'none',
+              backgroundColor: 'transparent',
+              color: colors.textSecondary,
+              cursor: 'pointer'
+            }}
+          >
+            <X size={20} />
+          </button>
+        </div>
+
+        {/* Content */}
+        <div style={settingsStyles.content}>
+          {/* Sidebar */}
+          <div style={settingsStyles.sidebar}>
+            {defaultTabs.map(tab => (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                style={{
+                  width: '100%',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '12px',
+                  padding: '12px 16px',
+                  marginBottom: '8px',
+                  borderRadius: '8px',
+                  border: 'none',
+                  cursor: 'pointer',
+                  fontSize: '14px',
+                  fontWeight: '500',
+                  backgroundColor: activeTab === tab.id ? colors.accent : 'transparent',
+                  color: activeTab === tab.id ? '#ffffff' : colors.textSecondary
+                }}
+              >
+                <tab.icon size={16} />
+                {tab.label}
+              </button>
+            ))}
+          </div>
+
+          {/* Main content */}
+          <div style={settingsStyles.main}>
+            {renderTabContent()}
+          </div>
+        </div>
+
+        {/* Footer */}
+        <div style={settingsStyles.footer}>
+          <button
+            onClick={resetToDefaults}
+            style={{
+              ...themeStyles.buttonSecondary,
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px'
+            }}
+          >
+            <RotateCcw size={16} />
+            Reset to Defaults
+          </button>
+          <div style={{ display: 'flex', gap: '12px' }}>
+            <button
+              onClick={onClose}
+              style={themeStyles.buttonSecondary}
+              disabled={loading}
+            >
+              Cancel
+            </button>
+            <button
+              onClick={saveSettings}
+              style={{
+                ...themeStyles.button,
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+                opacity: loading ? 0.6 : 1
+              }}
+              disabled={loading}
+            >
+              <Save size={16} />
+              {loading ? 'Saving...' : 'Save Settings'}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// Toggle Switch Component
+const ToggleSwitch = ({ checked, onChange, colors }) => (
+  <div
+    onClick={() => onChange(!checked)}
+    style={{
+      width: '48px',
+      height: '24px',
+      backgroundColor: checked ? colors.accent : colors.border,
+      borderRadius: '12px',
+      cursor: 'pointer',
+      position: 'relative',
+      transition: 'all 0.2s'
+    }}
+  >
+    <div style={{
+      position: 'absolute',
+      top: '2px',
+      left: checked ? '26px' : '2px',
+      width: '20px',
+      height: '20px',
+      backgroundColor: '#ffffff',
+      borderRadius: '50%',
+      transition: 'all 0.2s'
+    }} />
+  </div>
+);
+
+export default SettingsWindow;

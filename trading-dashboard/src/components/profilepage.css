@@ -55,7 +55,7 @@ body {
 .profile-header {
 
   padding: 1.5rem 0;
-  position: sticky;
+  /* position: sticky; */
   top: 0;
   z-index: 10;
   
@@ -404,6 +404,7 @@ body {
   background-color: var(--color-accent, #3b82f6);
   color: var(--color-text, #ffffff);
   border-color: var(--color-accent, #3b82f6);
+
 }
 
 .btn-primary:hover:not(:disabled) {

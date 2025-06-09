@@ -1,0 +1,699 @@
+// themeConfig.js - Comprehensive theme configuration and utilities
+
+// Theme mode constants
+export const THEME_MODES = {
+  DARK: 'dark',
+  LIGHT: 'light',
+  CUSTOM: 'custom',
+  AUTO: 'auto' // Follows system preference
+};
+
+// Default theme color palettes
+export const DEFAULT_THEMES = {
+  dark: {
+    // Primary colors
+    background: '#0f172a',
+    cardBackground: '#1e293b',
+    sidebar: '#1e293b',
+    
+    // Text colors
+    text: '#ffffff',
+    textSecondary: '#94a3b8',
+    textMuted: '#64748b',
+    
+    // Accent colors
+    accent: '#3b82f6',
+    accentSecondary: '#8b5cf6',
+    accentHover: '#2563eb',
+    
+    // Status colors
+    success: '#10b981',
+    warning: '#f59e0b',
+    danger: '#ef4444',
+    info: '#06b6d4',
+    
+    // UI colors
+    border: '#334155',
+    borderHover: '#475569',
+    shadow: 'rgba(0, 0, 0, 0.5)',
+    
+    // Component-specific
+    chart: 'dark',
+    input: '#334155',
+    placeholder: '#64748b'
+  },
+  light: {
+    // Primary colors
+    background: '#ffffff',
+    cardBackground: '#f8fafc',
+    sidebar: '#f1f5f9',
+    
+    // Text colors
+    text: '#0f172a',
+    textSecondary: '#475569',
+    textMuted: '#64748b',
+    
+    // Accent colors
+    accent: '#3b82f6',
+    accentSecondary: '#8b5cf6',
+    accentHover: '#2563eb',
+    
+    // Status colors
+    success: '#10b981',
+    warning: '#f59e0b',
+    danger: '#ef4444',
+    info: '#06b6d4',
+    
+    // UI colors
+    border: '#e2e8f0',
+    borderHover: '#cbd5e1',
+    shadow: 'rgba(0, 0, 0, 0.1)',
+    
+    // Component-specific
+    chart: 'light',
+    input: '#ffffff',
+    placeholder: '#94a3b8'
+  }
+};
+
+// Default application settings
+export const DEFAULT_SETTINGS = {
+  // Theme settings
+  theme: THEME_MODES.LIGHT,
+  customColors: { ...DEFAULT_THEMES.light },
+  followSystemTheme: false,
+  
+  // Layout settings
+  sidebarWidth: 256,
+  sidebarCollapsed: false,
+  compactMode: false,
+  showSidebar: true,
+  
+  // Typography settings
+  fontSize: 'medium', // small, medium, large
+  fontFamily: 'system-ui', // system-ui, serif, monospace
+  lineHeight: 'normal', // tight, normal, relaxed
+  
+  // Visual settings
+  cardBorderRadius: 8,
+  cardPadding: 20,
+  borderWidth: 1,
+  shadowLevel: 'medium', // none, small, medium, large
+  
+  // Animation settings
+  enableAnimations: true,
+  enableHoverEffects: true,
+  transitionSpeed: 'medium', // slow, medium, fast
+  reduceMotion: false,
+  
+  // Layout preferences
+  gridGap: 16,
+  containerMaxWidth: 1200,
+  headerHeight: 64,
+  footerHeight: 48,
+  
+  // Feature toggles
+  enableNotifications: true,
+  enableSounds: false,
+  enableTooltips: true,
+  enableKeyboardShortcuts: true,
+  
+  // Performance settings
+  enableVirtualization: false,
+  lazyLoadImages: true,
+  prefersReducedData: false
+};
+
+// Predefined theme presets
+export const THEME_PRESETS = {
+  // Dark themes
+  midnight: {
+    name: 'Midnight',
+    base: 'dark',
+    colors: {
+      ...DEFAULT_THEMES.dark,
+      background: '#000000',
+      cardBackground: '#0a0a0a',
+      accent: '#6366f1'
+    }
+  },
+  oceanDark: {
+    name: 'Ocean Dark',
+    base: 'dark',
+    colors: {
+      ...DEFAULT_THEMES.dark,
+      background: '#0c1222',
+      cardBackground: '#1a2332',
+      accent: '#0ea5e9',
+      accentSecondary: '#06b6d4'
+    }
+  },
+  forestDark: {
+    name: 'Forest Dark',
+    base: 'dark',
+    colors: {
+      ...DEFAULT_THEMES.dark,
+      background: '#0a1612',
+      cardBackground: '#1a2e23',
+      accent: '#059669',
+      accentSecondary: '#0d9488'
+    }
+  },
+  
+  // Light themes
+  minimal: {
+    name: 'Minimal',
+    base: 'light',
+    colors: {
+      ...DEFAULT_THEMES.light,
+      background: '#fafafa',
+      cardBackground: '#ffffff',
+      accent: '#000000'
+    }
+  },
+  warm: {
+    name: 'Warm',
+    base: 'light',
+    colors: {
+      ...DEFAULT_THEMES.light,
+      background: '#fef7ed',
+      cardBackground: '#fff7ed',
+      accent: '#ea580c',
+      accentSecondary: '#dc2626'
+    }
+  },
+  cool: {
+    name: 'Cool',
+    base: 'light',
+    colors: {
+      ...DEFAULT_THEMES.light,
+      background: '#f0f9ff',
+      cardBackground: '#f8fafc',
+      accent: '#0284c7',
+      accentSecondary: '#0891b2'
+    }
+  }
+};
+
+// Typography scale
+export const TYPOGRAPHY_SCALES = {
+  small: {
+    base: '14px',
+    sm: '12px',
+    lg: '16px',
+    xl: '18px',
+    '2xl': '20px',
+    '3xl': '24px'
+  },
+  medium: {
+    base: '16px',
+    sm: '14px',
+    lg: '18px',
+    xl: '20px',
+    '2xl': '24px',
+    '3xl': '30px'
+  },
+  large: {
+    base: '18px',
+    sm: '16px',
+    lg: '20px',
+    xl: '24px',
+    '2xl': '30px',
+    '3xl': '36px'
+  }
+};
+
+// Shadow configurations
+export const SHADOW_LEVELS = {
+  none: 'none',
+  small: '0 1px 2px 0 rgba(0, 0, 0, 0.05)',
+  medium: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
+  large: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
+  xl: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)'
+};
+
+// Animation durations
+export const TRANSITION_SPEEDS = {
+  slow: '0.4s',
+  medium: '0.2s',
+  fast: '0.1s'
+};
+
+// Utility Functions
+
+/**
+ * Get current theme colors based on settings
+ * @param {Object} settings - Application settings
+ * @returns {Object} Color palette object
+ */
+export const getThemeColors = (settings) => {
+  if (!settings) return DEFAULT_THEMES.light;
+  
+  switch (settings.theme) {
+    case THEME_MODES.LIGHT:
+      return DEFAULT_THEMES.light;
+    case THEME_MODES.DARK:
+      return DEFAULT_THEMES.dark;
+    case THEME_MODES.CUSTOM:
+      return settings.customColors || DEFAULT_THEMES.light;
+    case THEME_MODES.AUTO:
+      const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+      return prefersDark ? DEFAULT_THEMES.dark : DEFAULT_THEMES.light;
+    default:
+      return DEFAULT_THEMES.light;
+  }
+};
+
+/**
+ * Validate and sanitize settings object
+ * @param {Object} settings - Settings to validate
+ * @returns {Object} Validated settings object
+ */
+export const validateSettings = (settings) => {
+  const validatedSettings = { ...DEFAULT_SETTINGS };
+  
+  if (!settings || typeof settings !== 'object') {
+    return validatedSettings;
+  }
+  
+  // Theme validation
+  if (Object.values(THEME_MODES).includes(settings.theme)) {
+    validatedSettings.theme = settings.theme;
+  }
+  
+  // Custom colors validation
+  if (settings.customColors && typeof settings.customColors === 'object') {
+    validatedSettings.customColors = {
+      ...DEFAULT_THEMES.light,
+      ...settings.customColors
+    };
+  }
+  
+  // Numeric settings validation with ranges
+  const numericValidations = {
+    sidebarWidth: { min: 200, max: 400 },
+    cardBorderRadius: { min: 0, max: 32 },
+    cardPadding: { min: 8, max: 48 },
+    borderWidth: { min: 0, max: 4 },
+    gridGap: { min: 4, max: 32 },
+    containerMaxWidth: { min: 800, max: 2000 },
+    headerHeight: { min: 48, max: 120 },
+    footerHeight: { min: 32, max: 80 }
+  };
+  
+  Object.entries(numericValidations).forEach(([key, { min, max }]) => {
+    if (typeof settings[key] === 'number' && settings[key] >= min && settings[key] <= max) {
+      validatedSettings[key] = settings[key];
+    }
+  });
+  
+  // Boolean settings validation
+  const booleanSettings = [
+    'followSystemTheme', 'sidebarCollapsed', 'compactMode', 'showSidebar',
+    'enableAnimations', 'enableHoverEffects', 'reduceMotion',
+    'enableNotifications', 'enableSounds', 'enableTooltips', 'enableKeyboardShortcuts',
+    'enableVirtualization', 'lazyLoadImages', 'prefersReducedData'
+  ];
+  
+  booleanSettings.forEach(key => {
+    if (typeof settings[key] === 'boolean') {
+      validatedSettings[key] = settings[key];
+    }
+  });
+  
+  // String enum validations
+  const stringValidations = {
+    fontSize: ['small', 'medium', 'large'],
+    fontFamily: ['system-ui', 'serif', 'monospace'],
+    lineHeight: ['tight', 'normal', 'relaxed'],
+    shadowLevel: ['none', 'small', 'medium', 'large'],
+    transitionSpeed: ['slow', 'medium', 'fast']
+  };
+  
+  Object.entries(stringValidations).forEach(([key, validValues]) => {
+    if (validValues.includes(settings[key])) {
+      validatedSettings[key] = settings[key];
+    }
+  });
+  
+  return validatedSettings;
+};
+
+/**
+ * Save settings to localStorage with validation
+ * @param {Object} settings - Settings to save
+ * @returns {boolean} Success status
+ */
+export const saveSettings = (settings) => {
+  try {
+    const validatedSettings = validateSettings(settings);
+    const settingsToSave = {
+      ...validatedSettings,
+      lastUpdated: new Date().toISOString(),
+      version: '1.0.0'
+    };
+    
+    localStorage.setItem('appSettings', JSON.stringify(settingsToSave));
+    
+    // Apply theme to document
+    applyThemeToDocument(validatedSettings);
+    
+    // Emit settings change event
+    const event = new CustomEvent('settingsChanged', { 
+      detail: validatedSettings 
+    });
+    window.dispatchEvent(event);
+    
+    return true;
+  } catch (error) {
+    console.error('Failed to save settings:', error);
+    return false;
+  }
+};
+
+/**
+ * Load settings from localStorage with validation
+ * @returns {Object} Validated settings object
+ */
+export const loadSettings = () => {
+  try {
+    const saved = localStorage.getItem('appSettings');
+    if (saved) {
+      const parsedSettings = JSON.parse(saved);
+      const validatedSettings = validateSettings(parsedSettings);
+      
+      // Apply theme immediately on load
+      applyThemeToDocument(validatedSettings);
+      
+      return validatedSettings;
+    }
+  } catch (error) {
+    console.error('Failed to load settings:', error);
+  }
+  
+  // Return and apply defaults
+  const defaultSettings = validateSettings(DEFAULT_SETTINGS);
+  applyThemeToDocument(defaultSettings);
+  return defaultSettings;
+};
+
+/**
+ * Apply theme colors and settings to CSS custom properties
+ * @param {Object} settings - Application settings
+ */
+export const applyThemeToDocument = (settings) => {
+  if (typeof document === 'undefined') return;
+  
+  const colors = getThemeColors(settings);
+  const root = document.documentElement;
+  
+  // Apply color custom properties
+  Object.entries(colors).forEach(([key, value]) => {
+    root.style.setProperty(`--color-${key}`, value);
+  });
+  
+  // Apply layout custom properties
+  const layoutProperties = {
+    '--sidebar-width': `${settings.sidebarWidth}px`,
+    '--card-border-radius': `${settings.cardBorderRadius}px`,
+    '--card-padding': `${settings.cardPadding}px`,
+    '--border-width': `${settings.borderWidth}px`,
+    '--grid-gap': `${settings.gridGap}px`,
+    '--container-max-width': `${settings.containerMaxWidth}px`,
+    '--header-height': `${settings.headerHeight}px`,
+    '--footer-height': `${settings.footerHeight}px`
+  };
+  
+  Object.entries(layoutProperties).forEach(([property, value]) => {
+    root.style.setProperty(property, value);
+  });
+  
+  // Apply typography properties
+  const fontSize = TYPOGRAPHY_SCALES[settings.fontSize] || TYPOGRAPHY_SCALES.medium;
+  Object.entries(fontSize).forEach(([size, value]) => {
+    root.style.setProperty(`--font-size-${size}`, value);
+  });
+  
+  // Apply other properties
+  root.style.setProperty('--font-family', settings.fontFamily);
+  root.style.setProperty('--line-height', 
+    settings.lineHeight === 'tight' ? '1.25' :
+    settings.lineHeight === 'relaxed' ? '1.75' : '1.5'
+  );
+  root.style.setProperty('--shadow', SHADOW_LEVELS[settings.shadowLevel]);
+  root.style.setProperty('--transition-speed', TRANSITION_SPEEDS[settings.transitionSpeed]);
+  
+  // Apply theme class to body
+  const body = document.body;
+  body.className = body.className.replace(/theme-\w+/g, '');
+  body.classList.add(`theme-${settings.theme}`);
+  
+  // Apply utility classes
+  const utilityClasses = {
+    'compact-mode': settings.compactMode,
+    'sidebar-collapsed': settings.sidebarCollapsed,
+    'reduce-motion': settings.reduceMotion || !settings.enableAnimations,
+    'disable-hover': !settings.enableHoverEffects
+  };
+  
+  Object.entries(utilityClasses).forEach(([className, shouldAdd]) => {
+    body.classList.toggle(className, shouldAdd);
+  });
+};
+
+/**
+ * Get computed theme styles for inline styling
+ * @param {Object} settings - Application settings
+ * @returns {Object} Style objects for different components
+ */
+export const getThemeStyles = (settings) => {
+  const colors = getThemeColors(settings);
+  const fontSize = TYPOGRAPHY_SCALES[settings.fontSize] || TYPOGRAPHY_SCALES.medium;
+  const shadow = SHADOW_LEVELS[settings.shadowLevel];
+  const transition = settings.enableAnimations ? 
+    `all ${TRANSITION_SPEEDS[settings.transitionSpeed]} ease` : 'none';
+  
+  return {
+    colors,
+    
+    // Page layout
+    page: {
+      backgroundColor: colors.background,
+      color: colors.text,
+      fontFamily: settings.fontFamily,
+      fontSize: fontSize.base,
+      lineHeight: settings.lineHeight === 'tight' ? 1.25 : 
+                  settings.lineHeight === 'relaxed' ? 1.75 : 1.5,
+      transition,
+      minHeight: '100vh'
+    },
+    
+    // Card component
+    card: {
+      backgroundColor: colors.cardBackground,
+      borderRadius: `${settings.cardBorderRadius}px`,
+      padding: settings.compactMode ? 
+        `${Math.max(settings.cardPadding * 0.7, 8)}px` : 
+        `${settings.cardPadding}px`,
+      border: `${settings.borderWidth}px solid ${colors.border}`,
+      boxShadow: shadow,
+      color: colors.text,
+      transition
+    },
+    
+    // Sidebar
+    sidebar: {
+      backgroundColor: colors.sidebar,
+      width: settings.showSidebar ? `${settings.sidebarWidth}px` : '0',
+      borderRight: `${settings.borderWidth}px solid ${colors.border}`,
+      color: colors.text,
+      transition,
+      overflow: 'hidden'
+    },
+    
+    // Buttons
+    button: {
+      backgroundColor: colors.accent,
+      color: colors.background,
+      border: 'none',
+      borderRadius: `${Math.min(settings.cardBorderRadius, 8)}px`,
+      padding: settings.compactMode ? '6px 12px' : '8px 16px',
+      fontSize: fontSize.sm,
+      fontWeight: '500',
+      cursor: 'pointer',
+      transition,
+      ':hover': settings.enableHoverEffects ? {
+        backgroundColor: colors.accentHover
+      } : {}
+    },
+    
+    buttonSecondary: {
+      backgroundColor: 'transparent',
+      color: colors.textSecondary,
+      border: `${settings.borderWidth}px solid ${colors.border}`,
+      borderRadius: `${Math.min(settings.cardBorderRadius, 8)}px`,
+      padding: settings.compactMode ? '6px 12px' : '8px 16px',
+      fontSize: fontSize.sm,
+      fontWeight: '500',
+      cursor: 'pointer',
+      transition,
+      ':hover': settings.enableHoverEffects ? {
+        borderColor: colors.borderHover,
+        backgroundColor: `${colors.accent}10`
+      } : {}
+    },
+    
+    // Form elements
+    input: {
+      backgroundColor: colors.input,
+      color: colors.text,
+      border: `${settings.borderWidth}px solid ${colors.border}`,
+      borderRadius: `${Math.min(settings.cardBorderRadius, 8)}px`,
+      padding: settings.compactMode ? '6px 10px' : '8px 12px',
+      fontSize: fontSize.sm,
+      transition,
+      '::placeholder': {
+        color: colors.placeholder
+      },
+      ':focus': {
+        outline: 'none',
+        borderColor: colors.accent,
+        boxShadow: `0 0 0 3px ${colors.accent}20`
+      }
+    },
+    
+    // Typography
+    heading: {
+      color: colors.text,
+      fontWeight: '600',
+      lineHeight: 1.25
+    },
+    
+    text: {
+      color: colors.text
+    },
+    
+    textSecondary: {
+      color: colors.textSecondary
+    },
+    
+    textMuted: {
+      color: colors.textMuted
+    }
+  };
+};
+
+/**
+ * Create a custom theme preset
+ * @param {string} name - Theme name
+ * @param {string} baseTheme - Base theme (light/dark)
+ * @param {Object} overrides - Color overrides
+ * @returns {Object} Theme preset object
+ */
+export const createThemePreset = (name, baseTheme, overrides) => {
+  return {
+    name,
+    base: baseTheme,
+    colors: {
+      ...DEFAULT_THEMES[baseTheme],
+      ...overrides
+    }
+  };
+};
+
+/**
+ * Initialize system theme listener
+ * @param {Function} onThemeChange - Callback for theme changes
+ * @returns {Function} Cleanup function
+ */
+export const initializeThemeListener = (onThemeChange) => {
+  if (typeof window === 'undefined' || !window.matchMedia) {
+    return () => {}; // No-op cleanup
+  }
+  
+  const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+  
+  const handleChange = (e) => {
+    if (typeof onThemeChange === 'function') {
+      onThemeChange(e.matches ? THEME_MODES.DARK : THEME_MODES.LIGHT);
+    }
+  };
+  
+  // Listen for changes
+  if (mediaQuery.addEventListener) {
+    mediaQuery.addEventListener('change', handleChange);
+    return () => mediaQuery.removeEventListener('change', handleChange);
+  } else {
+    // Fallback for older browsers
+    mediaQuery.addListener(handleChange);
+    return () => mediaQuery.removeListener(handleChange);
+  }
+};
+
+/**
+ * Get responsive breakpoints
+ * @returns {Object} Breakpoint values
+ */
+export const getBreakpoints = () => ({
+  xs: '475px',
+  sm: '640px',
+  md: '768px',
+  lg: '1024px',
+  xl: '1280px',
+  '2xl': '1536px'
+});
+
+/**
+ * Generate CSS variables for the current theme
+ * @param {Object} settings - Application settings
+ * @returns {string} CSS custom properties as string
+ */
+export const generateCSSVariables = (settings) => {
+  const colors = getThemeColors(settings);
+  const fontSize = TYPOGRAPHY_SCALES[settings.fontSize] || TYPOGRAPHY_SCALES.medium;
+  
+  let css = ':root {\n';
+  
+  // Color variables
+  Object.entries(colors).forEach(([key, value]) => {
+    css += `  --color-${key}: ${value};\n`;
+  });
+  
+  // Typography variables
+  Object.entries(fontSize).forEach(([size, value]) => {
+    css += `  --font-size-${size}: ${value};\n`;
+  });
+  
+  // Layout variables
+  css += `  --sidebar-width: ${settings.sidebarWidth}px;\n`;
+  css += `  --card-border-radius: ${settings.cardBorderRadius}px;\n`;
+  css += `  --card-padding: ${settings.cardPadding}px;\n`;
+  css += `  --grid-gap: ${settings.gridGap}px;\n`;
+  css += `  --transition-speed: ${TRANSITION_SPEEDS[settings.transitionSpeed]};\n`;
+  css += `  --shadow: ${SHADOW_LEVELS[settings.shadowLevel]};\n`;
+  
+  css += '}';
+  
+  return css;
+};
+
+// Export everything
+export default {
+  THEME_MODES,
+  DEFAULT_THEMES,
+  DEFAULT_SETTINGS,
+  THEME_PRESETS,
+  TYPOGRAPHY_SCALES,
+  SHADOW_LEVELS,
+  TRANSITION_SPEEDS,
+  getThemeColors,
+  validateSettings,
+  saveSettings,
+  loadSettings,
+  applyThemeToDocument,
+  getThemeStyles,
+  createThemePreset,
+  initializeThemeListener,
+  getBreakpoints,
+  generateCSSVariables
+};
