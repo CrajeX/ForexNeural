@@ -21,7 +21,7 @@ const PORT = process.env.PORT || 3000;
 // Middleware
 app.use(express.json());
 app.use(cors({
-    origin: ['http://localhost:5173','https://atecon.netlify.app', 'http://localhost:3000'],
+    origin: ['http://localhost:5173','https://atecon.netlify.app', 'http://localhost:3000','http://localhost:5174'],
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization']
@@ -45,15 +45,24 @@ app.use(session({
 
 // MySQL Database configuration
 const dbConfig = {
-    host: process.env.DB_HOST || 'localhost',
-    user: process.env.DB_USER || 'root',
-    password: process.env.DB_PASSWORD || '',
-    database: process.env.DB_NAME || '8con',
+    host: process.env.DB_HOST_EDGE || 'localhost',
+    user: process.env.DB_USER_EDGE || 'root',
+    password: process.env.DB_PASSWORD_EDGE || '',
+    database: process.env.DB_NAME_EDGE || '8con',
     charset: 'utf8',
     connectionLimit: 10
 };
 
+const dbEnrollment = {
+    host: process.env.DB_HOST || 'localhost',
+    user: process.env.DB_USER || 'root',
+    password: process.env.DB_PASSWORD || '',
+    database: process.env.DB_NAME || '8cons',
+    charset: 'utf8',
+    connectionLimit: 10
+};
 let pool;
+let pools;
 
 // File upload configuration
 const storage = multer.diskStorage({
@@ -70,7 +79,9 @@ const upload = multer({ storage: storage });
 async function initDatabase() {
     try {
         pool = mysql.createPool(dbConfig);
+        pools = mysql.createPool(dbEnrollment);
         const connection = await pool.getConnection();
+        const connections = await pools.getConnection();
         console.log('✅ MySQL Database connected successfully');
         connection.release();
         return true;
@@ -197,7 +208,7 @@ app.get('/api/check-auth', async (req, res) => {
 });
 
 // Login endpoint with SQL session storage
-app.post('/api/login', async (req, res) => {
+app.post('/api/auth/login', async (req, res) => {
   try {
     const { email, password } = req.body;
     console.log('🔐 Login attempt for email:', email);
@@ -209,11 +220,16 @@ app.post('/api/login', async (req, res) => {
     const trimmedEmail = email.trim();
     const trimmedPassword = password.trim();
 
-    // STEP 1: Get student info from MySQL
-    const [studentRows] = await pool.execute(
-      "SELECT account_id, name, student_id, birth_place, birth_date, address, phone_no, learning_style, trading_level, age, gender FROM students WHERE email = ?",
-      [trimmedEmail]
-    );
+    // STEP 1: Get student info from MySQL with person details
+    const [studentRows] = await pools.execute(`
+      SELECT s.account_id, s.student_id, s.person_id, s.registration_date, 
+             s.graduation_status, s.graduation_date, s.gpa, s.academic_standing, s.notes,
+             p.first_name, p.last_name, p.email, p.phone, p.address, 
+             p.birth_date, p.birth_place, p.gender
+      FROM students s
+      JOIN persons p ON s.person_id = p.person_id
+      WHERE p.email = ?
+    `, [trimmedEmail]);
 
     if (studentRows.length === 0) {
       console.log('❌ No student found with email:', trimmedEmail);
@@ -223,10 +239,12 @@ app.post('/api/login', async (req, res) => {
     const student = studentRows[0];
 
     // STEP 2: Get account info (auth details)
-    const [accountRows] = await pool.execute(
-      "SELECT account_id, username, password, roles FROM accounts WHERE account_id = ?",
-      [student.account_id]
-    );
+    const [accountRows] = await pools.execute(`
+      SELECT account_id, username, password_hash, token, account_status, 
+             last_login, failed_login_attempts, locked_until, created_at, updated_at
+      FROM accounts 
+      WHERE account_id = ?
+    `, [student.account_id]);
 
     if (accountRows.length === 0) {
       console.log('❌ No account found for account_id:', student.account_id);
@@ -235,46 +253,147 @@ app.post('/api/login', async (req, res) => {
 
     const account = accountRows[0];
 
+    // Check if account is locked
+    if (account.locked_until && new Date(account.locked_until) > new Date()) {
+      console.log('❌ Account is locked until:', account.locked_until);
+      return res.status(423).json({ 
+        error: 'Account is temporarily locked. Please try again later.',
+        lockedUntil: account.locked_until
+      });
+    }
+
+    // Check account status
+    if (account.account_status !== 'active') {
+      console.log('❌ Account is not active:', account.account_status);
+      return res.status(401).json({ error: 'Account is not active' });
+    }
+
     // STEP 3: Password check (replace with real bcrypt logic)
     let passwordValid = true;
     // Uncomment below for actual bcrypt verification
     /*
-    passwordValid = await bcrypt.compare(trimmedPassword, account.password);
+    passwordValid = await bcrypt.compare(trimmedPassword, account.password_hash);
     */
 
     if (!passwordValid) {
       console.log('❌ Password invalid');
+      
+      // Increment failed login attempts
+      await pools.execute(`
+        UPDATE accounts 
+        SET failed_login_attempts = failed_login_attempts + 1,
+            locked_until = CASE 
+              WHEN failed_login_attempts >= 4 THEN DATE_ADD(NOW(), INTERVAL 15 MINUTE)
+              ELSE locked_until
+            END
+        WHERE account_id = ?
+      `, [account.account_id]);
+      
       return res.status(401).json({ error: 'Invalid email or password' });
     }
 
-    // STEP 4: Compose session userData
+    // STEP 4: Get account roles and role details
+    const [roleRows] = await pools.execute(`
+      SELECT ar.role_id, ar.assigned_date, ar.assigned_by, ar.is_active, ar.expiry_date,
+             r.role_name, r.permissions, r.description
+      FROM account_roles ar
+      JOIN roles r ON ar.role_id = r.role_id
+      WHERE ar.account_id = ? AND ar.is_active = TRUE
+      AND (ar.expiry_date IS NULL OR ar.expiry_date > NOW())
+    `, [account.account_id]);
+
+    if (roleRows.length === 0) {
+      console.log('❌ No active roles found for account_id:', account.account_id);
+      return res.status(401).json({ error: 'No active roles assigned to this account' });
+    }
+
+    // Get primary role (first active role)
+    const primaryRole = roleRows[0];
+    const allRoles = roleRows.map(role => ({
+      roleId: role.role_id,
+      roleName: role.role_name,
+      permissions: role.permissions,
+      assignedDate: role.assigned_date,
+      isActive: role.is_active,
+      expiryDate: role.expiry_date
+    }));
+
+    // STEP 5: Get trading level information if applicable
+    let tradingLevelInfo = null;
+    if (student.trading_level_id) {
+      const [tradingLevelRows] = await pools.execute(`
+        SELECT level_id, level_name, level_description, minimum_score, 
+               prerequisite_level_id, estimated_duration_weeks, 
+               recommended_capital, risk_tolerance
+        FROM trading_levels 
+        WHERE level_id = ?
+      `, [student.trading_level_id]);
+      
+      if (tradingLevelRows.length > 0) {
+        tradingLevelInfo = tradingLevelRows[0];
+      }
+    }
+
+    // STEP 6: Compose session userData
     const userData = {
       account_id: account.account_id,
       student_id: student.student_id,
-      name: student.name,
+      person_id: student.person_id,
       username: account.username,
       email: trimmedEmail,
-      roles: account.roles,
+      firstName: student.first_name,
+      lastName: student.last_name,
+      fullName: `${student.first_name} ${student.last_name}`,
+      phone: student.phone,
       address: student.address,
-      birth_place: student.birth_place,
-      phone_no: student.phone_no,
-      trading_level: student.trading_level,
+      birthDate: student.birth_date,
+      birthPlace: student.birth_place,
       gender: student.gender,
-      birth_date: student.birth_date,
+      
+      // Student specific data
+      registrationDate: student.registration_date,
+      graduationStatus: student.graduation_status,
+      graduationDate: student.graduation_date,
+      gpa: student.gpa,
+      academicStanding: student.academic_standing,
+      notes: student.notes,
+      
+      // Role information
+      primaryRole: primaryRole.role_name,
+      roleId: primaryRole.role_id,
+      permissions: primaryRole.permissions,
+      roles: allRoles,
+      
+      // Trading level
+      tradingLevel: tradingLevelInfo,
+      
+      // Session info
       authenticated: true,
-      loginTime: new Date().toISOString()
+      loginTime: new Date().toISOString(),
+      lastLogin: account.last_login
     };
 
-    // STEP 5: Create Express session
+    // STEP 7: Reset failed login attempts and update last login
+    await pools.execute(`
+      UPDATE accounts 
+      SET failed_login_attempts = 0, 
+          locked_until = NULL, 
+          last_login = NOW(),
+          updated_at = NOW()
+      WHERE account_id = ?
+    `, [account.account_id]);
+
+    // STEP 8: Create Express session
     req.session.user_id = account.account_id;
     req.session.user_email = trimmedEmail;
+    req.session.role = primaryRole.role_name;
 
-    // STEP 6: Check for existing session in SQL
+    // STEP 9: Check for existing session in SQL
     const existingSession = await getSessionFromSQL(account.account_id);
 
     if (existingSession) {
       console.log('🔁 Reusing session');
-      await pool.execute(
+      await pools.execute(
         "UPDATE user_sessions SET updated_at = NOW(), user_agent = ?, ip_address = ? WHERE account_id = ?",
         [req.headers['user-agent'] || '', req.ip || req.connection.remoteAddress || '', account.account_id]
       );
@@ -300,7 +419,7 @@ app.post('/api/login', async (req, res) => {
       );
     }
 
-    // STEP 7: Sync to SQL users table (if not already)
+    // STEP 10: Sync to SQL users table (if not already)
     const [userExists] = await pool.execute(
       "SELECT id FROM users WHERE email = ? OR username = ?",
       [trimmedEmail, account.username]
@@ -314,14 +433,14 @@ app.post('/api/login', async (req, res) => {
       `, [
         account.account_id,
         student.student_id,
-        student.name,
+        userData.fullName,
         account.username,
         trimmedEmail,
-        account.roles,
+        primaryRole.role_name,
         student.address,
         student.birth_place,
-        student.phone_no,
-        student.trading_level,
+        student.phone,
+        tradingLevelInfo ? tradingLevelInfo.level_name : null,
         student.gender,
         student.birth_date,
         1,
@@ -330,7 +449,7 @@ app.post('/api/login', async (req, res) => {
       console.log('✅ SQL user synced');
     }
 
-    // STEP 8: Return success
+    // STEP 11: Return success
     res.json({
       success: true,
       user: userData,
@@ -648,34 +767,64 @@ app.post('/api/user/avatar', upload.single('avatar'), async (req, res) => {
 app.post('/api/register', async (req, res) => {
   try {
     const {
-      account_id,
-      student_id,
+      student_id = null,
       email,
       password,
       username,
       name,
-      roles = 'student'
+      roles = 'student',
+      address = '',
+      birth_place = '',
+      phone_no = '',
+      trading_level = null,
+      gender = '',
+      birth_date = '',
+      authenticated = true,
+      loginTime = new Date()
     } = req.body;
 
-    // Check if user already exists
+    // 1. Get person_id from pools (external DB)
+    const [personRows] = await pools.execute(
+      "SELECT person_id FROM persons WHERE email = ?",
+      [email]
+    );
+
+    if (personRows.length === 0) {
+      return res.status(404).json({
+        success: false,
+        error: "Person not found in external 'persons' database"
+      });
+    }
+
+    const account_id = personRows[0].person_id;
+
+    // 2. Check if already registered
     const [existingUsers] = await pool.execute(
-      "SELECT id FROM users WHERE email = ? OR username = ?",
-      [email, username]
+      "SELECT account_id FROM users WHERE account_id = ?",
+      [account_id]
     );
 
     if (existingUsers.length > 0) {
       return res.status(400).json({
         success: false,
-        error: 'User with this email or username already exists'
+        error: 'User with this account ID already exists'
       });
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    const [result] = await pool.execute(`
+    // 3. Insert into `accounts`
+    await pool.execute(
+      `INSERT INTO accounts (account_id, username, password, roles)
+       VALUES (?, ?, ?, ?)`,
+      [account_id, username, hashedPassword, roles]
+    );
+
+    // 4. Insert into `users`
+    const [userResult] = await pool.execute(`
       INSERT INTO users 
-      (account_id, student_id, email, password, username, name, roles, authenticated, login_time, created_at, updated_at)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())
+      (account_id, student_id, email, password, username, name, roles, address, birth_place, phone_no, trading_level, gender, birth_date, authenticated, login_time, created_at, updated_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())
     `, [
       account_id,
       student_id,
@@ -684,23 +833,47 @@ app.post('/api/register', async (req, res) => {
       username,
       name,
       roles,
-      1,
-      new Date()
+      address,
+      birth_place,
+      phone_no,
+      trading_level,
+      gender,
+      birth_date,
+      authenticated ? 1 : 0,
+      new Date(loginTime)
     ]);
 
-    // Get the created user
-    const [users] = await pool.execute(
-      "SELECT * FROM users WHERE id = ?",
-      [result.insertId]
-    );
+    // 5. Insert into `profiles`
+    await pool.execute(`
+      INSERT INTO profiles
+      (account_id, student_id, name, username, email, roles, address, birth_place, birth_date, phone_no, trading_level, learning_style, gender, avatar, bio, preferences, authenticated, login_time, last_login, is_verified, verification_token, created_at, updated_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NULL, ?, NULL, NULL, NULL, ?, ?, NULL, 0, NULL, NOW(), NOW())
+    `, [
+      account_id,
+      student_id,
+      name,
+      username,
+      email,
+      roles,
+      address,
+      birth_place,
+      birth_date,
+      phone_no,
+      trading_level,
+      gender,
+      authenticated ? 1 : 0,
+      new Date(loginTime)
+    ]);
 
+    // 6. Return user info without password
+    const [users] = await pool.execute("SELECT * FROM users WHERE id = ?", [userResult.insertId]);
     const user = users[0];
     delete user.password;
 
     res.status(201).json({
       success: true,
-      user: user,
-      message: 'User created in SQL'
+      user,
+      message: 'User created successfully in accounts, users, and profiles'
     });
 
   } catch (error) {
@@ -708,6 +881,7 @@ app.post('/api/register', async (req, res) => {
     res.status(500).json({ success: false, error: 'Server error' });
   }
 });
+
 
 // ====================
 // PROFILE API ROUTES

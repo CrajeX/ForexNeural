@@ -161,77 +161,77 @@ const ProfilePage = () => {
 
   // Get user data from session storage and fetch from MongoDB
   const getUserFromSession = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      
-      // Get user data from sessionStorage first
-      const storedUser = sessionStorage.getItem('user');
-      const sessionData = storedUser ? JSON.parse(storedUser) : null;
-      
-      if (!sessionData?.account_id) {
-        throw new Error('No user session found. Please log in again.');
-      }
+  try {
+    setLoading(true);
+    setError(null);
+    
+    // Get session data from sessionStorage
+    const storedSession = sessionStorage.getItem('session');
+    const sessionData = storedSession ? JSON.parse(storedSession) : null;
 
-      console.log('🔍 Fetching profile for account_id:', sessionData.account_id);
-
-      // FIXED: Fetch profile from MongoDB via your API (matches backend route)
-      const response = await fetch(`http://localhost:3000/api/profile/${sessionData.account_id}`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        credentials: 'include' // Include session cookies
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.error || `HTTP ${response.status}: ${response.statusText}`);
-      }
-
-      const data = await response.json();
-      
-      if (!data.success) {
-        throw new Error(data.error || 'Failed to fetch profile data');
-      }
-
-      console.log('✅ Profile data received:', data.profile);
-      
-      // Set the profile data (backend returns 'profile')
-      const profileData = data.profile;
-      console.log(profileData);
-      setUser(profileData);
-      setEditedUser(profileData);
-
-      // Update sessionStorage with fresh data
-      // sessionStorage.setItem('user', JSON.stringify(profileData));
-      
-    } catch (error) {
-      console.error('❌ Error fetching user profile:', error);
-      setError(error.message);
-      
-      // For demo purposes, set mock data if API fails
-      const mockData = {
-        account_id: 1,
-        name: "John Doe",
-        email: "john.doe@example.com",
-        phone: "+1234567890",
-        location: "New York, NY",
-        student_id: "2024001",
-        course: "Computer Science",
-        yearLevel: "3rd Year",
-        roles: "student",
-        status: "Active",
-        avatar: null,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString()
-      };
-      setUser(mockData);
-      setEditedUser(mockData);
-    } finally {
-      setLoading(false);
+    if (!sessionData?.account_id) {
+      throw new Error('No user session found. Please log in again.');
     }
-  };
+
+    console.log('🔍 Fetching profile for account_id:', sessionData.account_id);
+
+
+    const response = await fetch(`http://localhost:3000/api/profile/${sessionData.account_id}`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      credentials: 'include'
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.error || `HTTP ${response.status}: ${response.statusText}`);
+    }
+
+    const data = await response.json();
+
+    if (!data.success) {
+      throw new Error(data.error || 'Failed to fetch profile data');
+    }
+
+    console.log('✅ Profile data received:', data.profile);
+    
+    const profileData = data.profile;
+
+    setUser(profileData);
+    setEditedUser(profileData);
+
+    // Optional: update the stored session with refreshed profile (if needed)
+    // sessionStorage.setItem('session', JSON.stringify({ ...sessionData, user: profileData }));
+
+  } catch (error) {
+    console.error('❌ Error fetching user profile:', error);
+    setError(error.message);
+
+    // Optional: Fallback mock
+    const mockData = {
+      account_id: 1,
+      name: "John Doe",
+      email: "john.doe@example.com",
+      phone: "+1234567890",
+      location: "New York, NY",
+      student_id: "2024001",
+      course: "Computer Science",
+      yearLevel: "3rd Year",
+      roles: "student",
+      status: "Active",
+      avatar: null,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    };
+    setUser(mockData);
+    setEditedUser(mockData);
+  } finally {
+    setLoading(false);
+  }
+};
+
 
   useEffect(() => {
     getUserFromSession();

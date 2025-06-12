@@ -3,9 +3,9 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Jun 05, 2025 at 10:12 AM
+-- Generation Time: Jun 12, 2025 at 06:51 AM
 -- Server version: 10.4.32-MariaDB
--- PHP Version: 8.2.12
+-- PHP Version: 8.0.30
 
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 START TRANSACTION;
@@ -20,36 +20,6 @@ SET time_zone = "+00:00";
 --
 -- Database: `8con`
 --
-
-DELIMITER $$
---
--- Procedures
---
-CREATE DEFINER=`root`@`localhost` PROCEDURE `CleanupExpiredResetTokens` ()   BEGIN
-    DECLARE deleted_count INT;
-    
-    DELETE FROM `password_resets` 
-    WHERE `expires_at` < NOW() OR `is_used` = 1;
-    
-    SET deleted_count = ROW_COUNT();
-    
-    INSERT INTO `activity_logs` (`action`, `description`, `created_at`)
-    VALUES ('system_cleanup', CONCAT('Cleaned up ', deleted_count, ' expired reset tokens'), NOW());
-END$$
-
-CREATE DEFINER=`root`@`localhost` PROCEDURE `CleanupExpiredSessions` ()   BEGIN
-    DECLARE deleted_count INT;
-    
-    DELETE FROM `user_sessions` 
-    WHERE `expires_at` < NOW() OR `is_active` = 0;
-    
-    SET deleted_count = ROW_COUNT();
-    
-    INSERT INTO `activity_logs` (`action`, `description`, `created_at`)
-    VALUES ('system_cleanup', CONCAT('Cleaned up ', deleted_count, ' expired sessions'), NOW());
-END$$
-
-DELIMITER ;
 
 -- --------------------------------------------------------
 
@@ -74,7 +44,8 @@ INSERT INTO `accounts` (`account_id`, `roles`, `username`, `password`, `reset_ot
 (1, 'student', 'test', 'test', 0, '2025-05-21 00:30:02.014214'),
 (2, 'admin', 'admin', 'admin', 0, '2025-05-21 00:30:02.014214'),
 (7, 'admin', 'Gimp', '5e1f0e062781b4bba659ddf21ca488509bd4d3b8110e4c5032986287015af6fa', 0, '2025-05-21 00:30:02.014214'),
-(9, 'student', 'dias', 'd38cc354527fa0431a79862ae30f3f67a19d63d6037e25c591b2f3a1f7c01d26', 0, '2025-05-21 00:30:02.014214'),
+(8, 'staff', 'janesmith85', '$2b$10$OzSQH5gU30AIxgq2mnCOI.3xmxrHxJCuUk/HT6w2B6b.RtfkGz002', 0, '2025-06-12 04:37:32.926879'),
+(9, 'staff', 'janesmith20', '$2b$10$u84SVqHRRTQ7n.4PPmZZGu/Yn/r8MAExAr2Jdku.OO98vzpiEXG0m', 0, '2025-06-12 04:41:50.755652'),
 (11, 'admin', 'Gimpy', 'ae135ad952a48300d66a514a2398c54b6e588c65f259dcb762b436fa5227e8ef', 0, '2025-05-21 00:30:02.014214'),
 (12, 'student', 'diass', 'b3da6c475b259fe6e394263eff01e9f8c2c9ca86c4d2431eba76edac03da5a0c', 0, '2025-05-21 00:30:02.014214'),
 (14, 'admin', 'Gimppy', '11ab273931c78ff884fed06896784f51c744247b0960ae1b2471046f5ea744c0', 0, '2025-05-21 00:30:02.014214'),
@@ -147,7 +118,29 @@ INSERT INTO `activity_logs` (`id`, `account_id`, `action`, `description`, `ip_ad
 (8, 1, 'profile_updated', 'User profile was updated', NULL, NULL, NULL, '2025-06-05 07:21:51'),
 (9, 1, 'profile_updated', 'User profile was updated', NULL, NULL, NULL, '2025-06-05 07:26:25'),
 (10, 1, 'profile_updated', 'User profile was updated', NULL, NULL, NULL, '2025-06-05 07:27:42'),
-(11, 1, 'profile_updated', 'User profile was updated', NULL, NULL, NULL, '2025-06-05 07:51:29');
+(11, 1, 'profile_updated', 'User profile was updated', NULL, NULL, NULL, '2025-06-05 07:51:29'),
+(12, 1, 'profile_updated', 'User profile was updated', NULL, NULL, NULL, '2025-06-06 06:58:17'),
+(13, 1, 'profile_updated', 'User profile was updated', NULL, NULL, NULL, '2025-06-06 08:46:54'),
+(14, 1, 'profile_updated', 'User profile was updated', NULL, NULL, NULL, '2025-06-06 08:48:04'),
+(15, 1, 'profile_updated', 'User profile was updated', NULL, NULL, NULL, '2025-06-06 08:48:36'),
+(16, 1, 'profile_updated', 'User profile was updated', NULL, NULL, NULL, '2025-06-06 08:49:31'),
+(17, 1, 'profile_updated', 'User profile was updated', NULL, NULL, NULL, '2025-06-06 08:52:21'),
+(18, 1, 'profile_updated', 'User profile was updated', NULL, NULL, NULL, '2025-06-06 08:52:34'),
+(19, 1, 'profile_updated', 'User profile was updated', NULL, NULL, NULL, '2025-06-06 08:55:24'),
+(20, 1, 'profile_updated', 'User profile was updated', NULL, NULL, NULL, '2025-06-06 08:55:36'),
+(21, 1, 'profile_updated', 'User profile was updated', NULL, NULL, NULL, '2025-06-06 08:55:47'),
+(22, 1, 'profile_updated', 'User profile was updated', NULL, NULL, NULL, '2025-06-06 08:58:37'),
+(23, 1, 'profile_updated', 'User profile was updated', NULL, NULL, NULL, '2025-06-06 08:58:45'),
+(24, 1, 'profile_updated', 'User profile was updated', NULL, NULL, NULL, '2025-06-06 09:01:05'),
+(25, 1, 'profile_updated', 'User profile was updated', NULL, NULL, NULL, '2025-06-06 09:04:26'),
+(26, 1, 'profile_updated', 'User profile was updated', NULL, NULL, NULL, '2025-06-06 09:05:40'),
+(27, 1, 'profile_updated', 'User profile was updated', NULL, NULL, NULL, '2025-06-06 09:08:28'),
+(31, 1, 'profile_updated', 'User profile was updated', NULL, NULL, NULL, '2025-06-06 09:13:42'),
+(32, 1, 'profile_updated', 'User profile was updated', NULL, NULL, NULL, '2025-06-06 09:15:25'),
+(33, 1, 'profile_updated', 'User profile was updated', NULL, NULL, NULL, '2025-06-06 09:15:36'),
+(34, 1, 'profile_updated', 'User profile was updated', NULL, NULL, NULL, '2025-06-06 09:15:43'),
+(35, 8, 'profile_updated', 'User profile was updated', NULL, NULL, NULL, '2025-06-12 04:38:17'),
+(36, 8, 'profile_updated', 'User profile was updated', NULL, NULL, NULL, '2025-06-12 04:38:20');
 
 -- --------------------------------------------------------
 
@@ -300,7 +293,8 @@ CREATE TABLE `profiles` (
 --
 
 INSERT INTO `profiles` (`id`, `account_id`, `student_id`, `name`, `username`, `email`, `roles`, `address`, `birth_place`, `birth_date`, `phone_no`, `trading_level`, `learning_style`, `gender`, `avatar`, `bio`, `preferences`, `authenticated`, `login_time`, `last_login`, `is_verified`, `verification_token`, `created_at`, `updated_at`) VALUES
-(1, 1, '1', 'test', 'test', 'crajeextremeyt@gmail.com', 'student', 'Valenzuela', 'Valenzuela', '2025-06-17', '09427184388', 'beginner', NULL, 'male', '/uploads/avatars/1749025966246-343866882.png', NULL, NULL, 1, '2025-06-04 08:31:08', '2025-06-05 15:51:29', 0, NULL, '2025-06-04 08:31:08', '2025-06-05 07:51:29');
+(2, 8, NULL, 'Jane Elizabeth Smith', 'janesmith85', 'jane.smith@example.com', '', '', 'San Francisco, CA', '1985-05-18', '', NULL, NULL, 'female', '/uploads/avatars/1749703097767-696713373.png', NULL, NULL, 1, '2025-06-12 12:37:32', NULL, 0, NULL, '2025-06-12 04:37:32', '2025-06-12 04:38:20'),
+(3, 9, NULL, 'Jane Elizabeth Smith', 'janesmith20', 'janes.smith@example.com', '', '', 'San Francisco, CA', '1985-05-19', '', NULL, NULL, 'female', NULL, NULL, NULL, 1, '2025-06-12 12:41:50', NULL, 0, NULL, '2025-06-12 04:41:50', '2025-06-12 04:41:50');
 
 --
 -- Triggers `profiles`
@@ -389,7 +383,7 @@ CREATE TABLE `students` (
 --
 
 INSERT INTO `students` (`student_id`, `name`, `age`, `gender`, `birth_date`, `birth_place`, `email`, `address`, `background`, `batch`, `rating`, `goals`, `trading_level`, `device_availability`, `learning_style`, `date_registered`, `account_id`, `phone_no`) VALUES
-('1', 'test', 12, 'male', '2025-06-18', 'Valenzuela', 'crajeextremeyt@gmail.com', 'Valenzuela', 'SVG', '2', 2.00, 'Money', 'Beginner', 'None', 'In-person', '2025-06-04', 1, '09427184388');
+('1', 'Chalex Napoles', 12, 'male', '2025-06-18', 'Valenzuela', 'crajeextremeyt@gmail.com', 'Valenzuela', 'SVG', '2', 2.00, 'Money', 'Beginner', 'None', 'In-person', '2025-06-04', 1, '09427184388');
 
 -- --------------------------------------------------------
 
@@ -454,7 +448,8 @@ CREATE TABLE `users` (
 --
 
 INSERT INTO `users` (`id`, `account_id`, `student_id`, `name`, `username`, `email`, `password`, `roles`, `address`, `birth_place`, `birth_date`, `phone_no`, `trading_level`, `gender`, `avatar`, `authenticated`, `login_time`, `last_login`, `created_at`, `updated_at`) VALUES
-(1, 1, '1', 'test', 'test', 'crajeextremeyt@gmail.com', NULL, 'student', 'Valenzuela', 'Valenzuela', '2025-06-18', '09427184388', 'beginner', 'male', NULL, 1, '2025-06-04 16:31:22', NULL, '2025-06-04 08:31:22', '2025-06-04 08:31:22');
+(7, 8, NULL, 'Jane Elizabeth Smith', 'janesmith85', 'jane.smith@example.com', '$2b$10$OzSQH5gU30AIxgq2mnCOI.3xmxrHxJCuUk/HT6w2B6b.RtfkGz002', '', '', 'San Francisco, CA', '1985-05-18', '', NULL, 'female', '/uploads/avatars/1749703097767-696713373.png', 1, '2025-06-12 12:37:32', NULL, '2025-06-12 04:37:32', '2025-06-12 04:38:20'),
+(8, 9, NULL, 'Jane Elizabeth Smith', 'janesmith20', 'janes.smith@example.com', '$2b$10$u84SVqHRRTQ7n.4PPmZZGu/Yn/r8MAExAr2Jdku.OO98vzpiEXG0m', '', '', 'San Francisco, CA', '1985-05-19', '', NULL, 'female', NULL, 1, '2025-06-12 12:41:50', NULL, '2025-06-12 04:41:50', '2025-06-12 04:41:50');
 
 -- --------------------------------------------------------
 
@@ -483,7 +478,7 @@ CREATE TABLE `user_sessions` (
 --
 
 INSERT INTO `user_sessions` (`id`, `session_id`, `account_id`, `user_email`, `user_data`, `is_active`, `expires_at`, `user_agent`, `ip_address`, `device_info`, `last_activity`, `created_at`, `updated_at`) VALUES
-(9, 'xojxCVMTL0lTwnoQUkQO00xQ7Bc2pd5Y', 1, 'crajeextremeyt@gmail.com', '{\"account_id\":1,\"student_id\":\"1\",\"name\":\"test\",\"username\":\"test\",\"email\":\"crajeextremeyt@gmail.com\",\"roles\":\"student\",\"address\":\"Valenzuela\",\"birth_place\":\"Valenzuela\",\"phone_no\":\"09427184388\",\"trading_level\":\"Beginner\",\"gender\":\"male\",\"birth_date\":\"2025-06-17T16:00:00.000Z\",\"authenticated\":true,\"loginTime\":\"2025-06-05T07:51:29.529Z\"}', 1, '2025-06-06 15:51:29', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Safari/537.36', '::1', NULL, '2025-06-05 07:51:29', '2025-06-05 07:51:29', '2025-06-05 07:51:29');
+(21, 'Cfo4o04cPo0CgnKRc-BHZCd5UVig1WFQ', 1, 'crajeextremeyt@gmail.com', '{\"account_id\":1,\"student_id\":\"1\",\"name\":\"Chalex Napoles\",\"username\":\"test\",\"email\":\"crajeextremeyt@gmail.com\",\"roles\":\"student\",\"address\":\"Valenzuela\",\"birth_place\":\"Valenzuela\",\"phone_no\":\"09427184388\",\"trading_level\":\"Beginner\",\"gender\":\"male\",\"birth_date\":\"2025-06-17T16:00:00.000Z\",\"authenticated\":true,\"loginTime\":\"2025-06-06T09:15:42.996Z\"}', 1, '2025-06-07 17:15:42', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/134.0.0.0 Safari/537.36 OPR/119.0.0.0', '::1', NULL, '2025-06-06 09:15:43', '2025-06-06 09:15:43', '2025-06-06 09:15:43');
 
 --
 -- Triggers `user_sessions`
@@ -686,7 +681,7 @@ ALTER TABLE `accounts`
 -- AUTO_INCREMENT for table `activity_logs`
 --
 ALTER TABLE `activity_logs`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=12;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=37;
 
 --
 -- AUTO_INCREMENT for table `competency_progress`
@@ -716,7 +711,7 @@ ALTER TABLE `payments`
 -- AUTO_INCREMENT for table `profiles`
 --
 ALTER TABLE `profiles`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 
 --
 -- AUTO_INCREMENT for table `referrals`
@@ -746,13 +741,13 @@ ALTER TABLE `system_settings`
 -- AUTO_INCREMENT for table `users`
 --
 ALTER TABLE `users`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9;
 
 --
 -- AUTO_INCREMENT for table `user_sessions`
 --
 ALTER TABLE `user_sessions`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=10;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=22;
 
 --
 -- Constraints for dumped tables
