@@ -3,9 +3,9 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Jun 12, 2025 at 06:52 AM
+-- Generation Time: Jun 13, 2025 at 01:10 PM
 -- Server version: 10.4.32-MariaDB
--- PHP Version: 8.0.30
+-- PHP Version: 8.2.12
 
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 START TRANSACTION;
@@ -189,7 +189,9 @@ CREATE TABLE `accounts` (
 
 INSERT INTO `accounts` (`account_id`, `username`, `password_hash`, `token`, `account_status`, `last_login`, `failed_login_attempts`, `locked_until`, `created_at`, `updated_at`) VALUES
 (8, 'janesmith85', '$2a$12$W8YsEd6wAAfxevFI.GwcweULIZHV5trLIKzAL2N.q8WWt8/bsPylW', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhY2NvdW50SWQiOjgsInVzZXJuYW1lIjoiamFuZXNtaXRoODUiLCJyb2xlIjoic3RhZmYiLCJpYXQiOjE3NDk2OTUyMTEsImV4cCI6MTc0OTc4MTYxMX0.json_S-oZ7wkV8HLjKhAxHNeQIEtdZo6mcJlhfHjNtE', 'active', '2025-06-12 04:37:32', 0, NULL, '2025-06-12 02:26:51', '2025-06-12 04:37:32'),
-(9, 'janesmith20', '$2a$12$6tuEYRIpBwsBE66.1afYCuewfEfU9GVkDoeiO1uPirLQ9B1qdtksu', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhY2NvdW50SWQiOjksInVzZXJuYW1lIjoiamFuZXNtaXRoMjAiLCJyb2xlIjoic3RhZmYiLCJpYXQiOjE3NDk3MDMyMTgsImV4cCI6MTc0OTc4OTYxOH0.5tKeHAEU9fMfgL2SRitfWIsFe4kM_oAv3QXGO00PjUM', 'active', '2025-06-12 04:41:50', 0, NULL, '2025-06-12 04:40:18', '2025-06-12 04:41:50');
+(9, 'janesmith20', '$2a$12$6tuEYRIpBwsBE66.1afYCuewfEfU9GVkDoeiO1uPirLQ9B1qdtksu', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhY2NvdW50SWQiOjksInVzZXJuYW1lIjoiamFuZXNtaXRoMjAiLCJyb2xlIjoic3RhZmYiLCJpYXQiOjE3NDk3ODY0MTcsImV4cCI6MTc0OTg3MjgxN30.JBJnniKh4rD9IuvnLhHL2zYYx2Ic895nbAr1TbXNYkk', 'active', '2025-06-13 03:46:57', 0, NULL, '2025-06-12 04:40:18', '2025-06-13 03:46:57'),
+(10, 'janesmith21', '$2b$12$oQI.A8XG5pPZtDzyhTQ0J.DSEeNzs7g8qYuG9UP6/ryrb9GLJsf1u', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhY2NvdW50SWQiOjEwLCJ1c2VybmFtZSI6ImphbmVzbWl0aDIxIiwicm9sZSI6InN0YWZmIiwiaWF0IjoxNzQ5Nzg3MTgxLCJleHAiOjE3NDk4NzM1ODF9.TcZujI-oI3CSWBaTrDsnHEpXY6uBLZXmGoNtqBS_nl8', 'active', NULL, 0, NULL, '2025-06-13 03:59:40', '2025-06-13 03:59:41'),
+(15, 'johndoe123', '$2b$12$WKbua14t/EIfUOhWgG3vA.nEZfZCyC0RONabHe/0ecJFFqMKwbT7O', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhY2NvdW50SWQiOjE1LCJ1c2VybmFtZSI6ImpvaG5kb2UxMjMiLCJyb2xlIjoic3R1ZGVudCIsImlhdCI6MTc0OTgxMDY4NSwiZXhwIjoxNzQ5ODk3MDg1fQ.qLQBHRyEXAQz35p7230u6t6ozhvpaCLxFROdiRKcd2Q', 'active', '2025-06-13 10:43:32', 0, NULL, '2025-06-13 04:50:42', '2025-06-13 10:43:32');
 
 -- --------------------------------------------------------
 
@@ -212,7 +214,9 @@ CREATE TABLE `account_roles` (
 
 INSERT INTO `account_roles` (`account_id`, `role_id`, `assigned_date`, `assigned_by`, `is_active`, `expiry_date`) VALUES
 (8, 2, '2025-06-12 02:26:51', NULL, 1, NULL),
-(9, 2, '2025-06-12 04:40:18', NULL, 1, NULL);
+(9, 2, '2025-06-12 04:40:18', NULL, 1, NULL),
+(10, 2, '2025-06-13 03:59:40', NULL, 1, NULL),
+(15, 3, '2025-06-13 04:50:42', NULL, 1, NULL);
 
 -- --------------------------------------------------------
 
@@ -308,6 +312,13 @@ CREATE TABLE `audit_log` (
   `timestamp` timestamp NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
+--
+-- Dumping data for table `audit_log`
+--
+
+INSERT INTO `audit_log` (`log_id`, `table_name`, `operation_type`, `primary_key_value`, `old_values`, `new_values`, `changed_by`, `ip_address`, `user_agent`, `session_id`, `timestamp`) VALUES
+(1, 'students', 'INSERT', 'S1749790242780_13', NULL, '{\"student_id\": \"S1749790242780_13\", \"person_id\": 13, \"account_id\": 15, \"graduation_status\": \"enrolled\"}', 15, NULL, NULL, NULL, '2025-06-13 04:50:42');
+
 -- --------------------------------------------------------
 
 --
@@ -397,6 +408,15 @@ CREATE TABLE `contact_info` (
   `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
+--
+-- Dumping data for table `contact_info`
+--
+
+INSERT INTO `contact_info` (`contact_id`, `person_id`, `student_id`, `contact_type`, `contact_value`, `is_primary`, `is_verified`, `created_at`, `updated_at`) VALUES
+(1, 13, 'S1749790242780_13', 'phone', '09234567890', 1, 0, '2025-06-13 04:50:42', '2025-06-13 04:50:42'),
+(2, 13, 'S1749790242780_13', 'address', '123 Main Street, New York, NY', 1, 0, '2025-06-13 04:50:42', '2025-06-13 04:50:42'),
+(3, 13, 'S1749790242780_13', 'email', 'johndoe@gmail.com', 1, 0, '2025-06-13 04:50:42', '2025-06-13 04:50:42');
+
 -- --------------------------------------------------------
 
 --
@@ -464,7 +484,7 @@ CREATE TABLE `course_offerings` (
   `location` varchar(100) DEFAULT NULL,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
   `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
-) ;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
 
@@ -656,6 +676,13 @@ CREATE TABLE `learning_preferences` (
   `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
+--
+-- Dumping data for table `learning_preferences`
+--
+
+INSERT INTO `learning_preferences` (`preference_id`, `student_id`, `learning_style`, `delivery_preference`, `device_type`, `internet_speed`, `preferred_schedule`, `study_hours_per_week`, `accessibility_needs`, `created_at`, `updated_at`) VALUES
+(1, 'S1749790242780_13', '', 'hybrid', 'Desktop,Mobile', NULL, 'flexible', NULL, NULL, '2025-06-13 04:50:42', '2025-06-13 04:50:42');
+
 -- --------------------------------------------------------
 
 --
@@ -720,7 +747,7 @@ CREATE TABLE `payments` (
   `notes` text DEFAULT NULL,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
   `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
-) ;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Triggers `payments`
@@ -823,7 +850,9 @@ CREATE TABLE `persons` (
 
 INSERT INTO `persons` (`person_id`, `first_name`, `middle_name`, `last_name`, `birth_date`, `birth_place`, `gender`, `email`, `education`, `created_at`, `updated_at`) VALUES
 (8, 'Jane', 'Elizabeth', 'Smith', '1985-05-20', 'San Francisco, CA', 'Female', 'jane.smith@example.com', 'Bachelor of Science in Library Science', '2025-06-12 02:26:51', '2025-06-12 02:26:51'),
-(9, 'Jane', 'Elizabeth', 'Smith', '1985-05-20', 'San Francisco, CA', 'Female', 'janes.smith@example.com', 'Bachelor of Science in Library Science', '2025-06-12 04:40:18', '2025-06-12 04:40:18');
+(9, 'Jane', 'Elizabeth', 'Smith', '1985-05-20', 'San Francisco, CA', 'Female', 'janes.smith@example.com', 'Bachelor of Science in Library Science', '2025-06-12 04:40:18', '2025-06-12 04:40:18'),
+(10, 'Janice', 'Elizabeth', 'Smith', '1985-05-20', 'San Francisco, CA', 'Female', 'janessmith@gmail.com', 'Bachelor of Science in Library Science', '2025-06-13 03:59:40', '2025-06-13 03:59:40'),
+(13, 'John', 'Michael', 'Doja Cat', '1990-05-15', 'Marilao Bulacan', 'Male', 'johndoe@gmail.com', 'Bachelor\'s Degree', '2025-06-13 04:50:42', '2025-06-13 08:07:15');
 
 --
 -- Triggers `persons`
@@ -1078,7 +1107,8 @@ CREATE TABLE `staff` (
 
 INSERT INTO `staff` (`staff_id`, `person_id`, `account_id`, `employee_id`, `hire_date`, `termination_date`, `employment_status`, `emergency_contact`, `notes`) VALUES
 (1, 8, 8, 'EMP1749695211711', '2025-06-12', NULL, 'active', NULL, NULL),
-(2, 9, 9, 'EMP1749703218926', '2025-06-12', NULL, 'active', NULL, NULL);
+(2, 9, 9, 'EMP1749703218926', '2025-06-12', NULL, 'active', NULL, NULL),
+(3, 10, 10, 'EMP1749787180992', '2025-06-13', NULL, 'active', NULL, NULL);
 
 -- --------------------------------------------------------
 
@@ -1126,7 +1156,14 @@ CREATE TABLE `students` (
   `gpa` decimal(3,2) DEFAULT NULL,
   `academic_standing` enum('good','probation','suspension') DEFAULT 'good',
   `notes` text DEFAULT NULL
-) ;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `students`
+--
+
+INSERT INTO `students` (`student_id`, `person_id`, `account_id`, `registration_date`, `graduation_status`, `graduation_date`, `gpa`, `academic_standing`, `notes`) VALUES
+('S1749790242780_13', 13, 15, '2025-06-13', 'enrolled', NULL, NULL, 'good', NULL);
 
 --
 -- Triggers `students`
@@ -1183,7 +1220,7 @@ CREATE TABLE `student_accounts` (
   `notes` text DEFAULT NULL,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
   `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
-) ;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
 
@@ -1347,7 +1384,7 @@ CREATE TABLE `student_progress` (
   `attempt_date` timestamp NOT NULL DEFAULT current_timestamp(),
   `assessed_by` int(11) DEFAULT NULL,
   `feedback` text DEFAULT NULL
-) ;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
 
@@ -1420,6 +1457,13 @@ CREATE TABLE `student_trading_levels` (
   `is_current` tinyint(1) DEFAULT 1,
   `notes` text DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `student_trading_levels`
+--
+
+INSERT INTO `student_trading_levels` (`student_id`, `level_id`, `assigned_date`, `assigned_by`, `assessment_score`, `assessment_method`, `is_current`, `notes`) VALUES
+('S1749790242780_13', 1, '2025-06-13 04:50:42', NULL, NULL, 'exam', 1, NULL);
 
 -- --------------------------------------------------------
 
@@ -2303,13 +2347,13 @@ ALTER TABLE `trading_levels`
 -- AUTO_INCREMENT for table `accounts`
 --
 ALTER TABLE `accounts`
-  MODIFY `account_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=10;
+  MODIFY `account_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=16;
 
 --
 -- AUTO_INCREMENT for table `audit_log`
 --
 ALTER TABLE `audit_log`
-  MODIFY `log_id` bigint(20) NOT NULL AUTO_INCREMENT;
+  MODIFY `log_id` bigint(20) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 
 --
 -- AUTO_INCREMENT for table `competencies`
@@ -2327,7 +2371,7 @@ ALTER TABLE `competency_types`
 -- AUTO_INCREMENT for table `contact_info`
 --
 ALTER TABLE `contact_info`
-  MODIFY `contact_id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `contact_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 
 --
 -- AUTO_INCREMENT for table `courses`
@@ -2369,7 +2413,7 @@ ALTER TABLE `fee_types`
 -- AUTO_INCREMENT for table `learning_preferences`
 --
 ALTER TABLE `learning_preferences`
-  MODIFY `preference_id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `preference_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 
 --
 -- AUTO_INCREMENT for table `password_reset_tokens`
@@ -2399,7 +2443,7 @@ ALTER TABLE `payment_schemes`
 -- AUTO_INCREMENT for table `persons`
 --
 ALTER TABLE `persons`
-  MODIFY `person_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=10;
+  MODIFY `person_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=14;
 
 --
 -- AUTO_INCREMENT for table `positions`
@@ -2435,7 +2479,7 @@ ALTER TABLE `sponsor_types`
 -- AUTO_INCREMENT for table `staff`
 --
 ALTER TABLE `staff`
-  MODIFY `staff_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+  MODIFY `staff_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 
 --
 -- AUTO_INCREMENT for table `student_accounts`
