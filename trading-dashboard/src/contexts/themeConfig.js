@@ -22,8 +22,8 @@ export const DEFAULT_THEMES = {
   },
   light: {
     background: '#e4eed3',
-    cardBackground: '#f9fafb',
-    sidebar: '#f9fafb',
+    cardBackground: '#e4eed3',
+    sidebar: '#e4eed3',
     text: '#111827',
     textSecondary: '#6b7280',
     accent: '#3b82f6',

@@ -386,7 +386,7 @@ const sessionData = storedSession ? JSON.parse(storedSession) : null;
   // Tab navigation
   const tabs = [
     { id: 'profile', label: 'Profile', icon: <User size={18} /> },
-    // { id: 'settings', label: 'Settings', icon: <Settings size={18} /> },
+    { id: 'settings', label: 'Settings', icon: <Settings size={18} /> },
     // { id: 'security', label: 'Security', icon: <Shield size={18} /> },
     // { id: 'notifications', label: 'Notifications', icon: <Bell size={18} /> }
   ];

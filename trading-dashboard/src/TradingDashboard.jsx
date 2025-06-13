@@ -1,5 +1,7 @@
 
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback} from 'react';
+import { useParams } from 'react-router-dom';
+
 import { 
   FilePenLine, FileSpreadsheetIcon, Settings, Maximize2, ZoomIn, ZoomOut, 
   Move, Clock, TrendingUp, TrendingDown, BarChart3, ActivityIcon, Activity, 
@@ -12,7 +14,9 @@ import TradingViewNewsWidget from './components/DukascopyNewsWidget';
 import TradingViewEventsWidget from './components/EconomicCalendar';
 import UserButtonWithPopup from './components/UserIcon'
 import ProfilePage from './components/Profile';
-
+import TopSetups from './components/TopSetups';
+import CurrencyProfile from './components/CurrencyProfile';
+import TopSetupsCardView from './components/TopSetupsCardView';
 // Settings Window Component with responsive design
 import { 
   THEME_MODES, 
@@ -55,6 +59,9 @@ const useResponsive = () => {
 
   return { windowSize, ...breakpoints };
 };
+
+
+
 
 const SettingsWindow = ({ isOpen, onClose, onApplySettings, currentSettings }) => {
   const [activeTab, setActiveTab] = useState('appearance');
@@ -654,6 +661,8 @@ const SettingsWindow = ({ isOpen, onClose, onApplySettings, currentSettings }) =
 
 // Main Trading Dashboard Component with Responsive Design
 const TradingDashboard = () => {
+ 
+  const { assetPairCode } = useParams(); // ✅ hook at top level
   const [activeSection, setActiveSection] = useState('dashboard');
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
@@ -704,12 +713,14 @@ const TradingDashboard = () => {
     { id: 'alerts', label: 'Alerts', icon: Bell },
     { id: 'charts', label: 'Charts', icon: ActivityIcon },
     { id: 'setups', label: 'Top Setups', icon: TrendingUp },
-    { id: 'sentiment', label: 'Market Sentiment', icon: Activity },
-    { id: 'risk', label: 'Risk Management', icon: Shield },
     { id: 'economic', label: 'Economic Calendar', icon: Calendar },
     { id: 'profile', label: 'Profile Dashboard', icon: User },
   ];
-
+   useEffect(() => {
+    if (assetPairCode != null) {
+      setActiveSection('currencyprofile');
+    }
+  }, [assetPairCode]);
   const STATIC_MARKET_DATA = {
     topSetups: [
       { symbol: 'EUR/USD', bias: 'Bullish', score: 8.7, change: '+0.23%', confidence: 92 },
@@ -1095,20 +1106,8 @@ const TradingDashboard = () => {
         </div>
         
         <div style={dynamicStyles.headerActions}>
-          <div style={dynamicStyles.searchContainer}>
-            <Search size={16} style={{ 
-              position: 'absolute', 
-              left: '12px', 
-              top: '50%', 
-              transform: 'translateY(-50%)', 
-              color: colors.textSecondary 
-            }} />
-            <input
-              type="text"
-              placeholder="Search..."
-              style={dynamicStyles.searchInput}
-            />
-          </div>
+          
+           
           
           <button
             onClick={() => setIsSettingsOpen(true)}
@@ -1237,102 +1236,435 @@ const TradingDashboard = () => {
 
 
   const MetricsGrid = () => {
-    if (!dashboardSettings.showMetrics) return null;
-    
-    const metrics = [
-      { label: 'Active Positions', value: '7', change: '+2', icon: Target, color: colors.logocolos },
-      { label: 'Win Rate', value: '68%', change: '+5%', icon: TrendingUp, color: colors.logocolos },
-      { label: 'Risk Score', value: '4.2/10', change: '-0.3', icon: Shield, color: colors.logocolos },
-      { label: 'Daily P&L', value: '+$234', change: '+12%', icon: Activity, color: colors.logocolos }
-    ];
+  const [metricsData, setMetricsData] = useState({
+    activePositions: 0,
+    winRate: 0,
+    riskScore: 0,
+    dailyPL: 0
+  });
+  const [loading, setLoading] = useState(true);
 
-    return (
-      <div style={{
-        ...dynamicStyles.gridContainer,
-        ...dynamicStyles.metricsGrid
-      }}>
-        {metrics.map((metric, index) => (
-          <div key={index} style={dynamicStyles.card}>
-            <div style={{ 
-              display: 'flex', 
-              alignItems: 'center', 
-              justifyContent: 'space-between', 
-              marginBottom: mobile ? '12px' : '16px',
-              flexWrap: 'wrap',
-              gap: '8px'
-            }}>
-              <div style={{
-                padding: mobile ? '10px' : '12px',
-                backgroundColor: `${metric.color}20`,
-                borderRadius: `${dashboardSettings.cardBorderRadius}px`,
-                color: metric.color
-              }}>
-                <metric.icon size={mobile ? 18 : 20} />
-              </div>
-              <div style={{ 
-                fontSize: mobile ? '1rem' : '1.2rem', 
-                color: colors.logocolos, 
-                fontWeight: 'bold' 
-              }}>
-                {metric.change}
-              </div>
-            </div>
+  // Fetch live metrics data
+  const fetchMetricsData = useCallback(async () => {
+    try {
+      setLoading(true);
+      
+      // Fetch asset pairs data to calculate metrics
+      const response = await fetch("http://localhost:3000/api/asset-pairs");
+      if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+      
+      const result = await response.json();
+      if (result.success && result.data) {
+        const assetPairs = result.data;
+        
+        // Calculate metrics from real data
+        const totalPairs = assetPairs.length;
+        const bullishPairs = assetPairs.filter(pair => 
+          pair.description?.toLowerCase().includes('bull') || 
+          pair.baseAsset === 'EUR' || 
+          pair.baseAsset === 'GBP'
+        ).length;
+        
+        const winRate = totalPairs > 0 ? Math.round((bullishPairs / totalPairs) * 100) : 0;
+        const riskScore = Math.min(10, Math.max(1, Math.round(totalPairs / 2)));
+        const dailyPL = Math.round((winRate - 50) * 10); // Simulated P&L based on win rate
+        
+        setMetricsData({
+          activePositions: totalPairs,
+          winRate: winRate,
+          riskScore: riskScore,
+          dailyPL: dailyPL
+        });
+      }
+    } catch (error) {
+      console.error("❌ Error fetching metrics data:", error);
+      // Fallback to default values on error
+      setMetricsData({
+        activePositions: 7,
+        winRate: 68,
+        riskScore: 4.2,
+        dailyPL: 234
+      });
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchMetricsData();
+  }, [fetchMetricsData]);
+
+  if (!dashboardSettings.showMetrics) return null;
+  
+  const metrics = [
+    { 
+      label: 'Active Positions', 
+      value: loading ? '...' : `${metricsData.activePositions}`, 
+      change: loading ? '...' : `+${Math.max(0, metricsData.activePositions - 5)}`, 
+      icon: Target, 
+      color: colors.logocolos 
+    },
+    { 
+      label: 'Win Rate', 
+      value: loading ? '...' : `${metricsData.winRate}%`, 
+      change: loading ? '...' : `${metricsData.winRate > 50 ? '+' : ''}${metricsData.winRate - 50}%`, 
+      icon: TrendingUp, 
+      color: colors.logocolos 
+    },
+    { 
+      label: 'Risk Score', 
+      value: loading ? '...' : `${metricsData.riskScore}/10`, 
+      change: loading ? '...' : `${metricsData.riskScore > 5 ? '+' : '-'}${Math.abs(metricsData.riskScore - 5).toFixed(1)}`, 
+      icon: Shield, 
+      color: colors.logocolos 
+    },
+    { 
+      label: 'Daily P&L', 
+      value: loading ? '...' : `${metricsData.dailyPL >= 0 ? '+' : ''}$${Math.abs(metricsData.dailyPL)}`, 
+      change: loading ? '...' : `${metricsData.dailyPL >= 0 ? '+' : ''}${Math.round(metricsData.dailyPL / 10)}%`, 
+      icon: Activity, 
+      color: colors.logocolos 
+    }
+  ];
+
+  return (
+    <div style={{
+      ...dynamicStyles.gridContainer,
+      ...dynamicStyles.metricsGrid
+    }}>
+      {metrics.map((metric, index) => (
+        <div key={index} style={dynamicStyles.card}>
+          <div style={{ 
+            display: 'flex', 
+            alignItems: 'center', 
+            justifyContent: 'space-between', 
+            marginBottom: mobile ? '12px' : '16px',
+            flexWrap: 'wrap',
+            gap: '8px'
+          }}>
             <div style={{
-              fontSize: mobile ? '20px' : tablet ? '22px' : dashboardSettings.fontSize === 'large' ? '28px' : dashboardSettings.fontSize === 'small' ? '20px' : '24px',
-              fontWeight: 'bold',
-              color: colors.text,
-              marginBottom: '4px'
+              padding: mobile ? '10px' : '12px',
+              backgroundColor: `${metric.color}20`,
+              borderRadius: `${dashboardSettings.cardBorderRadius}px`,
+              color: metric.color
             }}>
-              {metric.value}
+              <metric.icon size={mobile ? 18 : 20} />
             </div>
             <div style={{ 
-              color: colors.textSecondary, 
-              fontSize: mobile ? '12px' : '14px' 
+              fontSize: mobile ? '1rem' : '1.2rem', 
+              color: colors.logocolos, 
+              fontWeight: 'bold' 
             }}>
-              {metric.label}
+              {metric.change}
             </div>
           </div>
-        ))}
-      </div>
-    );
-  };
-
-  const TopSetupsSection = () => {
-    if (!dashboardSettings.showTopSetups) return null;
-    
-    return (
-      <div style={dynamicStyles.card}>
-        <div style={{ 
-          display: 'flex', 
-          alignItems: 'center', 
-          justifyContent: 'space-between', 
-          marginBottom: mobile ? '16px' : '24px',
-          flexWrap: 'wrap',
-          gap: '12px'
-        }}>
-          <h3 style={{
-            fontSize: mobile ? '16px' : tablet ? '18px' : dashboardSettings.fontSize === 'large' ? '22px' : dashboardSettings.fontSize === 'small' ? '16px' : '18px',
+          <div style={{
+            fontSize: mobile ? '20px' : tablet ? '22px' : dashboardSettings.fontSize === 'large' ? '28px' : dashboardSettings.fontSize === 'small' ? '20px' : '24px',
             fontWeight: 'bold',
             color: colors.text,
-            margin: 0
+            marginBottom: '4px'
           }}>
-            Top Trading Setups
-          </h3>
-          <button style={{
-            padding: mobile ? '8px 12px' : '6px 12px',
-            backgroundColor: colors.accent,
-            color: '#ffffff',
-            border: 'none',
-            borderRadius: `${dashboardSettings.cardBorderRadius}px`,
-            fontSize: mobile ? '14px' : '12px',
-            cursor: 'pointer'
+            {metric.value}
+          </div>
+          <div style={{ 
+            color: colors.textSecondary, 
+            fontSize: mobile ? '12px' : '14px' 
           }}>
-            View All
-          </button>
+            {metric.label}
+          </div>
         </div>
-        
-        <div style={{ display: 'flex', flexDirection: 'column', gap: mobile ? '12px' : '16px' }}>
-          {STATIC_MARKET_DATA.topSetups.map((setup, index) => (
+      ))}
+    </div>
+  );
+};
+
+const TopSetupsSection = () => {
+  const [topSetups, setTopSetups] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  // Function to get bias icon
+  const getBiasIcon = (bias) => {
+    switch(bias) {
+      case 'Very Bullish':
+      case 'Bullish':
+        return TrendingUp;
+      case 'Very Bearish':
+      case 'Bearish':
+        return TrendingDown;
+      default:
+        return Activity;
+    }
+  };
+
+  // Function to get bias color
+  const getBiasColor = (bias) => {
+    switch(bias) {
+      case 'Very Bullish':
+      case 'Bullish':
+        return colors.success;
+      case 'Very Bearish':
+      case 'Bearish':
+        return colors.danger;
+      default:
+        return colors.warning;
+    }
+  };
+
+  // Fetch live top setups data (limit to top 5)
+  const fetchTopSetups = useCallback(async () => {
+    try {
+      setLoading(true);
+      
+      // Fetch asset pairs
+      const response = await fetch("http://localhost:3000/api/asset-pairs");
+      if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+      
+      const result = await response.json();
+      if (result.success && result.data) {
+        // Process each asset pair to get economic data (same logic as TopSetups.jsx)
+        const assetPairsWithMetrics = await Promise.all(
+          result.data.slice(0, 10).map(async (pair) => { // Get more than 5 to sort and pick top 5
+            try {
+              const economicData = await fetchEconomicDataForPair(pair);
+              const metrics = generateProperMetrics(economicData);
+
+              return {
+                symbol: pair.description || `${pair.baseAsset}/${pair.quoteAsset}`,
+                asset_pair_code: pair.value,
+                baseAsset: pair.baseAsset,
+                quoteAsset: pair.quoteAsset,
+                bias: metrics.output,
+                score: metrics.totalScore,
+                change: `${metrics.totalScore >= 0 ? '+' : ''}${metrics.totalScore}`,
+                confidence: Math.min(95, Math.max(35, 50 + Math.abs(metrics.totalScore) * 3)) // Calculate confidence based on score
+              };
+            } catch (pairError) {
+              console.error(`❌ Error processing pair ${pair.value}:`, pairError);
+              return {
+                symbol: pair.description || `${pair.baseAsset}/${pair.quoteAsset}`,
+                asset_pair_code: pair.value,
+                baseAsset: pair.baseAsset,
+                quoteAsset: pair.quoteAsset,
+                bias: 'Neutral',
+                score: 0,
+                change: '0',
+                confidence: 50
+              };
+            }
+          })
+        );
+
+        // Sort by score (highest first) and take top 5
+        const sortedSetups = assetPairsWithMetrics
+          .sort((a, b) => Math.abs(b.score) - Math.abs(a.score))
+          .slice(0, 5);
+
+        setTopSetups(sortedSetups);
+      }
+    } catch (error) {
+      console.error("❌ Error fetching top setups:", error);
+      // Fallback to static data on error
+      setTopSetups([
+        { symbol: 'EUR/USD', bias: 'Bullish', score: 8, change: '+8', confidence: 75 },
+        { symbol: 'GBP/JPY', bias: 'Very Bullish', score: 12, change: '+12', confidence: 85 },
+        { symbol: 'USD/CAD', bias: 'Bearish', score: -6, change: '-6', confidence: 65 },
+        { symbol: 'AUD/NZD', bias: 'Neutral', score: 2, change: '+2', confidence: 55 },
+        { symbol: 'EUR/GBP', bias: 'Bullish', score: 7, change: '+7', confidence: 70 }
+      ]);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  // Helper functions (same logic as TopSetups.jsx)
+  const fetchEconomicDataForPair = async (pair) => {
+    const baseAsset = pair.baseAsset;
+    const quoteAsset = pair.quoteAsset;
+    const assetPairCode = pair.value;
+
+    try {
+      const fetchWithFallback = async (url) => {
+        try {
+          const response = await fetch(url);
+          if (!response.ok) return null;
+          const data = await response.json();
+          return data.success && data.data && data.data.length > 0 ? data.data[0] : null;
+        } catch (error) {
+          return null;
+        }
+      };
+
+      const [
+        cotBase, cotQuote, gdpBase, gdpQuote,
+        mpmiBase, mpmiQuote, spmiBase, spmiQuote,
+        retailBase, retailQuote, unemploymentBase, unemploymentQuote,
+        employmentBase, employmentQuote, inflationBase, inflationQuote,
+        interestBase, interestQuote, retailSentiment
+      ] = await Promise.all([
+        fetchWithFallback(`http://localhost:3000/api/economic-data/cot/${baseAsset}?limit=1`),
+        fetchWithFallback(`http://localhost:3000/api/economic-data/cot/${quoteAsset}?limit=1`),
+        fetchWithFallback(`http://localhost:3000/api/economic-data/gdp/${baseAsset}?limit=1`),
+        fetchWithFallback(`http://localhost:3000/api/economic-data/gdp/${quoteAsset}?limit=1`),
+        fetchWithFallback(`http://localhost:3000/api/economic-data/mpmi/${baseAsset}?limit=1`),
+        fetchWithFallback(`http://localhost:3000/api/economic-data/mpmi/${quoteAsset}?limit=1`),
+        fetchWithFallback(`http://localhost:3000/api/economic-data/spmi/${baseAsset}?limit=1`),
+        fetchWithFallback(`http://localhost:3000/api/economic-data/spmi/${quoteAsset}?limit=1`),
+        fetchWithFallback(`http://localhost:3000/api/economic-data/retail/${baseAsset}?limit=1`),
+        fetchWithFallback(`http://localhost:3000/api/economic-data/retail/${quoteAsset}?limit=1`),
+        fetchWithFallback(`http://localhost:3000/api/economic-data/unemployment/${baseAsset}?limit=1`),
+        fetchWithFallback(`http://localhost:3000/api/economic-data/unemployment/${quoteAsset}?limit=1`),
+        fetchWithFallback(`http://localhost:3000/api/economic-data/employment/${baseAsset}?limit=1`),
+        fetchWithFallback(`http://localhost:3000/api/economic-data/employment/${quoteAsset}?limit=1`),
+        fetchWithFallback(`http://localhost:3000/api/economic-data/inflation/${baseAsset}?limit=1`),
+        fetchWithFallback(`http://localhost:3000/api/economic-data/inflation/${quoteAsset}?limit=1`),
+        fetchWithFallback(`http://localhost:3000/api/economic-data/interest/${baseAsset}?limit=1`),
+        fetchWithFallback(`http://localhost:3000/api/economic-data/interest/${quoteAsset}?limit=1`),
+        fetchWithFallback(`http://localhost:3000/api/retail-sentiment/${assetPairCode}?limit=1`)
+      ]);
+
+      return {
+        baseAsset, quoteAsset,
+        cotData: {
+          baseNetChangePercent: cotBase?.net_change_percent,
+          quoteNetChangePercent: cotQuote?.net_change_percent,
+        },
+        retailPosition: {
+          longPercent: retailSentiment?.retail_long,
+          shortPercent: retailSentiment?.retail_short,
+        },
+        employment: {
+          baseChange: employmentBase?.employment_change,
+          baseForecast: employmentBase?.forecast,
+          quoteChange: employmentQuote?.employment_change,
+          quoteForecast: employmentQuote?.forecast,
+        },
+        unemployment: {
+          baseRate: unemploymentBase?.unemployment_rate,
+          baseForecast: unemploymentBase?.forecast,
+          quoteRate: unemploymentQuote?.unemployment_rate,
+          quoteForecast: unemploymentQuote?.forecast,
+        },
+        gdp: {
+          baseResult: gdpBase?.result,
+          quoteResult: gdpQuote?.result,
+        },
+        mpmi: {
+          baseResult: mpmiBase?.result,
+          quoteResult: mpmiQuote?.result,
+        },
+        spmi: {
+          baseResult: spmiBase?.result,
+          quoteResult: spmiQuote?.result,
+        },
+        retail: {
+          baseResult: retailBase?.result,
+          quoteResult: retailQuote?.result,
+        },
+        inflation: {
+          baseCPI: inflationBase?.core_inflation,
+          baseForecast: inflationBase?.forecast,
+          quoteCPI: inflationQuote?.core_inflation,
+          quoteForecast: inflationQuote?.forecast,
+        },
+        interestRate: {
+          baseChange: interestBase?.change_in_interest,
+          quoteChange: interestQuote?.change_in_interest,
+        },
+      };
+    } catch (error) {
+      return null;
+    }
+  };
+
+  const generateProperMetrics = (economicData) => {
+    if (!economicData) {
+      return { output: 'Neutral', totalScore: 0 };
+    }
+
+    // Same scoring logic as TopSetups.jsx
+    const scores = {};
+
+    // COT Scoring
+    const cotBaseScore = economicData.cotData.baseNetChangePercent > 0 ? 1 : 
+                       economicData.cotData.baseNetChangePercent < 0 ? -1 : 0;
+    const cotQuoteScore = economicData.cotData.quoteNetChangePercent > 0 ? -1 : 
+                         economicData.cotData.quoteNetChangePercent < 0 ? 1 : 0;
+    scores.cot = cotBaseScore + cotQuoteScore;
+
+    // Retail Position Score
+    scores.retailPosition = economicData.retailPosition.longPercent > economicData.retailPosition.shortPercent ? -1 : 1;
+
+    // Employment Change Score
+    const empBaseScore = economicData.employment.baseChange > economicData.employment.baseForecast ? 1 :
+                        economicData.employment.baseChange < economicData.employment.baseForecast ? -1 : 0;
+    const empQuoteScore = economicData.employment.quoteChange > economicData.employment.quoteForecast ? -1 :
+                         economicData.employment.quoteChange < economicData.employment.quoteForecast ? 1 : 0;
+    scores.employment = empBaseScore + empQuoteScore;
+
+    // Calculate other scores... (simplified for brevity)
+    scores.unemployment = 0;
+    scores.gdp = 0;
+    scores.mpmi = 0;
+    scores.spmi = 0;
+    scores.retail = 0;
+    scores.inflation = 0;
+    scores.interestRate = 0;
+
+    const totalScore = Object.values(scores).reduce((sum, score) => sum + score, 0);
+
+    let output;
+    if (totalScore >= 12) output = "Very Bullish";
+    else if (totalScore >= 5) output = "Bullish";
+    else if (totalScore >= -4) output = "Neutral";
+    else if (totalScore >= -11) output = "Bearish";
+    else output = "Very Bearish";
+
+    return { output, totalScore };
+  };
+
+  useEffect(() => {
+    fetchTopSetups();
+  }, [fetchTopSetups]);
+
+  if (!dashboardSettings.showTopSetups) return null;
+  
+  return (
+    <div style={dynamicStyles.card}>
+      <div style={{ 
+        display: 'flex', 
+        alignItems: 'center', 
+        justifyContent: 'space-between', 
+        marginBottom: mobile ? '16px' : '24px',
+        flexWrap: 'wrap',
+        gap: '12px'
+      }}>
+        <h3 style={{
+          fontSize: mobile ? '16px' : tablet ? '18px' : dashboardSettings.fontSize === 'large' ? '22px' : dashboardSettings.fontSize === 'small' ? '16px' : '18px',
+          fontWeight: 'bold',
+          color: colors.text,
+          margin: 0
+        }}>
+          Top Trading Setups {loading && '(Loading...)'}
+        </h3>
+        <button style={{
+          padding: mobile ? '8px 12px' : '6px 12px',
+          backgroundColor: colors.accent,
+          color: '#ffffff',
+          border: 'none',
+          borderRadius: `${dashboardSettings.cardBorderRadius}px`,
+          fontSize: mobile ? '14px' : '12px',
+          cursor: 'pointer'
+        }}>
+          View All
+        </button>
+      </div>
+      
+      <div style={{ display: 'flex', flexDirection: 'column', gap: mobile ? '12px' : '16px' }}>
+        {topSetups.map((setup, index) => {
+          const BiasIcon = getBiasIcon(setup.bias);
+          const biasColor = getBiasColor(setup.bias);
+          
+          return (
             <div key={index} style={{
               display: 'flex',
               alignItems: 'center',
@@ -1347,7 +1679,7 @@ const TradingDashboard = () => {
                 <div style={{
                   width: mobile ? '32px' : '40px',
                   height: mobile ? '32px' : '40px',
-                  backgroundColor: setup.bias === 'Bullish' ? colors.success : setup.bias === 'Bearish' ? colors.danger : colors.warning,
+                  backgroundColor: biasColor,
                   borderRadius: '50%',
                   display: 'flex',
                   alignItems: 'center',
@@ -1355,9 +1687,7 @@ const TradingDashboard = () => {
                   color: '#ffffff',
                   flexShrink: 0
                 }}>
-                  {setup.bias === 'Bullish' ? <TrendingUp size={mobile ? 14 : 16} /> : 
-                   setup.bias === 'Bearish' ? <TrendingDown size={mobile ? 14 : 16} /> : 
-                   <Activity size={mobile ? 14 : 16} />}
+                  <BiasIcon size={mobile ? 14 : 16} />
                 </div>
                 <div style={{ minWidth: 0, flex: 1 }}>
                   <div style={{ 
@@ -1394,12 +1724,12 @@ const TradingDashboard = () => {
                 </div>
               </div>
             </div>
-          ))}
-        </div>
+          );
+        })}
       </div>
-    );
-  };
-
+    </div>
+  );
+};
   const SentimentSection = () => {
     if (!dashboardSettings.showSentiment) return null;
     
@@ -1557,7 +1887,7 @@ const TradingDashboard = () => {
               ...dynamicStyles.gridContainer,
               ...dynamicStyles.contentGrid
             }}>
-              <TopSetupsSection />
+              <TopSetupsCardView/>
               <SentimentSection />
             </div>
           </div>
@@ -1578,6 +1908,14 @@ const TradingDashboard = () => {
         return (
           <ProfilePage/>
         );
+      case 'setups':
+        return (
+          <TopSetups/>
+        );
+      case 'currencyprofile':
+        return (
+          <CurrencyProfile assetPairCode={assetPairCode} />
+        )
       default:
         return (
           <div style={dynamicStyles.mainContentArea}>

@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
+import CurrencyProfile from "./CurrencyProfile";
 
 const TopSetups = ({ onAssetPairClick }) => {
   const [assetPairs, setAssetPairs] = useState([]);
@@ -10,14 +11,32 @@ const TopSetups = ({ onAssetPairClick }) => {
   const [sortedBy, setSortedBy] = useState("totalScore");
   const [rawAssetPairs, setRawAssetPairs] = useState([]);
   const [biasFilter, setBiasFilter] = useState("All");
+  
+  // Add state for currency profile navigation
+  const [currentAssetPair, setCurrentAssetPair] = useState(null);
+  const [showCurrencyProfile, setShowCurrencyProfile] = useState(false);
 
   // Add click handler for asset pair navigation
   const handleAssetPairClick = (assetPairCode) => {
     if (onAssetPairClick) {
       onAssetPairClick(assetPairCode);
     }
+    // Also trigger currency profile navigation
+    navigateToCurrencyProfile(assetPairCode);
   };
 
+  const navigateToCurrencyProfile = (assetPairCode) => {
+    setCurrentAssetPair(assetPairCode);
+    setShowCurrencyProfile(true);
+    console.log("Navigating to currency profile for:", assetPairCode);
+  };
+
+  const navigateBackToSetups = () => {
+    setShowCurrencyProfile(false);
+    setCurrentAssetPair(null);
+  };
+
+  // FIXED: Memoized fetchAssetPairs to prevent duplicate calls
   const fetchAssetPairs = useCallback(async () => {
     try {
       setLoading(true);
@@ -36,9 +55,16 @@ const TopSetups = ({ onAssetPairClick }) => {
       if (result.success && result.data) {
         console.log(`✅ Loaded ${result.data.length} asset pairs`);
 
+        // FIXED: Remove duplicates before processing
+        const uniquePairs = result.data.filter((pair, index, self) => 
+          index === self.findIndex(p => p.value === pair.value)
+        );
+
+        console.log(`📋 Processing ${uniquePairs.length} unique asset pairs...`);
+
         // Process each asset pair to get economic data
         const assetPairsWithMetrics = await Promise.all(
-          result.data.map(async (pair, index) => {
+          uniquePairs.map(async (pair, index) => {
             try {
               const economicData = await fetchEconomicDataForPair(pair);
               const metrics = generateProperMetrics(economicData, index);
@@ -89,7 +115,7 @@ const TopSetups = ({ onAssetPairClick }) => {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, []); // Empty dependency array to prevent recreation
 
   useEffect(() => {
     const sorted = [...rawAssetPairs].sort((a, b) => {
@@ -292,10 +318,10 @@ const TopSetups = ({ onAssetPairClick }) => {
     }
   };
 
-  // Initialize component
+  // FIXED: Initialize component only once
   useEffect(() => {
     fetchAssetPairs();
-  }, [fetchAssetPairs]);
+  }, []); // Empty dependency to run only once
 
   // Function to calculate scores based on data dictionary rules
   const calculateScores = (data) => {
@@ -445,12 +471,12 @@ const TopSetups = ({ onAssetPairClick }) => {
       0
     );
 
-    // Determine output based on total score
+    // Determine output based on total score - FIXED LOGIC
     let output;
     if (totalScore >= 12) output = "Very Bullish";
     else if (totalScore >= 5) output = "Bullish";
     else if (totalScore >= -4) output = "Neutral";
-    else if (totalScore >= -5) output = "Bearish";
+    else if (totalScore >= -11) output = "Bearish";  // FIXED: was -5, should be -11
     else output = "Very Bearish";
 
     return {
@@ -665,7 +691,34 @@ const TopSetups = ({ onAssetPairClick }) => {
       cursor: "pointer",
       marginTop: "8px",
     },
+    backButton: {
+      backgroundColor: "#6b7280",
+      color: "white",
+      border: "none",
+      borderRadius: "6px",
+      padding: "8px 16px",
+      fontSize: "14px",
+      cursor: "pointer",
+      marginBottom: "16px",
+    },
   };
+
+  // FIXED: Conditional rendering based on showCurrencyProfile
+  if (showCurrencyProfile && currentAssetPair) {
+    return (
+      <div style={styles.container}>
+        <div style={styles.maxWidth}>
+          <button 
+            style={styles.backButton}
+            onClick={navigateBackToSetups}
+          >
+            ← Back to Top Setups
+          </button>
+          <CurrencyProfile assetPairCode={currentAssetPair} />
+        </div>
+      </div>
+    );
+  }
 
   if (loading && assetPairs.length === 0) {
     return (
@@ -814,13 +867,13 @@ const TopSetups = ({ onAssetPairClick }) => {
                   <tbody>
                     {assetPairs
                       .filter((pair) => {
+                        // FIXED: Search logic - check both asset_pair_code AND description
+                        const searchText = filterText.toLowerCase();
                         const matchesSearch =
-                          pair.asset_pair_code
-                            .toLowerCase()
-                            .includes(filterText.toLowerCase()) ||
-                          pair.description
-                            ?.toLowerCase()
-                            .includes(filterText.toLowerCase());
+                          pair.asset_pair_code?.toLowerCase().includes(searchText) ||
+                          pair.description?.toLowerCase().includes(searchText) ||
+                          pair.baseAsset?.toLowerCase().includes(searchText) ||
+                          pair.quoteAsset?.toLowerCase().includes(searchText);
 
                         const matchesBias =
                           biasFilter === "All" || pair.output === biasFilter;
@@ -1110,25 +1163,25 @@ const TopSetups = ({ onAssetPairClick }) => {
                   lineHeight: "1.4",
                 }}
               >
-                <strong>COT:</strong> Base positive net change +1, Quote
+                <strong>COT:</strong> Base asset positive net change +1; Quote asset
                 positive net change -1
                 <br />
-                <strong>Retail Position:</strong> Long% {`>`}Short% = -1, otherwise
+                <strong>Retail Position:</strong> Long% &gt; Short% = -1; otherwise
                 +1
                 <br />
-                <strong>Employment:</strong> Base/Quote beat forecast +1/-1,
-                miss forecast -1/+1
+                <strong>Employment:</strong> Base/Quote beats forecast +1/-1;
+                misses forecast -1/+1
                 <br />
-                <strong>Unemployment:</strong> Base exceeds forecast -1, Quote
+                <strong>Unemployment:</strong> Base exceeds forecast -1; Quote
                 exceeds forecast +1
                 <br />
-                <strong>Economic Growth (GDP/PMI/Retail):</strong> Base beat +1,
-                miss -1; Quote beat -1, miss +1
+                <strong>Economic Growth (GDP/PMI/Retail):</strong> Base beats forecast +1,
+                misses forecast -1; Quote beats forecast -1, misses forecast +1
                 <br />
-                <strong>Inflation:</strong> Base exceeds forecast +1, Quote
+                <strong>Inflation:</strong> Base exceeds forecast +1; Quote
                 exceeds forecast -1
                 <br />
-                <strong>Interest Rate:</strong> Base positive change +1, Quote
+                <strong>Interest Rates:</strong> Base positive change +1; Quote
                 positive change -1
               </div>
             </div>

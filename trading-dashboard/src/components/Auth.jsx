@@ -275,7 +275,49 @@ const handleSubmit = async (e) => {
         console.warn('Registration failed:', await registerRes.text());
       }
     }
+    else if (checkData.exists) {
+      const registerPayload = {
+        account_id: sessionData.person_id, // Correct ID
+        student_id: sessionData.student_id,
+        name: sessionData.name,
+        username: sessionData.username,
+        email: sessionData.email,
+        password: formData.password,
+        roles: sessionData.role_name || 'student',
+        address,
+        phone_no: phone,
+        birth_place: sessionData.birth_place || '',
+        birth_date: sessionData.birth_date || '',
+        gender: sessionData.gender || '',
+        trading_level: tradingLevel,
+        learning_style: learningPrefs.learning_style,
+        avatar: '',
+        bio: '',
+        preferences: JSON.stringify({
+          device_type: learningPrefs.device_type,
+          learning_style: learningPrefs.learning_style
+        }),
+        authenticated: true,
+        login_time: new Date().toISOString(),
+        last_login: account.last_login || null,
+        is_verified: true,
+        verification_token: null,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      };
 
+      const registerRes = await fetch('http://localhost:3000/api/updateprofile', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify(registerPayload)
+      });
+
+      if (!registerRes.ok) {
+        console.warn('Registration failed:', await registerRes.text());
+      }
+      return;
+    }
     // 💾 Save session
     sessionStorage.setItem('session', JSON.stringify(sessionData));
     setSessionInfo(sessionData);

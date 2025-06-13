@@ -764,6 +764,7 @@ app.post('/api/user/avatar', upload.single('avatar'), async (req, res) => {
 });
 
 // Create User Route (Registration) - SQL-based
+// Create User Route (Registration) - SQL-based
 app.post('/api/register', async (req, res) => {
   try {
     const {
@@ -1569,7 +1570,6 @@ app.post('/api/password-reset/confirm', async (req, res) => {
     });
   }
 });
-
 
 // ====================
 // ASSETS API ROUTES
@@ -2423,7 +2423,7 @@ app.get("/api/economic-data/cot/:asset_code", async (req, res) => {
     const { asset_code } = req.params;
     const { limit = 10 } = req.query;
 
-    console.log("📈 Fetching COT data for asset:", asset_code);
+   
 
     const [cotData] = await pool.execute(
       `SELECT * FROM cot_data 
@@ -2689,7 +2689,6 @@ app.get("/api/economic-data/unemployment/:asset_code", async (req, res) => {
     const { asset_code } = req.params;
     const { limit = 10 } = req.query;
 
-    console.log("📈 Fetching unemployment data for asset:", asset_code);
 
     const [unemploymentData] = await pool.execute(
       `SELECT * FROM unemployment_rate 
@@ -2720,8 +2719,7 @@ app.get("/api/economic-data/employment/:asset_code", async (req, res) => {
     const { asset_code } = req.params;
     const { limit = 10 } = req.query;
 
-    console.log("📈 Fetching employment data for asset:", asset_code);
-
+    
     const [employmentData] = await pool.execute(
       `SELECT * FROM employment_change 
        WHERE asset_code = ? 
@@ -3311,7 +3309,7 @@ app.get("/api/economic-data/inflation/:asset_code", async (req, res) => {
     const { asset_code } = req.params;
     const { limit = 10 } = req.query;
 
-    console.log("📈 Fetching inflation data for asset:", asset_code);
+   
 
     const [inflationData] = await pool.execute(
       `SELECT * FROM core_inflation 
@@ -3433,7 +3431,7 @@ app.get("/api/economic-data/interest/:asset_code", async (req, res) => {
     const { asset_code } = req.params;
     const { limit = 10 } = req.query;
 
-    console.log("📈 Fetching interest rate data for asset:", asset_code);
+    
 
     const [interestData] = await pool.execute(
       `SELECT * FROM interest_rate 
@@ -3705,10 +3703,7 @@ app.get("/api/retail-sentiment/:asset_pair_code", async (req, res) => {
     const { asset_pair_code } = req.params;
     const { limit = 10 } = req.query;
 
-    console.log(
-      "📈 Fetching retail sentiment data for asset pair:",
-      asset_pair_code
-    );
+  
 
     const [sentimentData] = await pool.execute(
       `SELECT * FROM retail_sentiment 
@@ -4402,66 +4397,70 @@ app.get("/api/currency-profile/:asset_pair_code", async (req, res) => {
   }
 });
 
+// ====================
+// END CURRENCY PROFILE API ROUTE
+// ====================
+
 // Error handling middleware
 app.use((err, req, res, next) => {
-  console.error('❌ Unhandled error:', err);
+  console.error("❌ Unhandled error:", err);
   res.status(500).json({
     success: false,
-    error: 'Internal server error'
+    error: "Internal server error",
   });
 });
 
 app.use((req, res) => {
   res.status(404).json({
     success: false,
-    error: 'Route not found in this API'
+    error: "Route not found in this API",
   });
 });
 
-
-
 // Graceful shutdown handling
-process.on('SIGTERM', async () => {
-  console.log('🛑 SIGTERM received, shutting down gracefully...');
-  
+process.on("SIGTERM", async () => {
+  console.log("🛑 SIGTERM received, shutting down gracefully...");
+
   if (pool) {
     await pool.end();
-    console.log('✅ Database connection pool closed');
+    console.log("✅ Database connection pool closed");
   }
-  
+
   process.exit(0);
 });
 
-process.on('SIGINT', async () => {
-  console.log('🛑 SIGINT received, shutting down gracefully...');
-  
+process.on("SIGINT", async () => {
+  console.log("🛑 SIGINT received, shutting down gracefully...");
+
   if (pool) {
     await pool.end();
-    console.log('✅ Database connection pool closed');
+    console.log("✅ Database connection pool closed");
   }
-  
+
   process.exit(0);
 });
 
 // Start server
 async function startServer() {
   const dbConnected = await initDatabase();
-  
+
   if (!dbConnected) {
-    console.error('❌ Failed to connect to database. Exiting...');
+    console.error("❌ Failed to connect to database. Exiting...");
     process.exit(1);
   }
-  
+
   app.listen(PORT, () => {
     console.log(`🚀 Server running on port ${PORT}`);
     console.log(`📍 Health check: http://localhost:${PORT}/health`);
-    console.log(`🔒 CORS enabled for: http://localhost:5173, https://atecon.netlify.app`);
+    console.log(
+      `🔒 CORS enabled for: http://localhost:5173, https://atecon.netlify.app`
+    );
   });
 }
 
 // Start the application
-startServer().catch(error => {
-  console.error('❌ Failed to start server:', error);
+startServer().catch((error) => {
+  console.error("❌ Failed to start server:", error);
   process.exit(1);
 });
 startServer().catch(console.error);

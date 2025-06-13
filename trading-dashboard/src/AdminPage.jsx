@@ -40,7 +40,7 @@ import TradingViewEventsWidget from "./components/EconomicCalendar";
 import UserButtonWithPopup from "./components/UserIcon";
 import EconomicDataEntry from "./components/EconomicDataEntry";
 import TopSetups from "./components/TopSetups";
-// import CurrencyProfile from "./components/CurrencyProfile";
+import CurrencyProfile from "./components/CurrencyProfile";
 
 // Settings Window Component
 const SettingsWindow = ({
@@ -1551,6 +1551,7 @@ const AdminPage = () => {
         return <TopSetups onAssetPairClick={navigateToCurrencyProfile} />;
       case "currency-profile":
         return currentAssetPair ? (
+          
           <CurrencyProfile assetPairCode={currentAssetPair} onNavigateBack={navigateBack} />
         ) : (
           <div style={{ padding: `${dashboardSettings.cardPadding}px` }}>
