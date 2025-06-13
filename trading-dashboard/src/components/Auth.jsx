@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { Eye, EyeOff, Mail, Lock, ArrowRight, RefreshCw } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { body } from 'express-validator';
 // Logo Component
 const Logo = () => {
   return (
@@ -129,10 +130,25 @@ const LoginSignupPage = () => {
 };
 
   const navigate = useNavigate();
+// 🛠 Helper Functions
+function getContactValue(contactInfo, type) {
+  return contactInfo.find(contact => contact.contact_type === type)?.contact_value || '';
+}
+
+function getCurrentTradingLevel(tradingLevels) {
+  return tradingLevels.find(level => level.is_current === 1)?.level_name || 'Beginner';
+}
+
+function getLearningPreferences(learningPrefs) {
+  const prefs = learningPrefs[0] || {};
+  return {
+    device_type: prefs.device_type || 'Desktop',
+    learning_style: prefs.learning_style || ''
+  };
+}
+
 const handleSubmit = async (e) => {
-  if (e && e.preventDefault) {
-    e.preventDefault();
-  }
+  if (e && e.preventDefault) e.preventDefault();
 
   setLoading(true);
   setError('');
@@ -145,16 +161,18 @@ const handleSubmit = async (e) => {
   }
 
   try {
-    // Admin shortcut
+    // 🔐 Admin shortcut
     if (formData.email === 'admin' && formData.password === 'admin') {
       console.log("Logging in as admin");
       navigate('/admin');
       return;
     }
 
+    // 🎟️ Step 1: Get token
     const token = await getToken(formData.email, formData.password);
     console.log('Token received:', token);
 
+    // 🔐 Step 2: Log in
     const loginRes = await fetch('http://localhost:3001/api/auth/login', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -168,13 +186,23 @@ const handleSubmit = async (e) => {
 
     const loginData = await loginRes.json();
     console.log('Login data:', loginData);
-
     localStorage.setItem('token', token);
 
+    // 🧠 Extract key data
     const { account, person, profile, role } = loginData.user;
+    const contactInfo = loginData.user.contact_info || [];
+    const tradingLevels = loginData.user.additional_data?.trading_levels || [];
+    const learningPrefsArr = loginData.user.additional_data?.learning_preferences || [];
+
+    const tradingLevel = getCurrentTradingLevel(tradingLevels);
+    const learningPrefs = getLearningPreferences(learningPrefsArr);
+    const address = getContactValue(contactInfo, 'address');
+    const phone = getContactValue(contactInfo, 'phone');
+
     const fullName = `${person.first_name} ${person.middle_name || ''} ${person.last_name}`.trim();
 
     const sessionData = {
+      person_id: person.person_id,
       account_id: account.account_id,
       username: account.username,
       account_status: account.account_status,
@@ -191,41 +219,56 @@ const handleSubmit = async (e) => {
       employment_status: profile?.employment_status,
       staff_id: profile?.staff_id,
       student_id: profile?.student_id || null,
-      trading_level: profile?.trading_level || null,
+      trading_level: tradingLevel,
       role_id: role?.role_id,
       role_name: role?.role_name,
       permissions: role?.permissions,
-      token: token,
+      token,
       isAuthenticated: true,
       loginTime: new Date().toISOString()
     };
 
-    // Register only if user does not already exist in SQL
-    const checkRes = await fetch(`http://localhost:3000/api/check-user?account_id=${sessionData.account_id}`);
+    // 🔍 Step 3: Check if user exists in SQL
+    const checkRes = await fetch(`http://localhost:3000/api/profile/${sessionData.person_id}`);
     const checkData = await checkRes.json();
 
+    // 📝 Step 4: Register if not found
     if (!checkData.exists) {
+      const registerPayload = {
+        account_id: sessionData.person_id, // Correct ID
+        student_id: sessionData.student_id,
+        name: sessionData.name,
+        username: sessionData.username,
+        email: sessionData.email,
+        password: formData.password,
+        roles: sessionData.role_name || 'student',
+        address,
+        phone_no: phone,
+        birth_place: sessionData.birth_place || '',
+        birth_date: sessionData.birth_date || '',
+        gender: sessionData.gender || '',
+        trading_level: tradingLevel,
+        learning_style: learningPrefs.learning_style,
+        avatar: '',
+        bio: '',
+        preferences: JSON.stringify({
+          device_type: learningPrefs.device_type,
+          learning_style: learningPrefs.learning_style
+        }),
+        authenticated: true,
+        login_time: new Date().toISOString(),
+        last_login: account.last_login || null,
+        is_verified: true,
+        verification_token: null,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      };
+
       const registerRes = await fetch('http://localhost:3000/api/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
-        body: JSON.stringify({
-          account_id: sessionData.account_id,
-          student_id: sessionData.student_id,
-          email: sessionData.email,
-          password: formData.password,
-          username: sessionData.username,
-          name: sessionData.name,
-          roles: sessionData.role_name || 'student',
-          address: sessionData.address || '',
-          birth_place: sessionData.birth_place || '',
-          phone_no: sessionData.phone_no || '',
-          trading_level: sessionData.trading_level,
-          gender: sessionData.gender || '',
-          birth_date: sessionData.birth_date || '',
-          authenticated: true,
-          loginTime: sessionData.loginTime
-        })
+        body: JSON.stringify(registerPayload)
       });
 
       if (!registerRes.ok) {
@@ -233,17 +276,19 @@ const handleSubmit = async (e) => {
       }
     }
 
+    // 💾 Save session
     sessionStorage.setItem('session', JSON.stringify(sessionData));
     setSessionInfo(sessionData);
 
+    // 🎉 Final success message
     let message = `Login successful! Welcome back, ${sessionData.name}!`;
     if (loginData.sessionInfo?.isExistingSession) {
       message += ` Previous session from ${new Date(loginData.sessionInfo.createdAt).toLocaleString()} restored.`;
     } else {
       message += ` New session started.`;
     }
-    setSuccess(message);
 
+    setSuccess(message);
     setFormData({ email: '', password: '' });
     navigate('/dashboard');
 
@@ -255,139 +300,6 @@ const handleSubmit = async (e) => {
   }
 };
 
-
-
-// const handleSubmit = async (e) => {
-//   if (e && e.preventDefault) {
-//     e.preventDefault();
-//   }
-  
-//   setLoading(true);
-//   setError('');
-//   setSuccess('');
-  
-//   // Validate input fields
-//   if (!formData.email || !formData.password) {
-//     setError('Please fill in all fields');
-//     setLoading(false);
-//     return;
-//   }
-  
-//   try {
-//     // Check for admin login first
-//     if (formData.email === 'admin' && formData.password === 'admin') {
-//       console.log("Logging in as admin");
-//       navigate('/admin');
-//       return;
-//     }
-    
-//     // STEP 1: Fetch token using credentials
-//     const token = await getToken(formData.email, formData.password);
-//     console.log('Token received:', token);
-    
-//     // STEP 2: Validate token with backend
-//     const loginRes = await fetch('http://localhost:3001/api/auth/login', {
-//       method: 'POST',
-//       headers: {
-//         'Content-Type': 'application/json'
-//       },
-//       body: JSON.stringify({ token })
-//     });
-
-//     if (!loginRes.ok) {
-//       const { error } = await loginRes.json();
-//       throw new Error(error || 'Login failed');
-//     }
-
-//     const loginData = await loginRes.json();
-//     console.log('Login data:', loginData);
-    
-//     // Store authentication data
-//     localStorage.setItem('token', token);
-//     localStorage.setItem('user', JSON.stringify(loginData.user));
-    
-//     // Create session data
-//     const sessionData = {
-//       user: loginData.user,
-//       name: loginData.user.name || loginData.user.username,
-//       sessionInfo: loginData.sessionInfo,
-//       isAuthenticated: true,
-//       loginTime: new Date().toISOString(),
-//       // Add other user properties as needed
-//       account_id: loginData.user.account_id,
-//       student_id: loginData.user.student_id,
-//       username: loginData.user.username,
-//       roles: loginData.user.roles,
-//       address: loginData.user.address,
-//       birth_place: loginData.user.birth_place,
-//       phone_no: loginData.user.phone_no,
-//       trading_level: loginData.user.trading_level,
-//       gender: loginData.user.gender,
-//       birth_date: loginData.user.birth_date
-//     };
-    
-//     // STEP 3: Register/sync user data with main server
-//     const registerRes = await fetch('http://localhost:3000/api/register', {
-//       method: 'POST',
-//       headers: {
-//         'Content-Type': 'application/json'
-//       },
-//       credentials: 'include',
-//       body: JSON.stringify({
-//         account_id: sessionData.account_id,
-//         student_id: sessionData.student_id,
-//         name: sessionData.name,
-//         username: sessionData.username,
-//         email: formData.email,
-//         roles: sessionData.roles,
-//         password: formData.password,
-//         address: sessionData.address,
-//         birth_place: sessionData.birth_place,
-//         phone_no: sessionData.phone_no,
-//         trading_level: sessionData.trading_level,
-//         gender: sessionData.gender,
-//         birth_date: sessionData.birth_date,
-//         authenticated: true,
-//         loginTime: sessionData.loginTime
-//       })
-//     });
-    
-//     if (!registerRes.ok) {
-//       console.warn('Registration sync failed, but continuing with login');
-//     }
-    
-//     // Save to sessionStorage
-//     sessionStorage.setItem('isAuthenticated', 'true');
-//     sessionStorage.setItem('user', JSON.stringify(loginData.user));
-    
-//     // Update component state
-//     setSessionInfo(sessionData);
-    
-//     // Create success message
-//     let message = `Login successful! Welcome back, ${sessionData.name}!`;
-//     if (loginData.sessionInfo?.isExistingSession) {
-//       message += ` Your previous session from ${new Date(loginData.sessionInfo.createdAt).toLocaleString()} has been restored.`;
-//     } else {
-//       message += ` New session created.`;
-//     }
-//     setSuccess(message);
-    
-//     // Reset form
-//     setFormData({ email: '', password: '' });
-    
-//     console.log('✅ Ready to navigate based on role:', loginData.user.roles);
-//     console.log("Authenticated - navigating to dashboard");
-    
-//     // Navigate to dashboard
-//     navigate('/dashboard');
-    
-//   } catch (error) {
-//     console.error('Login error:', error);
-//     setError(error.message || 'Connection error. Please check if the server is running.');
-//   } finally {
-//     setLoading(false);
-//   }
-// };
 
   const handleLogout = async () => {
     try {

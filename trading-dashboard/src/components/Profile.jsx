@@ -167,16 +167,17 @@ const ProfilePage = () => {
     
     // Get session data from sessionStorage
     const storedSession = sessionStorage.getItem('session');
-    const sessionData = storedSession ? JSON.parse(storedSession) : null;
+const sessionData = storedSession ? JSON.parse(storedSession) : null;
+
 
     if (!sessionData?.account_id) {
       throw new Error('No user session found. Please log in again.');
     }
 
-    console.log('🔍 Fetching profile for account_id:', sessionData.account_id);
+    console.log('🔍 Fetching profile for account_id:', sessionData.person_id);
 
 
-    const response = await fetch(`http://localhost:3000/api/profile/${sessionData.account_id}`, {
+    const response = await fetch(`http://localhost:3000/api/profile/${sessionData.person_id}`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
@@ -385,9 +386,9 @@ const ProfilePage = () => {
   // Tab navigation
   const tabs = [
     { id: 'profile', label: 'Profile', icon: <User size={18} /> },
-    { id: 'settings', label: 'Settings', icon: <Settings size={18} /> },
-    { id: 'security', label: 'Security', icon: <Shield size={18} /> },
-    { id: 'notifications', label: 'Notifications', icon: <Bell size={18} /> }
+    // { id: 'settings', label: 'Settings', icon: <Settings size={18} /> },
+    // { id: 'security', label: 'Security', icon: <Shield size={18} /> },
+    // { id: 'notifications', label: 'Notifications', icon: <Bell size={18} /> }
   ];
 
   if (loading) {
@@ -502,8 +503,8 @@ const ProfilePage = () => {
             <StatCard
               title="Joined"
               value={
-                user.createdAt
-                  ? new Date(user.createdAt).getFullYear()
+                user.created_at
+                  ? new Date(user.created_at).getFullYear()
                   : 'Unknown'
               }
               icon={<Calendar size={20} />}
