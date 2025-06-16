@@ -146,7 +146,6 @@ function getLearningPreferences(learningPrefs) {
     learning_style: prefs.learning_style || ''
   };
 }
-
 const handleSubmit = async (e) => {
   if (e && e.preventDefault) e.preventDefault();
 
@@ -228,96 +227,129 @@ const handleSubmit = async (e) => {
       loginTime: new Date().toISOString()
     };
 
-    // 🔍 Step 3: Check if user exists in SQL
-    const checkRes = await fetch(`http://localhost:3000/api/profile/${sessionData.person_id}`);
-    const checkData = await checkRes.json();
+    // 🔍 Step 3: Get existing profile from database
+    console.log('🔍 Fetching existing profile...');
+    const profileRes = await fetch(`http://localhost:3000/api/profile/${sessionData.person_id}`);
+    const profileData = await profileRes.json();
 
-    // 📝 Step 4: Register if not found
-    if (!checkData.exists) {
-      const registerPayload = {
-        account_id: sessionData.person_id, // Correct ID
-        student_id: sessionData.student_id,
-        name: sessionData.name,
-        username: sessionData.username,
-        email: sessionData.email,
-        password: formData.password,
-        roles: sessionData.role_name || 'student',
-        address,
-        phone_no: phone,
-        birth_place: sessionData.birth_place || '',
-        birth_date: sessionData.birth_date || '',
-        gender: sessionData.gender || '',
-        trading_level: tradingLevel,
-        learning_style: learningPrefs.learning_style,
-        avatar: '',
-        bio: '',
-        preferences: JSON.stringify({
-          device_type: learningPrefs.device_type,
-          learning_style: learningPrefs.learning_style
-        }),
-        authenticated: true,
-        login_time: new Date().toISOString(),
-        last_login: account.last_login || null,
-        is_verified: true,
-        verification_token: null,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
-      };
+    // 📝 Step 4: Prepare user data payload
+    const userPayload = {
+      account_id: sessionData.person_id,
+      student_id: sessionData.student_id,
+      name: sessionData.name,
+      username: sessionData.username,
+      email: sessionData.email,
+      password: formData.password,
+      roles: sessionData.role_name || 'student',
+      address,
+      phone_no: phone,
+      birth_place: sessionData.birth_place || '',
+      birth_date: sessionData.birth_date || '',
+      gender: sessionData.gender || '',
+      trading_level: tradingLevel,
+      learning_style: learningPrefs.learning_style,
+      avatar: '',
+      bio: '',
+      preferences: JSON.stringify({
+        device_type: learningPrefs.device_type,
+        learning_style: learningPrefs.learning_style
+      }),
+      authenticated: true,
+      login_time: new Date().toISOString(),
+      last_login: account.last_login || null,
+      is_verified: true,
+      verification_token: null,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
+    };
 
+    if (!profileData.success || !profileData.profile) {
+      // 📝 Profile doesn't exist - create new user
+      console.log('📝 Creating new user profile...');
       const registerRes = await fetch('http://localhost:3000/api/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
-        body: JSON.stringify(registerPayload)
+        body: JSON.stringify(userPayload)
       });
 
       if (!registerRes.ok) {
         console.warn('Registration failed:', await registerRes.text());
+      } else {
+        console.log('✅ New user registered successfully');
+      }
+    } else {
+      // 🔄 Profile exists - check if data needs updating
+      console.log('🔄 Profile exists, checking for updates...');
+      const existingProfile = profileData.profile;
+      
+      // Compare key fields to determine if update is needed
+      const needsUpdate = (
+        existingProfile.name !== userPayload.name ||
+        existingProfile.email !== userPayload.email ||
+        existingProfile.username !== userPayload.username ||
+        existingProfile.address !== userPayload.address ||
+        existingProfile.phone_no !== userPayload.phone_no ||
+        existingProfile.birth_place !== userPayload.birth_place ||
+        existingProfile.birth_date !== userPayload.birth_date ||
+        existingProfile.gender !== userPayload.gender ||
+        existingProfile.trading_level !== userPayload.trading_level ||
+        existingProfile.learning_style !== userPayload.learning_style ||
+        existingProfile.roles !== userPayload.roles
+      );
+
+      if (needsUpdate) {
+        console.log('🔄 Profile data differs from session, updating...');
+        
+        // Log what's being updated for debugging
+        console.log('📊 Profile differences found:');
+        if (existingProfile.name !== userPayload.name) 
+          console.log(`  Name: "${existingProfile.name}" → "${userPayload.name}"`);
+        if (existingProfile.email !== userPayload.email) 
+          console.log(`  Email: "${existingProfile.email}" → "${userPayload.email}"`);
+        if (existingProfile.username !== userPayload.username) 
+          console.log(`  Username: "${existingProfile.username}" → "${userPayload.username}"`);
+        if (existingProfile.trading_level !== userPayload.trading_level) 
+          console.log(`  Trading Level: "${existingProfile.trading_level}" → "${userPayload.trading_level}"`);
+
+        const updateRes = await fetch('http://localhost:3000/api/updateprofile', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify(userPayload)
+        });
+
+        if (!updateRes.ok) {
+          console.warn('Profile update failed:', await updateRes.text());
+        } else {
+          console.log('✅ Profile updated successfully');
+        }
+      } else {
+        console.log('✅ Profile is up to date, no changes needed');
+        
+        // Still update login time and authentication status
+        const minimalUpdate = {
+          ...userPayload,
+          login_time: new Date().toISOString(),
+          authenticated: true,
+          last_login: new Date().toISOString()
+        };
+
+        const updateRes = await fetch('http://localhost:3000/api/updateprofile', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify(minimalUpdate)
+        });
+
+        if (!updateRes.ok) {
+          console.warn('Login time update failed:', await updateRes.text());
+        } else {
+          console.log('✅ Login time updated');
+        }
       }
     }
-    else if (checkData.exists) {
-      const registerPayload = {
-        account_id: sessionData.person_id, // Correct ID
-        student_id: sessionData.student_id,
-        name: sessionData.name,
-        username: sessionData.username,
-        email: sessionData.email,
-        password: formData.password,
-        roles: sessionData.role_name || 'student',
-        address,
-        phone_no: phone,
-        birth_place: sessionData.birth_place || '',
-        birth_date: sessionData.birth_date || '',
-        gender: sessionData.gender || '',
-        trading_level: tradingLevel,
-        learning_style: learningPrefs.learning_style,
-        avatar: '',
-        bio: '',
-        preferences: JSON.stringify({
-          device_type: learningPrefs.device_type,
-          learning_style: learningPrefs.learning_style
-        }),
-        authenticated: true,
-        login_time: new Date().toISOString(),
-        last_login: account.last_login || null,
-        is_verified: true,
-        verification_token: null,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
-      };
 
-      const registerRes = await fetch('http://localhost:3000/api/updateprofile', {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify(registerPayload)
-      });
-
-      if (!registerRes.ok) {
-        console.warn('Registration failed:', await registerRes.text());
-      }
-      return;
-    }
     // 💾 Save session
     sessionStorage.setItem('session', JSON.stringify(sessionData));
     setSessionInfo(sessionData);
@@ -341,7 +373,6 @@ const handleSubmit = async (e) => {
     setLoading(false);
   }
 };
-
 
   const handleLogout = async () => {
     try {

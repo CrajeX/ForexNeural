@@ -22,6 +22,7 @@ const TopSetups = ({ onAssetPairClick }) => {
       onAssetPairClick(assetPairCode);
     }
     // Also trigger currency profile navigation
+    console.log(assetPairCode)
     navigateToCurrencyProfile(assetPairCode);
   };
 
@@ -705,16 +706,18 @@ const TopSetups = ({ onAssetPairClick }) => {
 
   // FIXED: Conditional rendering based on showCurrencyProfile
   if (showCurrencyProfile && currentAssetPair) {
+    // console.log(currentAssetPair)
     return (
       <div style={styles.container}>
         <div style={styles.maxWidth}>
           <button 
             style={styles.backButton}
             onClick={navigateBackToSetups}
+            
           >
             ← Back to Top Setups
           </button>
-          <CurrencyProfile assetPairCode={currentAssetPair} />
+           <CurrencyProfile assetPairCode={currentAssetPair} />
         </div>
       </div>
     );

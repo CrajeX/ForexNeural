@@ -1,7 +1,7 @@
 
 import React, { useState, useRef, useEffect, useCallback} from 'react';
 import { useParams } from 'react-router-dom';
-
+import { useNavigate } from 'react-router-dom';
 import { 
   FilePenLine, FileSpreadsheetIcon, Settings, Maximize2, ZoomIn, ZoomOut, 
   Move, Clock, TrendingUp, TrendingDown, BarChart3, ActivityIcon, Activity, 
@@ -667,7 +667,29 @@ const TradingDashboard = () => {
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
   const { mobile, tablet, desktop, windowSize } = useResponsive();
-  
+  const navigate = useNavigate();
+  const styles = {
+    container: {
+      padding: "24px",
+      backgroundColor: "#f9fafb",
+      minHeight: "100vh",
+    },
+    maxWidth: {
+      maxWidth: "90rem",
+      margin: "0 auto",
+    },
+     backButton: {
+      backgroundColor: "#6b7280",
+      color: "white",
+      border: "none",
+      borderRadius: "6px",
+      padding: "8px 16px",
+      fontSize: "14px",
+      cursor: "pointer",
+      marginBottom: "16px",
+    },
+  };
+
   const [dashboardSettings, setDashboardSettings] = useState({
     theme: 'dark',
     customColors: {
@@ -743,6 +765,11 @@ const TradingDashboard = () => {
     if (mobile) return 12;
     if (tablet) return 16;
     return dashboardSettings.cardPadding;
+  };
+
+   const navigateBackToSetups = () => {
+     navigate('/dashboard');
+     setActiveSection('dashboard');
   };
 
   const getResponsiveFontSize = () => {
@@ -1914,7 +1941,18 @@ const TopSetupsSection = () => {
         );
       case 'currencyprofile':
         return (
-          <CurrencyProfile assetPairCode={assetPairCode} />
+           <div style={styles.container}>
+                  <div style={styles.maxWidth}>
+                    <button 
+                      style={styles.backButton}
+                      onClick={navigateBackToSetups}
+                    >
+                      ← Back to Dashboard
+                    </button>
+                      <CurrencyProfile assetPairCode={assetPairCode} />
+                  </div>
+                </div>
+         
         )
       default:
         return (

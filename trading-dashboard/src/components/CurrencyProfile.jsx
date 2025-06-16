@@ -33,7 +33,7 @@ const CurrencyProfile = ({ assetPairCode: propAssetPairCode}) => {
   
   // Use URL parameter if available, otherwise use prop
   const assetPairCode = urlAssetPairCode || propAssetPairCode;
-    const handleBack = () => {
+  const handleBack = () => {
         const navigate = useNavigate();
     sessionStorage.setItem('programmaticNav', 'true');
     sessionStorage.setItem('allowNavigation', 'true');

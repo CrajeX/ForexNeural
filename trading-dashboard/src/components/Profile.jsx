@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { User, Mail, Phone, MapPin, Calendar, Edit3, Save, X, Camera, Settings, Shield, Bell, Home } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
@@ -167,7 +166,7 @@ const ProfilePage = () => {
     
     // Get session data from sessionStorage
     const storedSession = sessionStorage.getItem('session');
-const sessionData = storedSession ? JSON.parse(storedSession) : null;
+    const sessionData = storedSession ? JSON.parse(storedSession) : null;
 
 
     if (!sessionData?.account_id) {
@@ -203,9 +202,6 @@ const sessionData = storedSession ? JSON.parse(storedSession) : null;
     setUser(profileData);
     setEditedUser(profileData);
 
-    // Optional: update the stored session with refreshed profile (if needed)
-    // sessionStorage.setItem('session', JSON.stringify({ ...sessionData, user: profileData }));
-
   } catch (error) {
     console.error('❌ Error fetching user profile:', error);
     setError(error.message);
@@ -215,9 +211,10 @@ const sessionData = storedSession ? JSON.parse(storedSession) : null;
       account_id: 1,
       name: "John Doe",
       email: "john.doe@example.com",
-      phone: "+1234567890",
-      location: "New York, NY",
+      phone_no: "+1234567890",
+      address: "New York, NY",
       student_id: "2024001",
+      trading_level: "Beginner",
       course: "Computer Science",
       yearLevel: "3rd Year",
       roles: "student",
@@ -247,75 +244,317 @@ const sessionData = storedSession ? JSON.parse(storedSession) : null;
   };
 
   // Save profile changes to MongoDB
-  const handleSaveProfile = async () => {
-    try {
-      setLoading(true);
-      setError(null);
+const handleSaveProfile = async () => {
+  try {
+    setLoading(true);
+    setError(null);
+  
+    const account_id = user.account_id;
     
-      const account_id = user.account_id;
-      
-      if (!account_id) {
-        throw new Error('Account ID not found. Please log in again.');
-      }
-      
-      console.log('💾 Saving profile for account_id:', account_id);
-      console.log('📝 Profile data:', editedUser);
-      
-      // FIXED: Update profile endpoint (matches backend route)
-      const response = await fetch(`http://localhost:3000/api/profile/${account_id}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        credentials: 'include',
-        body: JSON.stringify(editedUser)
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.error || `HTTP ${response.status}: Update failed`);
-      }
-
-      const data = await response.json();
-      
-      if (data.success) {
-        setUser(data.profile);
-        setEditedUser(data.profile);
-        setIsEditing(false);
-        
-        // Update sessionStorage
-        sessionStorage.setItem('user', JSON.stringify(data.profile));
-        
-        alert(data.message || 'Profile updated successfully!');
-        console.log('✅ Profile updated successfully');
-      } else {
-        throw new Error(data.error || 'Update failed');
-      }
-      
-    } catch (error) {
-      console.error('❌ Error updating profile:', error);
-      setError(error.message);
-      
-      let userMessage = 'Failed to update profile. ';
-      
-      if (error.message.includes('404')) {
-        userMessage += 'Profile not found.';
-      } else if (error.message.includes('Failed to fetch')) {
-        userMessage += 'Cannot connect to server. Please check your connection.';
-      } else if (error.message.includes('Account ID')) {
-        userMessage += 'Please log in again.';
-      } else {
-        userMessage += error.message;
-      }
-      
-      alert(userMessage);
-      
-    } finally {
-      setLoading(false);
+    if (!account_id) {
+      throw new Error('Account ID not found. Please log in again.');
     }
-  };
+    
+    console.log('💾 Saving profile for account_id:', account_id);
+    console.log('📝 Original editedUser data:', editedUser);
+    
+    // Prepare the data to send - clean and normalize the data
+    const profileData = {};
+    
+    // Handle name field
+    if (editedUser.name !== undefined && editedUser.name !== null) {
+      profileData.name = editedUser.name.toString().trim();
+    }
+    
+    // Handle email field
+    if (editedUser.email !== undefined && editedUser.email !== null) {
+      profileData.email = editedUser.email.toString().trim();
+    }
+    
+    // Handle phone field - normalize field name
+    if (editedUser.phone_no !== undefined && editedUser.phone_no !== null) {
+      profileData.phone_no = editedUser.phone_no.toString().trim();
+    } else if (editedUser.phone !== undefined && editedUser.phone !== null) {
+      // Handle if the field is named 'phone' instead of 'phone_no'
+      profileData.phone_no = editedUser.phone.toString().trim();
+    }
+    
+    // Handle address field
+    if (editedUser.address !== undefined && editedUser.address !== null) {
+      profileData.address = editedUser.address.toString().trim();
+    }
+    
+    // Handle trading level - normalize to proper case
+    if (editedUser.trading_level !== undefined && editedUser.trading_level !== null) {
+      const tradingLevel = editedUser.trading_level.toString().trim();
+      // Normalize trading level to proper case (Beginner, Intermediate, Advanced)
+      if (tradingLevel.toLowerCase() === 'beginner') {
+        profileData.trading_level = 'Beginner';
+      } else if (tradingLevel.toLowerCase() === 'intermediate') {
+        profileData.trading_level = 'Intermediate';
+      } else if (tradingLevel.toLowerCase() === 'advanced') {
+        profileData.trading_level = 'Advanced';
+      } else {
+        profileData.trading_level = tradingLevel;
+      }
+    }
+    
+    // Handle learning style - normalize to proper case
+    if (editedUser.learning_style !== undefined && editedUser.learning_style !== null) {
+      const learningStyle = editedUser.learning_style.toString().trim();
+      if (learningStyle.toLowerCase() === 'in-person' || learningStyle.toLowerCase() === 'in person') {
+        profileData.learning_style = 'In-person';
+      } else if (learningStyle.toLowerCase() === 'online') {
+        profileData.learning_style = 'Online';
+      } else {
+        profileData.learning_style = learningStyle;
+      }
+    }
+    
+    // Handle gender - normalize to proper case
+    if (editedUser.gender !== undefined && editedUser.gender !== null) {
+      const gender = editedUser.gender.toString().trim();
+      if (gender.toLowerCase() === 'male') {
+        profileData.gender = 'Male';
+      } else if (gender.toLowerCase() === 'female') {
+        profileData.gender = 'Female';
+      } else if (gender.toLowerCase() === 'other') {
+        profileData.gender = 'Other';
+      } else {
+        profileData.gender = gender;
+      }
+    }
+    
+    // Handle birth date - ensure proper format
+    if (editedUser.birth_date !== undefined && editedUser.birth_date !== null) {
+      let birthDate = editedUser.birth_date;
+      
+      // If it's already a Date object, convert to ISO string
+      if (birthDate instanceof Date) {
+        profileData.birth_date = birthDate.toISOString();
+      } 
+      // If it's a string, validate and format it
+      else if (typeof birthDate === 'string' && birthDate.trim() !== '') {
+        try {
+          const date = new Date(birthDate);
+          if (!isNaN(date.getTime())) {
+            profileData.birth_date = date.toISOString();
+          }
+        } catch (e) {
+          console.warn('⚠️ Invalid birth_date format, skipping:', birthDate);
+        }
+      }
+    }
+    
+    // Handle birth place
+    if (editedUser.birth_place !== undefined && editedUser.birth_place !== null) {
+      profileData.birth_place = editedUser.birth_place.toString().trim();
+    }
+    
+    // Handle education
+    if (editedUser.education !== undefined && editedUser.education !== null) {
+      profileData.education = editedUser.education.toString().trim();
+    }
+    
+    // Remove any empty string fields to avoid unnecessary updates
+    Object.keys(profileData).forEach(key => {
+      if (profileData[key] === '' || profileData[key] === null || profileData[key] === undefined) {
+        delete profileData[key];
+      }
+    });
+    
+    console.log('📤 Cleaned profile data being sent:', profileData);
+    
+    // Validate that we have some data to send
+    if (Object.keys(profileData).length === 0) {
+      throw new Error('No valid data to update. Please make changes before saving.');
+    }
+    
+    // Update profile endpoint - matches backend route
+    const response = await fetch(`http://localhost:3001/api/profile/${account_id}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      credentials: 'include',
+      body: JSON.stringify(profileData)
+    });
 
-  // Cancel editing
+    // Check if response is ok
+    if (!response.ok) {
+      let errorMessage = `HTTP ${response.status}: Update failed`;
+      
+      try {
+        const errorData = await response.json();
+        errorMessage = errorData.error || errorData.message || errorMessage;
+        
+        // Include details in development mode
+        if (errorData.details && process.env.NODE_ENV === 'development') {
+          console.error('Server error details:', errorData.details);
+        }
+      } catch (parseError) {
+        console.error('Failed to parse error response:', parseError);
+      }
+      
+      throw new Error(errorMessage);
+    }
+
+    // Parse the successful response
+    const data = await response.json();
+    console.log('📥 Server response:', data);
+    
+    if (data.success) {
+      // Update local state with the returned profile data
+      const updatedProfile = data.profile;
+      
+      // Clean up the profile data for local state
+      const cleanedProfile = {
+        ...updatedProfile,
+        // Ensure consistent field naming
+        phone_no: updatedProfile.phone_no || updatedProfile.phone,
+        // Handle any data type conversions needed for the UI
+        birth_date: updatedProfile.birth_date ? new Date(updatedProfile.birth_date) : null,
+      };
+      
+      setUser(cleanedProfile);
+      setEditedUser(cleanedProfile);
+      setIsEditing(false);
+      
+      // Update sessionStorage with new profile data
+      const storedSession = sessionStorage.getItem('session');
+      if (storedSession) {
+        try {
+          const sessionData = JSON.parse(storedSession);
+          // Update session with new profile data, preserving existing session fields
+          const updatedSession = {
+            ...sessionData,
+            ...cleanedProfile,
+            // Preserve critical session fields that shouldn't be overwritten
+            person_id: sessionData.person_id,
+            account_id: sessionData.account_id,
+            authenticated: sessionData.authenticated,
+            loginTime: sessionData.loginTime
+          };
+          sessionStorage.setItem('session', JSON.stringify(updatedSession));
+          console.log('✅ Session updated with new profile data');
+        } catch (sessionError) {
+          console.warn('⚠️ Failed to update session storage:', sessionError);
+        }
+      }
+      
+      // Show success message
+      const successMessage = data.message || 'Profile updated successfully!';
+      alert(successMessage);
+      console.log('✅ Profile updated successfully');
+      
+      // Optional: Use toast notification instead of alert
+      // showToast('success', successMessage);
+      
+    } else {
+      throw new Error(data.error || data.message || 'Update failed - no success response');
+    }
+    
+  } catch (error) {
+    console.error('❌ Error updating profile:', error);
+    setError(error.message);
+    
+    // Provide user-friendly error messages
+    let userMessage = 'Failed to update profile. ';
+    
+    if (error.message.includes('404')) {
+      userMessage += 'Profile not found. Please try logging in again.';
+    } else if (error.message.includes('Failed to fetch')) {
+      userMessage += 'Cannot connect to server. Please check your internet connection.';
+    } else if (error.message.includes('Account ID')) {
+      userMessage += 'Please log in again.';
+    } else if (error.message.includes('Email or phone number already exists')) {
+      userMessage += 'Email or phone number is already in use by another account.';
+    } else if (error.message.includes('exceed maximum length')) {
+      userMessage += 'One or more fields are too long. Please shorten your entries.';
+    } else if (error.message.includes('Required field cannot be empty')) {
+      userMessage += 'Please fill in all required fields.';
+    } else if (error.message.includes('No valid data to update')) {
+      userMessage = error.message; // Use the exact message for this case
+    } else if (error.message.includes('Database')) {
+      userMessage += 'Database error. Please try again later or contact support.';
+    } else {
+      userMessage += error.message;
+    }
+    
+    alert(userMessage);
+    
+    // Optional: Use toast notification instead of alert
+    // showToast('error', userMessage);
+    
+  } finally {
+    setLoading(false);
+  }
+};
+
+// Optional: Toast notification helper function (if you want to replace alerts)
+const showToast = (type, message) => {
+  // Create a simple toast notification
+  const toast = document.createElement('div');
+  toast.className = `toast toast-${type}`;
+  toast.style.cssText = `
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    padding: 15px 20px;
+    border-radius: 8px;
+    color: white;
+    font-weight: 500;
+    z-index: 9999;
+    max-width: 400px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    background-color: ${type === 'success' ? '#10b981' : '#ef4444'};
+    animation: slideIn 0.3s ease-out;
+    cursor: pointer;
+    font-family: system-ui, -apple-system, sans-serif;
+    line-height: 1.4;
+  `;
+  toast.textContent = message;
+  
+  // Add slide-in animation
+  if (!document.getElementById('toast-styles')) {
+    const style = document.createElement('style');
+    style.id = 'toast-styles';
+    style.textContent = `
+      @keyframes slideIn {
+        from { transform: translateX(100%); opacity: 0; }
+        to { transform: translateX(0); opacity: 1; }
+      }
+      @keyframes slideOut {
+        from { transform: translateX(0); opacity: 1; }
+        to { transform: translateX(100%); opacity: 0; }
+      }
+    `;
+    document.head.appendChild(style);
+  }
+  
+  document.body.appendChild(toast);
+  
+  // Auto-remove after 5 seconds
+  setTimeout(() => {
+    toast.style.animation = 'slideOut 0.3s ease-out';
+    setTimeout(() => {
+      if (toast.parentNode) {
+        toast.parentNode.removeChild(toast);
+      }
+    }, 300);
+  }, 5000);
+  
+  // Allow manual dismissal
+  toast.addEventListener('click', () => {
+    toast.style.animation = 'slideOut 0.3s ease-out';
+    setTimeout(() => {
+      if (toast.parentNode) {
+        toast.parentNode.removeChild(toast);
+      }
+    }, 300);
+  });
+
+};
   const handleCancelEdit = () => {
     setEditedUser(user);
     setIsEditing(false);
@@ -561,7 +800,7 @@ const sessionData = storedSession ? JSON.parse(storedSession) : null;
                     label="Phone Number"
                     type="tel"
                     value={isEditing ? editedUser.phone_no : user.phone_no}
-                    onChange={(e) => handleFieldChange('phone', e.target.value)}
+                    onChange={(e) => handleFieldChange('phone_no', e.target.value)}
                     isEditing={isEditing}
                     icon={<Phone size={18} />}
                     placeholder="Enter your phone number"
@@ -569,7 +808,7 @@ const sessionData = storedSession ? JSON.parse(storedSession) : null;
                   <ProfileField
                     label="Location"
                     value={isEditing ? editedUser.address : user.address}
-                    onChange={(e) => handleFieldChange('location', e.target.value)}
+                    onChange={(e) => handleFieldChange('address', e.target.value)}
                     isEditing={isEditing}
                     icon={<MapPin size={18} />}
                     placeholder="Enter your location"
@@ -588,20 +827,10 @@ const sessionData = storedSession ? JSON.parse(storedSession) : null;
                       icon={<User size={18} />}
                     />
                     <ProfileField
-                      label="Course/Program"
-                      value={isEditing ? editedUser.trading_level : user.trading_level}
-                      onChange={(e) => handleFieldChange('course', e.target.value)}
-                      isEditing={isEditing}
-                      icon={<User size={18} />}
-                      placeholder="Enter your course"
-                    />
-                    <ProfileField
                       label="Trading Level"
-                      value={isEditing ? editedUser.yearLevel : user.trading_level}
-                      onChange={(e) => handleFieldChange('yearLevel', e.target.value)}
-                      isEditing={isEditing}
+                      value={user.trading_level || 'N/A'}
+                      isEditing={false}
                       icon={<Calendar size={18} />}
-                      placeholder="Enter your year level"
                     />
                   </div>
                 </ProfileCard>

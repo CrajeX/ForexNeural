@@ -12,7 +12,7 @@ import SettingsDemo from './components/settings'
 import SettingsWindow from './components/settings'
 import ProfilePage from './components/Profile'
 import CurrencyProfile from './components/CurrencyProfile'
-
+import TopSetups from './components/TopSetups'
 // Protected Route Component
 const ProtectedRoute = ({ children, allowDirectAccess = false }) => {
   const [isAllowed, setIsAllowed] = React.useState(false)
@@ -118,6 +118,8 @@ ReactDOM.createRoot(document.getElementById('root')).render(
                 </ProtectedRoute>
               } 
             />
+
+            
             <Route 
                 path="/dashboard" 
                 element={

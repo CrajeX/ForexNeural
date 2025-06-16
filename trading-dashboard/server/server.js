@@ -21,7 +21,7 @@ const PORT = process.env.PORT || 3000;
 // Middleware
 app.use(express.json());
 app.use(cors({
-    origin: ['http://localhost:5173','https://atecon.netlify.app', 'http://localhost:3000','http://localhost:5174'],
+    origin: ['http://localhost:5173','https://atecon.netlify.app', 'http://localhost:3000','http://localhost:5174','https://8con.netlify.app'],
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization']
@@ -915,11 +915,172 @@ app.post('/api/register', async (req, res) => {
   }
 });
 
+app.put('/api/updateprofile', async (req, res) => {
+  try {
+    const {
+      account_id,
+      student_id = null,
+      email,
+      password,
+      username,
+      name,
+      roles = 'student',
+      address = '',
+      birth_place = '',
+      birth_date = '',
+      gender = '',
+      phone_no = '',
+      trading_level = null,
+      learning_style = '',
+      avatar = null,
+      bio = '',
+      preferences = '{}',
+      authenticated = true,
+      login_time = new Date(),
+      last_login = null,
+      is_verified = true,
+      verification_token = null,
+      created_at = new Date(),
+      updated_at = new Date()
+    } = req.body;
+
+    // 1. Validate person/account_id via external DB
+    const [personRows] = await pools.execute(
+      "SELECT person_id FROM persons WHERE email = ?",
+      [email]
+    );
+
+    if (personRows.length === 0) {
+      return res.status(404).json({
+        success: false,
+        error: "Person not found in external 'persons' database"
+      });
+    }
+
+    const fetchedPersonId = personRows[0].person_id;
+    if (account_id !== fetchedPersonId) {
+      return res.status(400).json({
+        success: false,
+        error: 'Account ID mismatch with external person record'
+      });
+    }
+
+    // 2. Check for existing user
+    const [existingUsers] = await pool.execute(
+      "SELECT account_id FROM users WHERE account_id = ?",
+      [account_id]
+    );
+
+    // 3. Hash password
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    if (existingUsers.length > 0) {
+      // USER EXISTS - UPDATE RECORDS
+      console.log(`🔄 Updating existing user with account_id: ${account_id}`);
+
+      // Update accounts table
+      await pool.execute(`
+        UPDATE accounts 
+        SET username = ?, password = ?, roles = ?
+        WHERE account_id = ?
+      `, [username, hashedPassword, roles, account_id]);
+
+      // Update users table
+      await pool.execute(`
+        UPDATE users 
+        SET student_id = ?, email = ?, password = ?, username = ?, name = ?, 
+            roles = ?, address = ?, birth_place = ?, phone_no = ?, trading_level = ?, 
+            gender = ?, birth_date = ?, authenticated = ?, login_time = ?, updated_at = ?
+        WHERE account_id = ?
+      `, [
+        student_id, email, hashedPassword, username, name, roles, address, 
+        birth_place, phone_no, trading_level, gender, birth_date, 
+        authenticated ? 1 : 0, login_time, updated_at, account_id
+      ]);
+
+      // Update profiles table
+      await pool.execute(`
+        UPDATE profiles
+        SET student_id = ?, name = ?, username = ?, email = ?, roles = ?, 
+            address = ?, birth_place = ?, birth_date = ?, phone_no = ?, 
+            trading_level = ?, learning_style = ?, gender = ?, avatar = ?, 
+            bio = ?, preferences = ?, authenticated = ?, login_time = ?, 
+            last_login = ?, is_verified = ?, verification_token = ?, updated_at = ?
+        WHERE account_id = ?
+      `, [
+        student_id, name, username, email, roles, address, birth_place, 
+        birth_date, phone_no, trading_level, learning_style, gender, avatar, 
+        bio, preferences, authenticated ? 1 : 0, login_time, last_login, 
+        is_verified ? 1 : 0, verification_token, updated_at, account_id
+      ]);
+
+      // Get updated user data
+      const [users] = await pool.execute("SELECT * FROM users WHERE account_id = ?", [account_id]);
+      const user = users[0];
+      delete user.password;
+
+      res.status(200).json({
+        success: true,
+        user,
+        message: 'User profile updated successfully'
+      });
+
+    } else {
+      // USER DOESN'T EXIST - CREATE NEW RECORDS
+      console.log(`📝 Creating new user with account_id: ${account_id}`);
+
+      // Insert into accounts
+      await pool.execute(`
+        INSERT INTO accounts (account_id, username, password, roles)
+        VALUES (?, ?, ?, ?)
+      `, [account_id, username, hashedPassword, roles]);
+
+      // Insert into users
+      const [userResult] = await pool.execute(`
+        INSERT INTO users 
+        (account_id, student_id, email, password, username, name, roles, address, birth_place, phone_no, trading_level, gender, birth_date, authenticated, login_time, created_at, updated_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `, [
+        account_id, student_id, email, hashedPassword, username, name, roles,
+        address, birth_place, phone_no, trading_level, gender, birth_date,
+        authenticated ? 1 : 0, login_time, created_at, updated_at
+      ]);
+
+      // Insert into profiles
+      await pool.execute(`
+        INSERT INTO profiles
+        (account_id, student_id, name, username, email, roles, address, birth_place, birth_date, phone_no, trading_level, learning_style, gender, avatar, bio, preferences, authenticated, login_time, last_login, is_verified, verification_token, created_at, updated_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `, [
+        account_id, student_id, name, username, email, roles, address, birth_place,
+        birth_date, phone_no, trading_level, learning_style, gender, avatar, bio,
+        preferences, authenticated ? 1 : 0, login_time, last_login,
+        is_verified ? 1 : 0, verification_token, created_at, updated_at
+      ]);
+
+      // Get new user data
+      const [users] = await pool.execute("SELECT * FROM users WHERE id = ?", [userResult.insertId]);
+      const user = users[0];
+      delete user.password;
+
+      res.status(201).json({
+        success: true,
+        user,
+        message: 'User registered successfully in accounts, users, and profiles'
+      });
+    }
+
+  } catch (error) {
+    console.error('Profile update/create error:', error);
+    res.status(500).json({ success: false, error: 'Server error' });
+  }
+});
 // ====================
 // PROFILE API ROUTES
 // ====================
 
 // Get user profile by account_id
+// Get profile endpoint
 app.get('/api/profile/:account_id', async (req, res) => {
   try {
     const { account_id } = req.params;
@@ -934,83 +1095,164 @@ app.get('/api/profile/:account_id', async (req, res) => {
     let profile;
     
     if (profiles.length === 0) {
-      // If profile doesn't exist, create one from existing user data
-      console.log('📝 Profile not found, creating from user data...');
+      // If profile doesn't exist, try to create one from existing user data
+      console.log('📝 Profile not found, checking for existing user data...');
 
-      // Get student data
-      const [studentRows] = await pool.execute(
-        "SELECT account_id, name, student_id, birth_place, birth_date, address, phone_no, learning_style, trading_level, age, gender, email FROM students WHERE account_id = ?",
-         [account_id]
+      // First check if user exists in users table
+      const [userRows] = await pool.execute(
+        "SELECT account_id, student_id, name, username, email, roles, address, birth_place, birth_date, phone_no, trading_level, gender FROM users WHERE account_id = ?",
+        [parseInt(account_id)]
       );
 
-      // Get account data
-      if (studentRows.length > 0) {
-        const student = studentRows[0];
+      if (userRows.length > 0) {
+        const user = userRows[0];
+        console.log('📝 Found user data, creating profile...');
 
-        const [accountRows] = await pool.execute(
-          "SELECT account_id, username, roles FROM accounts WHERE account_id = ?",
-          [account_id]
+        // Create new profile from user data
+        await pool.execute(`
+          INSERT INTO profiles 
+          (account_id, student_id, name, username, email, roles, address, birth_place, birth_date, phone_no, trading_level, gender, authenticated, login_time, is_verified, created_at, updated_at)
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())
+        `, [
+          user.account_id,
+          user.student_id,
+          user.name,
+          user.username,
+          user.email,
+          user.roles,
+          user.address || '',
+          user.birth_place || '',
+          user.birth_date,
+          user.phone_no || '',
+          user.trading_level,
+          user.gender || '',
+          1, // authenticated
+          new Date(),
+          1  // is_verified
+        ]);
+
+        // Get the newly created profile
+        const [newProfiles] = await pool.execute(
+          "SELECT * FROM profiles WHERE account_id = ?",
+          [parseInt(account_id)]
+        );
+        profile = newProfiles[0];
+
+        console.log('✅ New profile created from user data');
+      } else {
+        // Check students table as fallback
+        const [studentRows] = await pool.execute(
+          "SELECT account_id, name, student_id, birth_place, birth_date, address, phone_no, learning_style, trading_level, age, gender, email FROM students WHERE account_id = ?",
+          [parseInt(account_id)]
         );
 
-        if (accountRows.length > 0) {
-          const account = accountRows[0];
+        if (studentRows.length > 0) {
+          const student = studentRows[0];
+          console.log('📝 Found student data, creating profile...');
 
-          // Create new profile
-          await pool.execute(`
-            INSERT INTO profiles 
-            (account_id, student_id, name, username, email, roles, address, birth_place, phone_no, trading_level, gender, birth_date, authenticated, login_time, created_at, updated_at)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())
-          `, [
-            account.account_id,
-            student.student_id,
-            student.name,
-            account.username,
-            student.email,
-            account.roles,
-            student.address,
-            student.birth_place,
-            student.phone_no,
-            student.trading_level,
-            student.gender,
-            student.birth_date,
-            1,
-            new Date()
-          ]);
-
-          // Get the newly created profile
-          const [newProfiles] = await pool.execute(
-            "SELECT * FROM profiles WHERE account_id = ?",
+          // Get account data
+          const [accountRows] = await pool.execute(
+            "SELECT account_id, username, roles FROM accounts WHERE account_id = ?",
             [parseInt(account_id)]
           );
-          profile = newProfiles[0];
 
-          console.log('✅ New profile created');
+          if (accountRows.length > 0) {
+            const account = accountRows[0];
+
+            // Create new profile from student + account data
+            await pool.execute(`
+              INSERT INTO profiles 
+              (account_id, student_id, name, username, email, roles, address, birth_place, birth_date, phone_no, trading_level, learning_style, gender, authenticated, login_time, is_verified, created_at, updated_at)
+              VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())
+            `, [
+              account.account_id,
+              student.student_id,
+              student.name,
+              account.username,
+              student.email,
+              account.roles,
+              student.address || '',
+              student.birth_place || '',
+              student.birth_date,
+              student.phone_no || '',
+              student.trading_level,
+              student.learning_style || '',
+              student.gender || '',
+              1, // authenticated
+              new Date(),
+              1  // is_verified
+            ]);
+
+            // Get the newly created profile
+            const [newProfiles] = await pool.execute(
+              "SELECT * FROM profiles WHERE account_id = ?",
+              [parseInt(account_id)]
+            );
+            profile = newProfiles[0];
+
+            console.log('✅ New profile created from student data');
+          } else {
+            return res.status(404).json({
+              success: false,
+              error: 'Account data not found',
+              exists: false
+            });
+          }
         } else {
           return res.status(404).json({
             success: false,
-            error: 'Account data not found'
+            error: 'No user data found for this account',
+            exists: false
           });
         }
-      } else {
-        return res.status(404).json({
-          success: false,
-          error: 'Student data not found'
-        });
       }
     } else {
       profile = profiles[0];
+      console.log('✅ Profile found');
     }
     
     res.json({
       success: true,
-      profile: profile
+      profile: profile,
+      exists: true
     });
     
   } catch (error) {
     console.error('❌ Get profile error:', error);
     res.status(500).json({ 
       success: false, 
-      error: 'Server error fetching profile' 
+      error: 'Server error fetching profile',
+      exists: false
+    });
+  }
+});
+
+// Enhanced check profile existence endpoint
+app.get('/api/profile/check/:account_id', async (req, res) => {
+  try {
+    const { account_id } = req.params;
+    
+    console.log('🔍 Checking profile existence for account_id:', account_id);
+    
+    const [profiles] = await pool.execute(
+      "SELECT account_id FROM profiles WHERE account_id = ?",
+      [parseInt(account_id)]
+    );
+    
+    const exists = profiles.length > 0;
+    
+    res.json({
+      success: true,
+      exists: exists,
+      account_id: parseInt(account_id)
+    });
+    
+  } catch (error) {
+    console.error('❌ Check profile error:', error);
+    res.status(500).json({ 
+      success: false, 
+      error: 'Server error checking profile',
+      exists: false
     });
   }
 });
