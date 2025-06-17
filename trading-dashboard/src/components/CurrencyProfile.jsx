@@ -2784,7 +2784,7 @@ const CurrencyProfile = ({ assetPairCode: propAssetPairCode, onNavigateBack }) =
     );
   }
 
-  const metricsData = createMetricsData();
+    const metricsData = createMetricsData();
   const totalScore =
     profileData?.totalScore ||
     metricsData.reduce((sum, item) => sum + item.score, 0);
@@ -2978,28 +2978,28 @@ const CurrencyProfile = ({ assetPairCode: propAssetPairCode, onNavigateBack }) =
             </div>
           </div>
 
-          {/* Retail Sentiment */}
-          <div style={styles.card}>
-            <div style={styles.sectionHeader}>Retail Sentiment</div>
-            <div style={{ overflowX: "auto" }}>
-              <table style={styles.economicTable}>
-                <thead>
-                  <tr style={styles.tableHeaderRow}>
-                    <th style={styles.tableHeader}>Retail Long %</th>
-                    <th style={styles.tableHeader}>Retail Short %</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr>
-                    <td colSpan={2} style={{ padding: "10px" }}>
-                      <div
+            {/* Retail Sentiment */}
+           <div style={styles.card}>
+             <div style={styles.sectionHeader}>Retail Sentiment</div>
+             <div style={{ overflowX: "auto" }}>
+               <table style={styles.economicTable}>
+                 <thead>
+                   <tr style={styles.tableHeaderRow}>
+                     <th style={styles.tableHeader}>Retail Long %</th>
+                     <th style={styles.tableHeader}>Retail Short %</th>
+                   </tr>
+                 </thead>
+                 <tbody>
+                   <tr>
+                     <td colSpan={2} style={{ padding: "10px" }}>
+                       <div
                         style={{
                           display: "flex",
                           width: "100%",
                           height: "30px",
                           borderRadius: "4px",
                           overflow: "hidden",
-                          border: "1px solid #CBD5E0",
+                          border: "1px solid #CBD5E0", // optional border
                         }}
                       >
                         <div
@@ -3036,103 +3036,324 @@ const CurrencyProfile = ({ assetPairCode: propAssetPairCode, onNavigateBack }) =
                     </td>
                   </tr>
                 </tbody>
+              </table>
+            </div>
+          </div>
+
+
+          {/* Interest Rate */}
+          <div style={styles.card}>
+            <div style={styles.sectionHeader}>Interest Rate</div>
+            <div style={{ overflowX: "auto" }}>
+              <table style={styles.economicTable}>
+                <thead>
+                  <tr style={styles.tableHeaderRow}>
+                    <th style={styles.tableHeader}>Currency</th>
+                    <th style={styles.tableHeader}>Actual</th>
+                    <th style={styles.tableHeader}>Forecast</th>
+                    <th style={styles.tableHeader}>Change</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr style={styles.tableRow}>
+                    <td style={styles.tableCell}>
+                      <div style={styles.tableCellLabel}>
+                        {assetPair.baseAsset}
+                      </div>
+                    </td>
+                    <td style={styles.tableCellCenter}>
+                      <div style={styles.dataValue}>
+                        {economicData.interestRate.baseChange > 0 ? "+" : ""}
+                        {economicData.interestRate.baseChange}%
+                      </div>
+                    </td>
+                    <td style={styles.tableCellCenter}>
+                      <div style={styles.dataValue}>-</div>
+                    </td>
+                    <td style={styles.tableCellCenter}>
+                      <div style={styles.dataValue}>
+                        {economicData.interestRate.baseChange > 0 ? "+" : ""}
+                        {economicData.interestRate.baseChange}%
+                      </div>
+                    </td>
+                  </tr>
+                  <tr style={styles.tableRow}>
+                    <td style={styles.tableCell}>
+                      <div style={styles.tableCellLabel}>
+                        {assetPair.quoteAsset}
+                      </div>
+                    </td>
+                    <td style={styles.tableCellCenter}>
+                      <div style={styles.dataValue}>
+                        {economicData.interestRate.quoteChange}%
+                      </div>
+                    </td>
+                    <td style={styles.tableCellCenter}>
+                      <div style={styles.dataValue}>-</div>
+                    </td>
+                    <td style={styles.tableCellCenter}>
+                      <div style={styles.dataValue}>
+                        {economicData.interestRate.quoteChange}%
+                      </div>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          {/* Core Inflation */}
+          <div style={styles.card}>
+            <div style={styles.sectionHeader}>Core Inflation</div>
+            <div style={{ overflowX: "auto" }}>
+              <table style={styles.economicTable}>
+                <thead>
+                  <tr style={styles.tableHeaderRow}>
+                    <th style={styles.tableHeader}>Currency</th>
+                    <th style={styles.tableHeader}>Actual</th>
+                    <th style={styles.tableHeader}>Forecast</th>
+                    <th style={styles.tableHeader}>Change</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr style={styles.tableRow}>
+                    <td style={styles.tableCell}>
+                      <div style={styles.tableCellLabel}>
+                        {assetPair.baseAsset}
+                      </div>
+                    </td>
+                    <td style={styles.tableCellCenter}>
+                      <div style={styles.dataValue}>
+                        {economicData.inflation.baseCPI}%
+                      </div>
+                    </td>
+                    <td style={styles.tableCellCenter}>
+                      <div style={styles.dataValue}>
+                        {economicData.inflation.baseForecast}%
+                      </div>
+                    </td>
+                    <td style={styles.tableCellCenter}>
+                      <div style={styles.dataValue}>
+                        {economicData.inflation.baseCPI >
+                        economicData.inflation.baseForecast
+                          ? "+"
+                          : ""}
+                        {(
+                          economicData.inflation.baseCPI -
+                          economicData.inflation.baseForecast
+                        ).toFixed(1)}
+                        %
+                      </div>
+                    </td>
+                  </tr>
+                  <tr style={styles.tableRow}>
+                    <td style={styles.tableCell}>
+                      <div style={styles.tableCellLabel}>
+                        {assetPair.quoteAsset}
+                      </div>
+                    </td>
+                    <td style={styles.tableCellCenter}>
+                      <div style={styles.dataValue}>
+                        {economicData.inflation.quoteCPI}%
+                      </div>
+                    </td>
+                    <td style={styles.tableCellCenter}>
+                      <div style={styles.dataValue}>
+                        {economicData.inflation.quoteForecast}%
+                      </div>
+                    </td>
+                    <td style={styles.tableCellCenter}>
+                      <div style={styles.dataValue}>
+                        {economicData.inflation.quoteCPI ===
+                        economicData.inflation.quoteForecast
+                          ? "0.0"
+                          : (economicData.inflation.quoteCPI -
+                              economicData.inflation.quoteForecast >
+                            0
+                              ? "+"
+                              : "") +
+                            (
+                              economicData.inflation.quoteCPI -
+                              economicData.inflation.quoteForecast
+                            ).toFixed(1)}
+                        %
+                      </div>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        {/* Right Column */}
+        <div style={styles.rightColumn}>
+          {/* Labor Market Data - Combined Table */}
+          <div style={styles.card}>
+            <div style={styles.sectionHeader}>LABOR MARKET DATA</div>
+            <div style={{ overflowX: "auto" }}>
+              <table style={styles.economicTable}>
+                {/* NFP Section - Only show if USD is present */}
+                {hasUSD(economicData) && (
+                  <>
+                    <thead>
+                      <tr style={styles.sectionTitleRow}>
+                        <th style={styles.sectionTitleCell} colSpan="4">
+                          NFP (USA)
+                        </th>
+                      </tr>
+                      <tr style={styles.tableHeaderRow}>
+                        <th style={styles.tableHeader}>Actual</th>
+                        <th style={styles.tableHeader}>Forecast</th>
+                        <th style={styles.tableHeader}>Change</th>
+                        <th style={styles.tableHeader}>-</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr style={styles.tableRow}>
+                        <td style={styles.tableCellCenter}>
+                          <div style={styles.dataValue}>
+                            {economicData.nfp.actual.toLocaleString()}
+                          </div>
+                        </td>
+                        <td style={styles.tableCellCenter}>
+                          <div style={styles.dataValue}>
+                            {economicData.nfp.forecast.toLocaleString()}
+                          </div>
+                        </td>
+                        <td style={styles.tableCellCenter}>
+                          <div style={styles.dataValue}>
+                            {economicData.nfp.change}%
+                          </div>
+                        </td>
+                        <td style={styles.tableCellCenter}>
+                          <div style={styles.dataValue}>-</div>
+                        </td>
+                      </tr>
+                    </tbody>
+                  </>
+                )}
+
+                {/* Employment Change Section */}
+                <thead>
+                  <tr style={styles.sectionTitleRow}>
+                    <th style={styles.sectionTitleCell} colSpan="4">
+                      Employment Change
+                    </th>
+                  </tr>
+                  <tr style={styles.tableHeaderRow}>
+                    <th style={styles.tableHeader}>Currency</th>
+                    <th style={styles.tableHeader}>Emp. Change</th>
+                    <th style={styles.tableHeader}>Forecast</th>
+                    <th style={styles.tableHeader}>Result</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr style={styles.tableRow}>
+                    <td style={styles.tableCell}>
+                      <div style={styles.tableCellLabel}>
+                        {assetPair.baseAsset}
+                      </div>
+                    </td>
+                    <td style={styles.tableCellCenter}>
+                      <div style={styles.dataValue}>
+                        {economicData.employment.baseChange.toLocaleString()}
+                      </div>
+                    </td>
+                    <td style={styles.tableCellCenter}>
+                      <div style={styles.dataValue}>
+                        {economicData.employment.baseForecast.toLocaleString()}
+                      </div>
+                    </td>
+                    <td style={styles.tableCellCenter}>
+                      <div style={styles.dataValue}>
+                        {economicData.employment.baseResult || "N/A"}
+                      </div>
+                    </td>
+                  </tr>
+                  <tr style={styles.tableRow}>
+                    <td style={styles.tableCell}>
+                      <div style={styles.tableCellLabel}>
+                        {assetPair.quoteAsset}
+                      </div>
+                    </td>
+                    <td style={styles.tableCellCenter}>
+                      <div style={styles.dataValue}>
+                        {economicData.employment.quoteChange.toLocaleString()}
+                      </div>
+                    </td>
+                    <td style={styles.tableCellCenter}>
+                      <div style={styles.dataValue}>
+                        {economicData.employment.quoteForecast.toLocaleString()}
+                      </div>
+                    </td>
+                    <td style={styles.tableCellCenter}>
+                      <div style={styles.dataValue}>
+                        {economicData.employment.quoteResult || "N/A"}
+                      </div>
+                    </td>
+                  </tr>
+                </tbody>
 
                 {/* Unemployment Section */}
                 <thead>
                   <tr style={styles.sectionTitleRow}>
-                    <th style={styles.sectionTitleCell} colSpan="5">
-                      Unemployment Rate
+                    <th style={styles.sectionTitleCell} colSpan="4">
+                      Unemployment
                     </th>
                   </tr>
                   <tr style={styles.tableHeaderRow}>
-                    <th style={{ ...styles.tableHeader, fontWeight: "bold" }}>
-                      Currency
-                    </th>
-                    <th style={{ ...styles.tableHeader, fontWeight: "bold" }}>
-                      Unemployment
-                    </th>
-                    <th style={{ ...styles.tableHeader, fontWeight: "bold" }}>
-                      Forecast
-                    </th>
-                    <th style={{ ...styles.tableHeader, fontWeight: "bold" }}>
-                      Result
-                    </th>
-                    <th style={{ ...styles.tableHeader, fontWeight: "bold" }}>
-                      Score
-                    </th>
+                    <th style={styles.tableHeader}>Currency</th>
+                    <th style={styles.tableHeader}>Unemployment</th>
+                    <th style={styles.tableHeader}>Forecast</th>
+                    <th style={styles.tableHeader}>Result</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {(() => {
-                    const unempScore = calculateUnemploymentScore(
-                      economicData.unemployment.baseRate,
-                      economicData.unemployment.baseForecast,
-                      economicData.unemployment.quoteRate,
-                      economicData.unemployment.quoteForecast
-                    );
-                    return (
-                      <>
-                        <tr style={styles.tableRow}>
-                          <td style={styles.tableCell}>
-                            <div style={styles.tableCellLabel}>
-                              {assetPair.baseAsset}
-                            </div>
-                          </td>
-                          <td style={styles.tableCellCenter}>
-                            <div style={styles.dataValue}>
-                              {economicData.unemployment.baseRate}%
-                            </div>
-                          </td>
-                          <td style={styles.tableCellCenter}>
-                            <div style={styles.dataValue}>
-                              {economicData.unemployment.baseForecast}%
-                            </div>
-                          </td>
-                          <td style={styles.tableCellCenter}>
-                            <div style={styles.dataValue}>
-                              {economicData.unemployment.baseResult || "N/A"}
-                            </div>
-                          </td>
-                          <td style={styles.tableCellCenter}>
-                            <div style={styles.dataValue}>
-                              {unempScore.baseScore > 0
-                                ? `+${unempScore.baseScore}`
-                                : unempScore.baseScore}
-                            </div>
-                          </td>
-                        </tr>
-                        <tr style={styles.tableRow}>
-                          <td style={styles.tableCell}>
-                            <div style={styles.tableCellLabel}>
-                              {assetPair.quoteAsset}
-                            </div>
-                          </td>
-                          <td style={styles.tableCellCenter}>
-                            <div style={styles.dataValue}>
-                              {economicData.unemployment.quoteRate}%
-                            </div>
-                          </td>
-                          <td style={styles.tableCellCenter}>
-                            <div style={styles.dataValue}>
-                              {economicData.unemployment.quoteForecast}%
-                            </div>
-                          </td>
-                          <td style={styles.tableCellCenter}>
-                            <div style={styles.dataValue}>
-                              {economicData.unemployment.quoteResult || "N/A"}
-                            </div>
-                          </td>
-                          <td style={styles.tableCellCenter}>
-                            <div style={styles.dataValue}>
-                              {unempScore.quoteScore > 0
-                                ? `+${unempScore.quoteScore}`
-                                : unempScore.quoteScore}
-                            </div>
-                          </td>
-                        </tr>
-                      </>
-                    );
-                  })()}
+                  <tr style={styles.tableRow}>
+                    <td style={styles.tableCell}>
+                      <div style={styles.tableCellLabel}>
+                        {assetPair.baseAsset}
+                      </div>
+                    </td>
+                    <td style={styles.tableCellCenter}>
+                      <div style={styles.dataValue}>
+                        {economicData.unemployment.baseRate}%
+                      </div>
+                    </td>
+                    <td style={styles.tableCellCenter}>
+                      <div style={styles.dataValue}>
+                        {economicData.unemployment.baseForecast}%
+                      </div>
+                    </td>
+                    <td style={styles.tableCellCenter}>
+                      <div style={styles.dataValue}>
+                        {economicData.unemployment.baseResult || "N/A"}
+                      </div>
+                    </td>
+                  </tr>
+                  <tr style={styles.tableRow}>
+                    <td style={styles.tableCell}>
+                      <div style={styles.tableCellLabel}>
+                        {assetPair.quoteAsset}
+                      </div>
+                    </td>
+                    <td style={styles.tableCellCenter}>
+                      <div style={styles.dataValue}>
+                        {economicData.unemployment.quoteRate}%
+                      </div>
+                    </td>
+                    <td style={styles.tableCellCenter}>
+                      <div style={styles.dataValue}>
+                        {economicData.unemployment.quoteForecast}%
+                      </div>
+                    </td>
+                    <td style={styles.tableCellCenter}>
+                      <div style={styles.dataValue}>
+                        {economicData.unemployment.quoteResult || "N/A"}
+                      </div>
+                    </td>
+                  </tr>
                 </tbody>
               </table>
             </div>
@@ -3146,392 +3367,251 @@ const CurrencyProfile = ({ assetPairCode: propAssetPairCode, onNavigateBack }) =
                 {/* GDP Growth Section */}
                 <thead>
                   <tr style={styles.sectionTitleRow}>
-                    <th style={styles.sectionTitleCell} colSpan="5">
+                    <th style={styles.sectionTitleCell} colSpan="4">
                       GDP Growth
                     </th>
                   </tr>
                   <tr style={styles.tableHeaderRow}>
-                    <th style={{ ...styles.tableHeader, fontWeight: "bold" }}>
-                      Currency
-                    </th>
-                    <th style={{ ...styles.tableHeader, fontWeight: "bold" }}>
-                      Actual
-                    </th>
-                    <th style={{ ...styles.tableHeader, fontWeight: "bold" }}>
-                      Forecast
-                    </th>
-                    <th style={{ ...styles.tableHeader, fontWeight: "bold" }}>
-                      Result
-                    </th>
-                    <th style={{ ...styles.tableHeader, fontWeight: "bold" }}>
-                      Score
-                    </th>
+                    <th style={styles.tableHeader}>Currency</th>
+                    <th style={styles.tableHeader}>Actual</th>
+                    <th style={styles.tableHeader}>Forecast</th>
+                    <th style={styles.tableHeader}>Result</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {(() => {
-                    const gdpScore = calculateGrowthScore(
-                      economicData.gdp.baseResult,
-                      economicData.gdp.quoteResult
-                    );
-                    return (
-                      <>
-                        <tr style={styles.tableRow}>
-                          <td style={styles.tableCell}>
-                            <div style={styles.tableCellLabel}>
-                              {assetPair.baseAsset}
-                            </div>
-                          </td>
-                          <td style={styles.tableCellCenter}>
-                            <div style={styles.dataValue}>
-                              {economicData.gdp.baseActual || "N/A"}
-                            </div>
-                          </td>
-                          <td style={styles.tableCellCenter}>
-                            <div style={styles.dataValue}>
-                              {economicData.gdp.baseForecast || "N/A"}
-                            </div>
-                          </td>
-                          <td style={styles.tableCellCenter}>
-                            <div style={styles.dataValue}>
-                              {economicData.gdp.baseResult}
-                            </div>
-                          </td>
-                          <td style={styles.tableCellCenter}>
-                            <div style={styles.dataValue}>
-                              {gdpScore.baseScore > 0
-                                ? `+${gdpScore.baseScore}`
-                                : gdpScore.baseScore}
-                            </div>
-                          </td>
-                        </tr>
-                        <tr style={styles.tableRow}>
-                          <td style={styles.tableCell}>
-                            <div style={styles.tableCellLabel}>
-                              {assetPair.quoteAsset}
-                            </div>
-                          </td>
-                          <td style={styles.tableCellCenter}>
-                            <div style={styles.dataValue}>
-                              {economicData.gdp.quoteActual || "N/A"}
-                            </div>
-                          </td>
-                          <td style={styles.tableCellCenter}>
-                            <div style={styles.dataValue}>
-                              {economicData.gdp.quoteForecast || "N/A"}
-                            </div>
-                          </td>
-                          <td style={styles.tableCellCenter}>
-                            <div style={styles.dataValue}>
-                              {economicData.gdp.quoteResult}
-                            </div>
-                          </td>
-                          <td style={styles.tableCellCenter}>
-                            <div style={styles.dataValue}>
-                              {gdpScore.quoteScore > 0
-                                ? `+${gdpScore.quoteScore}`
-                                : gdpScore.quoteScore}
-                            </div>
-                          </td>
-                        </tr>
-                      </>
-                    );
-                  })()}
+                  <tr style={styles.tableRow}>
+                    <td style={styles.tableCell}>
+                      <div style={styles.tableCellLabel}>
+                        {assetPair.baseAsset}
+                      </div>
+                    </td>
+                    <td style={styles.tableCellCenter}>
+                      <div style={styles.dataValue}>
+                        {economicData.gdp.baseActual || "N/A"}
+                      </div>
+                    </td>
+                    <td style={styles.tableCellCenter}>
+                      <div style={styles.dataValue}>
+                        {economicData.gdp.baseForecast || "N/A"}
+                      </div>
+                    </td>
+                    <td style={styles.tableCellCenter}>
+                      <div style={styles.dataValue}>
+                        {economicData.gdp.baseResult}
+                      </div>
+                    </td>
+                  </tr>
+                  <tr style={styles.tableRow}>
+                    <td style={styles.tableCell}>
+                      <div style={styles.tableCellLabel}>
+                        {assetPair.quoteAsset}
+                      </div>
+                    </td>
+                    <td style={styles.tableCellCenter}>
+                      <div style={styles.dataValue}>
+                        {economicData.gdp.quoteActual || "N/A"}
+                      </div>
+                    </td>
+                    <td style={styles.tableCellCenter}>
+                      <div style={styles.dataValue}>
+                        {economicData.gdp.quoteForecast || "N/A"}
+                      </div>
+                    </td>
+                    <td style={styles.tableCellCenter}>
+                      <div style={styles.dataValue}>
+                        {economicData.gdp.quoteResult}
+                      </div>
+                    </td>
+                  </tr>
                 </tbody>
 
                 {/* Manufacturing PMI Section */}
                 <thead>
                   <tr style={styles.sectionTitleRow}>
-                    <th style={styles.sectionTitleCell} colSpan="5">
+                    <th style={styles.sectionTitleCell} colSpan="4">
                       Manufacturing PMI
                     </th>
                   </tr>
                   <tr style={styles.tableHeaderRow}>
-                    <th style={{ ...styles.tableHeader, fontWeight: "bold" }}>
-                      Currency
-                    </th>
-                    <th style={{ ...styles.tableHeader, fontWeight: "bold" }}>
-                      Actual
-                    </th>
-                    <th style={{ ...styles.tableHeader, fontWeight: "bold" }}>
-                      Forecast
-                    </th>
-                    <th style={{ ...styles.tableHeader, fontWeight: "bold" }}>
-                      Result
-                    </th>
-                    <th style={{ ...styles.tableHeader, fontWeight: "bold" }}>
-                      Score
-                    </th>
+                    <th style={styles.tableHeader}>Currency</th>
+                    <th style={styles.tableHeader}>Actual</th>
+                    <th style={styles.tableHeader}>Forecast</th>
+                    <th style={styles.tableHeader}>Result</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {(() => {
-                    const mpmiScore = calculateGrowthScore(
-                      economicData.mpmi.baseResult,
-                      economicData.mpmi.quoteResult
-                    );
-                    return (
-                      <>
-                        <tr style={styles.tableRow}>
-                          <td style={styles.tableCell}>
-                            <div style={styles.tableCellLabel}>
-                              {assetPair.baseAsset}
-                            </div>
-                          </td>
-                          <td style={styles.tableCellCenter}>
-                            <div style={styles.dataValue}>
-                              {economicData.mpmi.baseValue || "N/A"}
-                            </div>
-                          </td>
-                          <td style={styles.tableCellCenter}>
-                            <div style={styles.dataValue}>
-                              {economicData.mpmi.baseForecast || "N/A"}
-                            </div>
-                          </td>
-                          <td style={styles.tableCellCenter}>
-                            <div style={styles.dataValue}>
-                              {economicData.mpmi.baseResult}
-                            </div>
-                          </td>
-                          <td style={styles.tableCellCenter}>
-                            <div style={styles.dataValue}>
-                              {mpmiScore.baseScore > 0
-                                ? `+${mpmiScore.baseScore}`
-                                : mpmiScore.baseScore}
-                            </div>
-                          </td>
-                        </tr>
-                        <tr style={styles.tableRow}>
-                          <td style={styles.tableCell}>
-                            <div style={styles.tableCellLabel}>
-                              {assetPair.quoteAsset}
-                            </div>
-                          </td>
-                          <td style={styles.tableCellCenter}>
-                            <div style={styles.dataValue}>
-                              {economicData.mpmi.quoteValue || "N/A"}
-                            </div>
-                          </td>
-                          <td style={styles.tableCellCenter}>
-                            <div style={styles.dataValue}>
-                              {economicData.mpmi.quoteForecast || "N/A"}
-                            </div>
-                          </td>
-                          <td style={styles.tableCellCenter}>
-                            <div style={styles.dataValue}>
-                              {economicData.mpmi.quoteResult}
-                            </div>
-                          </td>
-                          <td style={styles.tableCellCenter}>
-                            <div style={styles.dataValue}>
-                              {mpmiScore.quoteScore > 0
-                                ? `+${mpmiScore.quoteScore}`
-                                : mpmiScore.quoteScore}
-                            </div>
-                          </td>
-                        </tr>
-                      </>
-                    );
-                  })()}
+                  <tr style={styles.tableRow}>
+                    <td style={styles.tableCell}>
+                      <div style={styles.tableCellLabel}>
+                        {assetPair.baseAsset}
+                      </div>
+                    </td>
+                    <td style={styles.tableCellCenter}>
+                      <div style={styles.dataValue}>
+                        {economicData.mpmi.baseValue || "N/A"}
+                      </div>
+                    </td>
+                    <td style={styles.tableCellCenter}>
+                      <div style={styles.dataValue}>
+                        {economicData.mpmi.baseForecast || "N/A"}
+                      </div>
+                    </td>
+                    <td style={styles.tableCellCenter}>
+                      <div style={styles.dataValue}>
+                        {economicData.mpmi.baseResult}
+                      </div>
+                    </td>
+                  </tr>
+                  <tr style={styles.tableRow}>
+                    <td style={styles.tableCell}>
+                      <div style={styles.tableCellLabel}>
+                        {assetPair.quoteAsset}
+                      </div>
+                    </td>
+                    <td style={styles.tableCellCenter}>
+                      <div style={styles.dataValue}>
+                        {economicData.mpmi.quoteValue || "N/A"}
+                      </div>
+                    </td>
+                    <td style={styles.tableCellCenter}>
+                      <div style={styles.dataValue}>
+                        {economicData.mpmi.quoteForecast || "N/A"}
+                      </div>
+                    </td>
+                    <td style={styles.tableCellCenter}>
+                      <div style={styles.dataValue}>
+                        {economicData.mpmi.quoteResult}
+                      </div>
+                    </td>
+                  </tr>
                 </tbody>
 
                 {/* Services PMI Section */}
                 <thead>
                   <tr style={styles.sectionTitleRow}>
-                    <th style={styles.sectionTitleCell} colSpan="5">
+                    <th style={styles.sectionTitleCell} colSpan="4">
                       Services PMI
                     </th>
                   </tr>
                   <tr style={styles.tableHeaderRow}>
-                    <th style={{ ...styles.tableHeader, fontWeight: "bold" }}>
-                      Currency
-                    </th>
-                    <th style={{ ...styles.tableHeader, fontWeight: "bold" }}>
-                      Actual
-                    </th>
-                    <th style={{ ...styles.tableHeader, fontWeight: "bold" }}>
-                      Forecast
-                    </th>
-                    <th style={{ ...styles.tableHeader, fontWeight: "bold" }}>
-                      Result
-                    </th>
-                    <th style={{ ...styles.tableHeader, fontWeight: "bold" }}>
-                      Score
-                    </th>
+                    <th style={styles.tableHeader}>Currency</th>
+                    <th style={styles.tableHeader}>Actual</th>
+                    <th style={styles.tableHeader}>Forecast</th>
+                    <th style={styles.tableHeader}>Result</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {(() => {
-                    const spmiScore = calculateGrowthScore(
-                      economicData.spmi.baseResult,
-                      economicData.spmi.quoteResult
-                    );
-                    return (
-                      <>
-                        <tr style={styles.tableRow}>
-                          <td style={styles.tableCell}>
-                            <div style={styles.tableCellLabel}>
-                              {assetPair.baseAsset}
-                            </div>
-                          </td>
-                          <td style={styles.tableCellCenter}>
-                            <div style={styles.dataValue}>
-                              {economicData.spmi.baseValue || "N/A"}
-                            </div>
-                          </td>
-                          <td style={styles.tableCellCenter}>
-                            <div style={styles.dataValue}>
-                              {economicData.spmi.baseForecast || "N/A"}
-                            </div>
-                          </td>
-                          <td style={styles.tableCellCenter}>
-                            <div style={styles.dataValue}>
-                              {economicData.spmi.baseResult}
-                            </div>
-                          </td>
-                          <td style={styles.tableCellCenter}>
-                            <div style={styles.dataValue}>
-                              {spmiScore.baseScore > 0
-                                ? `+${spmiScore.baseScore}`
-                                : spmiScore.baseScore}
-                            </div>
-                          </td>
-                        </tr>
-                        <tr style={styles.tableRow}>
-                          <td style={styles.tableCell}>
-                            <div style={styles.tableCellLabel}>
-                              {assetPair.quoteAsset}
-                            </div>
-                          </td>
-                          <td style={styles.tableCellCenter}>
-                            <div style={styles.dataValue}>
-                              {economicData.spmi.quoteValue || "N/A"}
-                            </div>
-                          </td>
-                          <td style={styles.tableCellCenter}>
-                            <div style={styles.dataValue}>
-                              {economicData.spmi.quoteForecast || "N/A"}
-                            </div>
-                          </td>
-                          <td style={styles.tableCellCenter}>
-                            <div style={styles.dataValue}>
-                              {economicData.spmi.quoteResult}
-                            </div>
-                          </td>
-                          <td style={styles.tableCellCenter}>
-                            <div style={styles.dataValue}>
-                              {spmiScore.quoteScore > 0
-                                ? `+${spmiScore.quoteScore}`
-                                : spmiScore.quoteScore}
-                            </div>
-                          </td>
-                        </tr>
-                      </>
-                    );
-                  })()}
+                  <tr style={styles.tableRow}>
+                    <td style={styles.tableCell}>
+                      <div style={styles.tableCellLabel}>
+                        {assetPair.baseAsset}
+                      </div>
+                    </td>
+                    <td style={styles.tableCellCenter}>
+                      <div style={styles.dataValue}>
+                        {economicData.spmi.baseValue || "N/A"}
+                      </div>
+                    </td>
+                    <td style={styles.tableCellCenter}>
+                      <div style={styles.dataValue}>
+                        {economicData.spmi.baseForecast || "N/A"}
+                      </div>
+                    </td>
+                    <td style={styles.tableCellCenter}>
+                      <div style={styles.dataValue}>
+                        {economicData.spmi.baseResult}
+                      </div>
+                    </td>
+                  </tr>
+                  <tr style={styles.tableRow}>
+                    <td style={styles.tableCell}>
+                      <div style={styles.tableCellLabel}>
+                        {assetPair.quoteAsset}
+                      </div>
+                    </td>
+                    <td style={styles.tableCellCenter}>
+                      <div style={styles.dataValue}>
+                        {economicData.spmi.quoteValue || "N/A"}
+                      </div>
+                    </td>
+                    <td style={styles.tableCellCenter}>
+                      <div style={styles.dataValue}>
+                        {economicData.spmi.quoteForecast || "N/A"}
+                      </div>
+                    </td>
+                    <td style={styles.tableCellCenter}>
+                      <div style={styles.dataValue}>
+                        {economicData.spmi.quoteResult}
+                      </div>
+                    </td>
+                  </tr>
                 </tbody>
 
                 {/* Retail Sales Section */}
                 <thead>
                   <tr style={styles.sectionTitleRow}>
-                    <th style={styles.sectionTitleCell} colSpan="5">
+                    <th style={styles.sectionTitleCell} colSpan="4">
                       Retail Sales
                     </th>
                   </tr>
                   <tr style={styles.tableHeaderRow}>
-                    <th style={{ ...styles.tableHeader, fontWeight: "bold" }}>
-                      Currency
-                    </th>
-                    <th style={{ ...styles.tableHeader, fontWeight: "bold" }}>
-                      Actual
-                    </th>
-                    <th style={{ ...styles.tableHeader, fontWeight: "bold" }}>
-                      Forecast
-                    </th>
-                    <th style={{ ...styles.tableHeader, fontWeight: "bold" }}>
-                      Result
-                    </th>
-                    <th style={{ ...styles.tableHeader, fontWeight: "bold" }}>
-                      Score
-                    </th>
+                    <th style={styles.tableHeader}>Currency</th>
+                    <th style={styles.tableHeader}>Actual</th>
+                    <th style={styles.tableHeader}>Forecast</th>
+                    <th style={styles.tableHeader}>Result</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {(() => {
-                    const retailScore = calculateGrowthScore(
-                      economicData.retail.baseResult,
-                      economicData.retail.quoteResult
-                    );
-                    return (
-                      <>
-                        <tr style={styles.tableRow}>
-                          <td style={styles.tableCell}>
-                            <div style={styles.tableCellLabel}>
-                              {assetPair.baseAsset}
-                            </div>
-                          </td>
-                          <td style={styles.tableCellCenter}>
-                            <div style={styles.dataValue}>
-                              {economicData.retail.baseActual || "N/A"}
-                            </div>
-                          </td>
-                          <td style={styles.tableCellCenter}>
-                            <div style={styles.dataValue}>
-                              {economicData.retail.baseForecast || "N/A"}
-                            </div>
-                          </td>
-                          <td style={styles.tableCellCenter}>
-                            <div style={styles.dataValue}>
-                              {economicData.retail.baseResult}
-                            </div>
-                          </td>
-                          <td style={styles.tableCellCenter}>
-                            <div style={styles.dataValue}>
-                              {retailScore.baseScore > 0
-                                ? `+${retailScore.baseScore}`
-                                : retailScore.baseScore}
-                            </div>
-                          </td>
-                        </tr>
-                        <tr style={styles.tableRow}>
-                          <td style={styles.tableCell}>
-                            <div style={styles.tableCellLabel}>
-                              {assetPair.quoteAsset}
-                            </div>
-                          </td>
-                          <td style={styles.tableCellCenter}>
-                            <div style={styles.dataValue}>
-                              {economicData.retail.quoteActual || "N/A"}
-                            </div>
-                          </td>
-                          <td style={styles.tableCellCenter}>
-                            <div style={styles.dataValue}>
-                              {economicData.retail.quoteForecast || "N/A"}
-                            </div>
-                          </td>
-                          <td style={styles.tableCellCenter}>
-                            <div style={styles.dataValue}>
-                              {economicData.retail.quoteResult}
-                            </div>
-                          </td>
-                          <td style={styles.tableCellCenter}>
-                            <div style={styles.dataValue}>
-                              {retailScore.quoteScore > 0
-                                ? `+${retailScore.quoteScore}`
-                                : retailScore.quoteScore}
-                            </div>
-                          </td>
-                        </tr>
-                      </>
-                    );
-                  })()}
+                  <tr style={styles.tableRow}>
+                    <td style={styles.tableCell}>
+                      <div style={styles.tableCellLabel}>
+                        {assetPair.baseAsset}
+                      </div>
+                    </td>
+                    <td style={styles.tableCellCenter}>
+                      <div style={styles.dataValue}>
+                        {economicData.retail.baseActual || "N/A"}
+                      </div>
+                    </td>
+                    <td style={styles.tableCellCenter}>
+                      <div style={styles.dataValue}>
+                        {economicData.retail.baseForecast || "N/A"}
+                      </div>
+                    </td>
+                    <td style={styles.tableCellCenter}>
+                      <div style={styles.dataValue}>
+                        {economicData.retail.baseResult}
+                      </div>
+                    </td>
+                  </tr>
+                  <tr style={styles.tableRow}>
+                    <td style={styles.tableCell}>
+                      <div style={styles.tableCellLabel}>
+                        {assetPair.quoteAsset}
+                      </div>
+                    </td>
+                    <td style={styles.tableCellCenter}>
+                      <div style={styles.dataValue}>
+                        {economicData.retail.quoteActual || "N/A"}
+                      </div>
+                    </td>
+                    <td style={styles.tableCellCenter}>
+                      <div style={styles.dataValue}>
+                        {economicData.retail.quoteForecast || "N/A"}
+                      </div>
+                    </td>
+                    <td style={styles.tableCellCenter}>
+                      <div style={styles.dataValue}>
+                        {economicData.retail.quoteResult}
+                      </div>
+                    </td>
+                  </tr>
                 </tbody>
               </table>
             </div>
           </div>
         </div>
       </div>
-
       {/* Bottom Section with Three Charts */}
       <div style={styles.bottomGrid}>
         {/* 8ConEdge AI Insight - Enhanced with AI Integration */}
@@ -3597,6 +3677,8 @@ const CurrencyProfile = ({ assetPairCode: propAssetPairCode, onNavigateBack }) =
         </div>
       </div>
     </div>
+
+
   );
 };
 

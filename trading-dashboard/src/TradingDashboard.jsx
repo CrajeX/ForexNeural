@@ -911,21 +911,28 @@ const TradingDashboard = () => {
       minWidth: 0, // Prevents flex item from overflowing
       marginLeft: mobile ? '0' : 'auto'
     },
-    header: {
-      backgroundColor: colors.cardBackground,
-      borderBottom: `1px solid ${colors.border}`,
-      padding: mobile ? '12px 16px' : tablet ? '16px 20px' : `${responsivePadding}px`,
-      position: 'sticky',
-      top: 0,
-      zIndex: 100,
-      flexShrink: 0
-    },
-    headerContent: {
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'space-between',
-      gap: mobile ? '12px' : '16px'
-    },
+header: {
+  height: '4rem',
+  backgroundColor: colors.cardBackground,
+  borderBottom: `1px solid ${colors.border}`,
+  padding: mobile ? '12px 16px' : tablet ? '16px 10px' : `${responsivePadding}px`,
+  position: 'sticky',
+  top: 0,
+  zIndex: 100,
+  flexShrink: 0,
+
+  // ✨ Add these to center headerContent
+  display: 'flex',
+  alignItems: 'center',
+},
+headerContent: {
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'space-between',
+  width: '100%', // makes sure it stretches across the header
+  gap: mobile ? '12px' : '16px',
+},
+
     headerLeft: {
       display: 'flex',
       alignItems: 'center',
