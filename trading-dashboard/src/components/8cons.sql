@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Jun 13, 2025 at 01:10 PM
+-- Generation Time: Jun 17, 2025 at 05:56 AM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -162,6 +162,82 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `sp_process_payment` (IN `p_account_
     END IF;
 END$$
 
+CREATE DEFINER=`root`@`localhost` PROCEDURE `sp_register_user_with_synced_ids` (IN `p_username` VARCHAR(15), IN `p_password_hash` VARCHAR(255), IN `p_first_name` VARCHAR(50), IN `p_middle_name` VARCHAR(50), IN `p_last_name` VARCHAR(50), IN `p_birth_date` DATE, IN `p_birth_place` VARCHAR(100), IN `p_gender` ENUM('Male','Female','Other'), IN `p_email` VARCHAR(100), IN `p_education` VARCHAR(100), IN `p_phone_no` VARCHAR(15), IN `p_address` TEXT, IN `p_role_name` VARCHAR(50), OUT `p_account_id` INT, OUT `p_result` VARCHAR(100))   BEGIN
+    DECLARE v_role_id INT;
+    DECLARE v_person_id INT;
+    DECLARE v_student_id VARCHAR(20);
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION
+    BEGIN
+        ROLLBACK;
+        SET p_result = 'ERROR: Registration failed';
+        SET p_account_id = NULL;
+    END;
+
+    START TRANSACTION;
+
+    -- Create account first
+    INSERT INTO accounts (username, password_hash, token, account_status)
+    VALUES (p_username, p_password_hash, '', 'active');
+    
+    SET p_account_id = LAST_INSERT_ID();
+
+    -- Create person with matching ID
+    INSERT INTO persons (person_id, first_name, middle_name, last_name, birth_date, birth_place, gender, email, education)
+    VALUES (p_account_id, p_first_name, p_middle_name, p_last_name, p_birth_date, p_birth_place, p_gender, p_email, p_education);
+
+    -- Get role_id
+    SELECT role_id INTO v_role_id FROM roles WHERE role_name = p_role_name;
+    
+    IF v_role_id IS NULL THEN
+        SET p_result = 'ERROR: Invalid role specified';
+        ROLLBACK;
+    ELSE
+        -- Assign role
+        INSERT INTO account_roles (account_id, role_id) VALUES (p_account_id, v_role_id);
+        
+        -- If student role, create student record
+        IF p_role_name = 'student' THEN
+            SET v_student_id = CONCAT('S', UNIX_TIMESTAMP(NOW()) * 1000, '_', p_account_id);
+            
+            INSERT INTO students (student_id, person_id, account_id)
+            VALUES (v_student_id, p_account_id, p_account_id);
+            
+            -- Add contact information
+            IF p_phone_no IS NOT NULL THEN
+                INSERT INTO contact_info (person_id, student_id, contact_type, contact_value, is_primary)
+                VALUES (p_account_id, v_student_id, 'phone', p_phone_no, 1);
+            END IF;
+            
+            IF p_address IS NOT NULL THEN
+                INSERT INTO contact_info (person_id, student_id, contact_type, contact_value, is_primary)
+                VALUES (p_account_id, v_student_id, 'address', p_address, 1);
+            END IF;
+            
+            IF p_email IS NOT NULL THEN
+                INSERT INTO contact_info (person_id, student_id, contact_type, contact_value, is_primary)
+                VALUES (p_account_id, v_student_id, 'email', p_email, 1);
+            END IF;
+            
+            -- Set default trading level (Beginner = level_id 1)
+            INSERT INTO student_trading_levels (student_id, level_id, is_current)
+            VALUES (v_student_id, 1, 1);
+            
+            -- Set default learning preferences
+            INSERT INTO learning_preferences (student_id, delivery_preference)
+            VALUES (v_student_id, 'hybrid');
+        END IF;
+        
+        -- If staff role, create staff record
+        IF p_role_name = 'staff' THEN
+            INSERT INTO staff (person_id, account_id, employee_id, hire_date, employment_status)
+            VALUES (p_account_id, p_account_id, CONCAT('EMP', UNIX_TIMESTAMP(NOW()) * 1000), CURDATE(), 'active');
+        END IF;
+        
+        SET p_result = 'SUCCESS: User registered successfully';
+        COMMIT;
+    END IF;
+END$$
+
 DELIMITER ;
 
 -- --------------------------------------------------------
@@ -191,7 +267,7 @@ INSERT INTO `accounts` (`account_id`, `username`, `password_hash`, `token`, `acc
 (8, 'janesmith85', '$2a$12$W8YsEd6wAAfxevFI.GwcweULIZHV5trLIKzAL2N.q8WWt8/bsPylW', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhY2NvdW50SWQiOjgsInVzZXJuYW1lIjoiamFuZXNtaXRoODUiLCJyb2xlIjoic3RhZmYiLCJpYXQiOjE3NDk2OTUyMTEsImV4cCI6MTc0OTc4MTYxMX0.json_S-oZ7wkV8HLjKhAxHNeQIEtdZo6mcJlhfHjNtE', 'active', '2025-06-12 04:37:32', 0, NULL, '2025-06-12 02:26:51', '2025-06-12 04:37:32'),
 (9, 'janesmith20', '$2a$12$6tuEYRIpBwsBE66.1afYCuewfEfU9GVkDoeiO1uPirLQ9B1qdtksu', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhY2NvdW50SWQiOjksInVzZXJuYW1lIjoiamFuZXNtaXRoMjAiLCJyb2xlIjoic3RhZmYiLCJpYXQiOjE3NDk3ODY0MTcsImV4cCI6MTc0OTg3MjgxN30.JBJnniKh4rD9IuvnLhHL2zYYx2Ic895nbAr1TbXNYkk', 'active', '2025-06-13 03:46:57', 0, NULL, '2025-06-12 04:40:18', '2025-06-13 03:46:57'),
 (10, 'janesmith21', '$2b$12$oQI.A8XG5pPZtDzyhTQ0J.DSEeNzs7g8qYuG9UP6/ryrb9GLJsf1u', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhY2NvdW50SWQiOjEwLCJ1c2VybmFtZSI6ImphbmVzbWl0aDIxIiwicm9sZSI6InN0YWZmIiwiaWF0IjoxNzQ5Nzg3MTgxLCJleHAiOjE3NDk4NzM1ODF9.TcZujI-oI3CSWBaTrDsnHEpXY6uBLZXmGoNtqBS_nl8', 'active', NULL, 0, NULL, '2025-06-13 03:59:40', '2025-06-13 03:59:41'),
-(15, 'johndoe123', '$2b$12$WKbua14t/EIfUOhWgG3vA.nEZfZCyC0RONabHe/0ecJFFqMKwbT7O', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhY2NvdW50SWQiOjE1LCJ1c2VybmFtZSI6ImpvaG5kb2UxMjMiLCJyb2xlIjoic3R1ZGVudCIsImlhdCI6MTc0OTgxMDY4NSwiZXhwIjoxNzQ5ODk3MDg1fQ.qLQBHRyEXAQz35p7230u6t6ozhvpaCLxFROdiRKcd2Q', 'active', '2025-06-13 10:43:32', 0, NULL, '2025-06-13 04:50:42', '2025-06-13 10:43:32');
+(13, 'johndoe123', '$2b$12$WKbua14t/EIfUOhWgG3vA.nEZfZCyC0RONabHe/0ecJFFqMKwbT7O', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhY2NvdW50SWQiOjEzLCJ1c2VybmFtZSI6ImpvaG5kb2UxMjMiLCJyb2xlIjoic3R1ZGVudCIsImlhdCI6MTc1MDEzMjQzOCwiZXhwIjoxNzUwMjE4ODM4fQ.VtQea8KITM11m9Mj78ndD7x7g-bP0RRtTSV0yYW2WAU', 'active', '2025-06-17 03:53:58', 0, NULL, '2025-06-13 04:50:42', '2025-06-17 03:53:58');
 
 -- --------------------------------------------------------
 
@@ -216,7 +292,7 @@ INSERT INTO `account_roles` (`account_id`, `role_id`, `assigned_date`, `assigned
 (8, 2, '2025-06-12 02:26:51', NULL, 1, NULL),
 (9, 2, '2025-06-12 04:40:18', NULL, 1, NULL),
 (10, 2, '2025-06-13 03:59:40', NULL, 1, NULL),
-(15, 3, '2025-06-13 04:50:42', NULL, 1, NULL);
+(13, 3, '2025-06-13 04:50:42', NULL, 1, NULL);
 
 -- --------------------------------------------------------
 
@@ -260,37 +336,12 @@ CREATE TABLE `activity_logs` (
 --
 
 INSERT INTO `activity_logs` (`id`, `account_id`, `action`, `description`, `ip_address`, `user_agent`, `metadata`, `created_at`) VALUES
-(1, 1, 'profile_updated', 'User profile was updated', NULL, NULL, NULL, '2025-06-04 08:31:22'),
-(2, 1, 'profile_updated', 'User profile was updated', NULL, NULL, NULL, '2025-06-04 08:32:46'),
-(3, 1, 'profile_updated', 'User profile was updated', NULL, NULL, NULL, '2025-06-04 08:32:48'),
-(4, 1, 'profile_updated', 'User profile was updated', NULL, NULL, NULL, '2025-06-05 02:39:28'),
-(5, 1, 'profile_updated', 'User profile was updated', NULL, NULL, NULL, '2025-06-05 02:45:47'),
-(6, 1, 'profile_updated', 'User profile was updated', NULL, NULL, NULL, '2025-06-05 02:57:29'),
-(7, 1, 'profile_updated', 'User profile was updated', NULL, NULL, NULL, '2025-06-05 02:58:04'),
-(8, 1, 'profile_updated', 'User profile was updated', NULL, NULL, NULL, '2025-06-05 07:21:51'),
-(9, 1, 'profile_updated', 'User profile was updated', NULL, NULL, NULL, '2025-06-05 07:26:25'),
-(10, 1, 'profile_updated', 'User profile was updated', NULL, NULL, NULL, '2025-06-05 07:27:42'),
-(11, 1, 'profile_updated', 'User profile was updated', NULL, NULL, NULL, '2025-06-05 07:51:29'),
-(12, 1, 'profile_updated', 'User profile was updated', NULL, NULL, NULL, '2025-06-06 06:58:17'),
-(13, 1, 'profile_updated', 'User profile was updated', NULL, NULL, NULL, '2025-06-06 08:46:54'),
-(14, 1, 'profile_updated', 'User profile was updated', NULL, NULL, NULL, '2025-06-06 08:48:04'),
-(15, 1, 'profile_updated', 'User profile was updated', NULL, NULL, NULL, '2025-06-06 08:48:36'),
-(16, 1, 'profile_updated', 'User profile was updated', NULL, NULL, NULL, '2025-06-06 08:49:31'),
-(17, 1, 'profile_updated', 'User profile was updated', NULL, NULL, NULL, '2025-06-06 08:52:21'),
-(18, 1, 'profile_updated', 'User profile was updated', NULL, NULL, NULL, '2025-06-06 08:52:34'),
-(19, 1, 'profile_updated', 'User profile was updated', NULL, NULL, NULL, '2025-06-06 08:55:24'),
-(20, 1, 'profile_updated', 'User profile was updated', NULL, NULL, NULL, '2025-06-06 08:55:36'),
-(21, 1, 'profile_updated', 'User profile was updated', NULL, NULL, NULL, '2025-06-06 08:55:47'),
-(22, 1, 'profile_updated', 'User profile was updated', NULL, NULL, NULL, '2025-06-06 08:58:37'),
-(23, 1, 'profile_updated', 'User profile was updated', NULL, NULL, NULL, '2025-06-06 08:58:45'),
-(24, 1, 'profile_updated', 'User profile was updated', NULL, NULL, NULL, '2025-06-06 09:01:05'),
-(25, 1, 'profile_updated', 'User profile was updated', NULL, NULL, NULL, '2025-06-06 09:04:26'),
-(26, 1, 'profile_updated', 'User profile was updated', NULL, NULL, NULL, '2025-06-06 09:05:40'),
-(27, 1, 'profile_updated', 'User profile was updated', NULL, NULL, NULL, '2025-06-06 09:08:28'),
-(31, 1, 'profile_updated', 'User profile was updated', NULL, NULL, NULL, '2025-06-06 09:13:42'),
-(32, 1, 'profile_updated', 'User profile was updated', NULL, NULL, NULL, '2025-06-06 09:15:25'),
-(33, 1, 'profile_updated', 'User profile was updated', NULL, NULL, NULL, '2025-06-06 09:15:36'),
-(34, 1, 'profile_updated', 'User profile was updated', NULL, NULL, NULL, '2025-06-06 09:15:43');
+(1, 13, 'profile_updated', 'User profile was updated', NULL, NULL, NULL, '2025-06-16 08:27:38'),
+(2, 13, 'profile_updated', 'User profile was updated', NULL, NULL, NULL, '2025-06-16 08:28:42'),
+(3, 13, 'profile_updated', 'User profile was updated', NULL, NULL, NULL, '2025-06-16 08:28:50'),
+(4, 13, 'profile_updated', 'User profile was updated', NULL, NULL, NULL, '2025-06-16 08:28:58'),
+(5, 13, 'profile_updated', 'User profile was updated', NULL, NULL, NULL, '2025-06-16 08:41:06'),
+(6, 13, 'profile_updated', 'User profile was updated', NULL, NULL, NULL, '2025-06-16 09:01:43');
 
 -- --------------------------------------------------------
 
@@ -317,7 +368,9 @@ CREATE TABLE `audit_log` (
 --
 
 INSERT INTO `audit_log` (`log_id`, `table_name`, `operation_type`, `primary_key_value`, `old_values`, `new_values`, `changed_by`, `ip_address`, `user_agent`, `session_id`, `timestamp`) VALUES
-(1, 'students', 'INSERT', 'S1749790242780_13', NULL, '{\"student_id\": \"S1749790242780_13\", \"person_id\": 13, \"account_id\": 15, \"graduation_status\": \"enrolled\"}', 15, NULL, NULL, NULL, '2025-06-13 04:50:42');
+(1, 'students', 'INSERT', 'S1749790242780_13', NULL, '{\"student_id\": \"S1749790242780_13\", \"person_id\": 13, \"account_id\": 15, \"graduation_status\": \"enrolled\"}', 15, NULL, NULL, NULL, '2025-06-13 04:50:42'),
+(2, 'students', 'UPDATE', 'S1749790242780_13', '{\"graduation_status\": \"enrolled\", \"gpa\": null, \"academic_standing\": \"good\"}', '{\"graduation_status\": \"enrolled\", \"gpa\": null, \"academic_standing\": \"good\"}', 13, NULL, NULL, NULL, '2025-06-16 07:35:21'),
+(3, 'students', 'UPDATE', 'S1749790242780_13', '{\"graduation_status\": \"enrolled\", \"gpa\": null, \"academic_standing\": \"good\"}', '{\"graduation_status\": \"enrolled\", \"gpa\": null, \"academic_standing\": \"good\"}', 13, NULL, NULL, NULL, '2025-06-16 07:36:12');
 
 -- --------------------------------------------------------
 
@@ -413,9 +466,9 @@ CREATE TABLE `contact_info` (
 --
 
 INSERT INTO `contact_info` (`contact_id`, `person_id`, `student_id`, `contact_type`, `contact_value`, `is_primary`, `is_verified`, `created_at`, `updated_at`) VALUES
-(1, 13, 'S1749790242780_13', 'phone', '09234567890', 1, 0, '2025-06-13 04:50:42', '2025-06-13 04:50:42'),
-(2, 13, 'S1749790242780_13', 'address', '123 Main Street, New York, NY', 1, 0, '2025-06-13 04:50:42', '2025-06-13 04:50:42'),
-(3, 13, 'S1749790242780_13', 'email', 'johndoe@gmail.com', 1, 0, '2025-06-13 04:50:42', '2025-06-13 04:50:42');
+(1, 13, 'S1749790242780_13', 'phone', '09234567890', 1, 0, '2025-06-13 04:50:42', '2025-06-16 09:01:43'),
+(2, 13, 'S1749790242780_13', 'address', '123 Main Street, New York, NY', 1, 0, '2025-06-13 04:50:42', '2025-06-16 09:01:43'),
+(3, 13, 'S1749790242780_13', 'email', 'johndoe@gmail.com', 1, 0, '2025-06-13 04:50:42', '2025-06-16 09:01:43');
 
 -- --------------------------------------------------------
 
@@ -681,7 +734,7 @@ CREATE TABLE `learning_preferences` (
 --
 
 INSERT INTO `learning_preferences` (`preference_id`, `student_id`, `learning_style`, `delivery_preference`, `device_type`, `internet_speed`, `preferred_schedule`, `study_hours_per_week`, `accessibility_needs`, `created_at`, `updated_at`) VALUES
-(1, 'S1749790242780_13', '', 'hybrid', 'Desktop,Mobile', NULL, 'flexible', NULL, NULL, '2025-06-13 04:50:42', '2025-06-13 04:50:42');
+(1, 'S1749790242780_13', '', 'hybrid', 'Desktop,Mobile', NULL, 'flexible', NULL, NULL, '2025-06-13 04:50:42', '2025-06-16 08:28:58');
 
 -- --------------------------------------------------------
 
@@ -852,11 +905,25 @@ INSERT INTO `persons` (`person_id`, `first_name`, `middle_name`, `last_name`, `b
 (8, 'Jane', 'Elizabeth', 'Smith', '1985-05-20', 'San Francisco, CA', 'Female', 'jane.smith@example.com', 'Bachelor of Science in Library Science', '2025-06-12 02:26:51', '2025-06-12 02:26:51'),
 (9, 'Jane', 'Elizabeth', 'Smith', '1985-05-20', 'San Francisco, CA', 'Female', 'janes.smith@example.com', 'Bachelor of Science in Library Science', '2025-06-12 04:40:18', '2025-06-12 04:40:18'),
 (10, 'Janice', 'Elizabeth', 'Smith', '1985-05-20', 'San Francisco, CA', 'Female', 'janessmith@gmail.com', 'Bachelor of Science in Library Science', '2025-06-13 03:59:40', '2025-06-13 03:59:40'),
-(13, 'John', 'Michael', 'Doja Cat', '1990-05-15', 'Marilao Bulacan', 'Male', 'johndoe@gmail.com', 'Bachelor\'s Degree', '2025-06-13 04:50:42', '2025-06-13 08:07:15');
+(13, 'John', 'Michael Doja', 'Catering', '1990-05-04', 'Marilao Bulacan', 'Male', 'johndoe@gmail.com', 'Bachelor\'s Degree', '2025-06-13 04:50:42', '2025-06-16 09:01:43');
 
 --
 -- Triggers `persons`
 --
+DELIMITER $$
+CREATE TRIGGER `sync_person_account_id` BEFORE INSERT ON `persons` FOR EACH ROW BEGIN
+    -- Get the account_id from the current session or context
+    -- This assumes the account is created first, then person
+    DECLARE v_account_id INT;
+    
+    -- Get the latest account_id (this works if account is created immediately before person)
+    SELECT MAX(account_id) INTO v_account_id FROM accounts;
+    
+    -- Set person_id to match account_id
+    SET NEW.person_id = v_account_id;
+END
+$$
+DELIMITER ;
 DELIMITER $$
 CREATE TRIGGER `trg_birth_date_check` BEFORE INSERT ON `persons` FOR EACH ROW BEGIN
   IF NEW.birth_date > CURDATE() THEN
@@ -1163,7 +1230,7 @@ CREATE TABLE `students` (
 --
 
 INSERT INTO `students` (`student_id`, `person_id`, `account_id`, `registration_date`, `graduation_status`, `graduation_date`, `gpa`, `academic_standing`, `notes`) VALUES
-('S1749790242780_13', 13, 15, '2025-06-13', 'enrolled', NULL, NULL, 'good', NULL);
+('S1749790242780_13', 13, 13, '2025-06-13', 'enrolled', NULL, NULL, 'good', NULL);
 
 --
 -- Triggers `students`
@@ -1463,7 +1530,15 @@ CREATE TABLE `student_trading_levels` (
 --
 
 INSERT INTO `student_trading_levels` (`student_id`, `level_id`, `assigned_date`, `assigned_by`, `assessment_score`, `assessment_method`, `is_current`, `notes`) VALUES
-('S1749790242780_13', 1, '2025-06-13 04:50:42', NULL, NULL, 'exam', 1, NULL);
+('S1749790242780_13', 1, '2025-06-13 04:50:42', NULL, NULL, 'exam', 0, NULL),
+('S1749790242780_13', 1, '2025-06-16 08:09:26', NULL, NULL, 'exam', 0, NULL),
+('S1749790242780_13', 1, '2025-06-16 08:23:57', NULL, NULL, 'exam', 0, NULL),
+('S1749790242780_13', 1, '2025-06-16 08:27:38', NULL, NULL, 'exam', 0, NULL),
+('S1749790242780_13', 1, '2025-06-16 08:28:42', NULL, NULL, 'exam', 0, NULL),
+('S1749790242780_13', 1, '2025-06-16 08:28:49', NULL, NULL, 'exam', 0, NULL),
+('S1749790242780_13', 1, '2025-06-16 08:28:58', NULL, NULL, 'exam', 0, NULL),
+('S1749790242780_13', 1, '2025-06-16 08:41:06', NULL, NULL, 'exam', 0, NULL),
+('S1749790242780_13', 1, '2025-06-16 09:01:43', NULL, NULL, 'exam', 1, NULL);
 
 -- --------------------------------------------------------
 
@@ -2350,10 +2425,16 @@ ALTER TABLE `accounts`
   MODIFY `account_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=16;
 
 --
+-- AUTO_INCREMENT for table `activity_logs`
+--
+ALTER TABLE `activity_logs`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
+
+--
 -- AUTO_INCREMENT for table `audit_log`
 --
 ALTER TABLE `audit_log`
-  MODIFY `log_id` bigint(20) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+  MODIFY `log_id` bigint(20) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 
 --
 -- AUTO_INCREMENT for table `competencies`
@@ -2371,7 +2452,7 @@ ALTER TABLE `competency_types`
 -- AUTO_INCREMENT for table `contact_info`
 --
 ALTER TABLE `contact_info`
-  MODIFY `contact_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+  MODIFY `contact_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=10;
 
 --
 -- AUTO_INCREMENT for table `courses`
@@ -2413,7 +2494,7 @@ ALTER TABLE `fee_types`
 -- AUTO_INCREMENT for table `learning_preferences`
 --
 ALTER TABLE `learning_preferences`
-  MODIFY `preference_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+  MODIFY `preference_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
 
 --
 -- AUTO_INCREMENT for table `password_reset_tokens`
@@ -2564,6 +2645,12 @@ ALTER TABLE `account_roles`
   ADD CONSTRAINT `account_roles_ibfk_1` FOREIGN KEY (`account_id`) REFERENCES `accounts` (`account_id`) ON DELETE CASCADE ON UPDATE CASCADE,
   ADD CONSTRAINT `account_roles_ibfk_2` FOREIGN KEY (`role_id`) REFERENCES `roles` (`role_id`) ON DELETE CASCADE ON UPDATE CASCADE,
   ADD CONSTRAINT `account_roles_ibfk_3` FOREIGN KEY (`assigned_by`) REFERENCES `accounts` (`account_id`) ON DELETE SET NULL;
+
+--
+-- Constraints for table `activity_logs`
+--
+ALTER TABLE `activity_logs`
+  ADD CONSTRAINT `account_id` FOREIGN KEY (`account_id`) REFERENCES `accounts` (`account_id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 --
 -- Constraints for table `competencies`

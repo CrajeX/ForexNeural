@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Jun 13, 2025 at 01:09 PM
+-- Generation Time: Jun 17, 2025 at 05:56 AM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -48,7 +48,7 @@ INSERT INTO `accounts` (`account_id`, `roles`, `username`, `password`, `reset_ot
 (9, 'staff', 'janesmith20', '$2b$10$u84SVqHRRTQ7n.4PPmZZGu/Yn/r8MAExAr2Jdku.OO98vzpiEXG0m', 0, '2025-06-12 04:41:50.755652'),
 (11, 'admin', 'Gimpy', 'ae135ad952a48300d66a514a2398c54b6e588c65f259dcb762b436fa5227e8ef', 0, '2025-05-21 00:30:02.014214'),
 (12, 'student', 'diass', 'b3da6c475b259fe6e394263eff01e9f8c2c9ca86c4d2431eba76edac03da5a0c', 0, '2025-05-21 00:30:02.014214'),
-(13, 'student', 'johndoe123', '$2b$10$OShZXEGGfgBuN7lXks/XfeuFvPemcypi5HE7rMbGffjHUTBmeAdWe', 0, '2025-06-13 06:24:33.463561'),
+(13, 'student', 'johndoe123', '$2b$10$13ICgI5IHOt9r/Yg7Jkj7uvI6F5ffSZcCOwGd4PafjeSEeKXd7Fxa', 0, '2025-06-13 06:24:33.463561'),
 (14, 'admin', 'Gimppy', '11ab273931c78ff884fed06896784f51c744247b0960ae1b2471046f5ea744c0', 0, '2025-05-21 00:30:02.014214'),
 (16, 'admin', 'Gimpppy', '1934e21e63ad9968f3ec03f05072e0a108952c74366af65a9949296f5ffce311', 0, '2025-05-21 00:30:02.014214'),
 (17, 'student', 'paul', '0cf5f61f9fc2247f39d5429b05e3e32ba7d9ac57427856a19f96f19321809c34', 0, '2025-05-21 00:30:02.014214'),
@@ -141,7 +141,26 @@ INSERT INTO `activity_logs` (`id`, `account_id`, `action`, `description`, `ip_ad
 (33, 1, 'profile_updated', 'User profile was updated', NULL, NULL, NULL, '2025-06-06 09:15:36'),
 (34, 1, 'profile_updated', 'User profile was updated', NULL, NULL, NULL, '2025-06-06 09:15:43'),
 (35, 8, 'profile_updated', 'User profile was updated', NULL, NULL, NULL, '2025-06-12 04:38:17'),
-(36, 8, 'profile_updated', 'User profile was updated', NULL, NULL, NULL, '2025-06-12 04:38:20');
+(36, 8, 'profile_updated', 'User profile was updated', NULL, NULL, NULL, '2025-06-12 04:38:20'),
+(37, 13, 'profile_updated', 'User profile was updated', NULL, NULL, NULL, '2025-06-16 04:03:37'),
+(38, 13, 'profile_updated', 'User profile was updated', NULL, NULL, NULL, '2025-06-16 04:58:27'),
+(39, 13, 'profile_updated', 'User profile was updated', NULL, NULL, NULL, '2025-06-16 05:00:15'),
+(40, 13, 'profile_updated', 'User profile was updated', NULL, NULL, NULL, '2025-06-16 06:10:43'),
+(41, 13, 'profile_updated', 'User profile was updated', NULL, NULL, NULL, '2025-06-16 06:33:53'),
+(42, 13, 'profile_updated', 'User profile was updated', NULL, NULL, NULL, '2025-06-16 06:40:29'),
+(43, 13, 'profile_updated', 'User profile was updated', NULL, NULL, NULL, '2025-06-16 06:40:44'),
+(44, 13, 'profile_updated', 'User profile was updated', NULL, NULL, NULL, '2025-06-16 06:49:36'),
+(45, 13, 'profile_updated', 'User profile was updated', NULL, NULL, NULL, '2025-06-16 07:18:29'),
+(46, 13, 'profile_updated', 'User profile was updated', NULL, NULL, NULL, '2025-06-16 07:43:41'),
+(47, 13, 'profile_updated', 'User profile was updated', NULL, NULL, NULL, '2025-06-16 07:53:34'),
+(48, 13, 'profile_updated', 'User profile was updated', NULL, NULL, NULL, '2025-06-16 08:09:46'),
+(49, 13, 'profile_updated', 'User profile was updated', NULL, NULL, NULL, '2025-06-16 08:24:44'),
+(50, 13, 'profile_updated', 'User profile was updated', NULL, NULL, NULL, '2025-06-16 08:39:28'),
+(51, 13, 'profile_updated', 'User profile was updated', NULL, NULL, NULL, '2025-06-16 09:01:41'),
+(52, 13, 'profile_updated', 'User profile was updated', NULL, NULL, NULL, '2025-06-16 09:02:04'),
+(53, 13, 'profile_updated', 'User profile was updated', NULL, NULL, NULL, '2025-06-16 09:04:45'),
+(54, 13, 'profile_updated', 'User profile was updated', NULL, NULL, NULL, '2025-06-16 09:05:25'),
+(55, 13, 'profile_updated', 'User profile was updated', NULL, NULL, NULL, '2025-06-17 03:53:59');
 
 -- --------------------------------------------------------
 
@@ -1284,7 +1303,7 @@ INSERT INTO `profiles` (`id`, `account_id`, `student_id`, `name`, `username`, `e
 (1, 1, '1', 'test', 'test', 'crajeextremeyt@gmail.com', 'student', 'Valenzuela', 'Valenzuela', '2025-06-17', '09427184388', 'beginner', NULL, 'male', '/uploads/avatars/1749025966246-343866882.png', NULL, NULL, 1, '2025-06-04 08:31:08', '2025-06-11 17:57:37', 0, NULL, '2025-06-04 08:31:08', '2025-06-11 09:57:37'),
 (2, 8, NULL, 'Jane Elizabeth Smith', 'janesmith85', 'jane.smith@example.com', '', '', 'San Francisco, CA', '1985-05-18', '', NULL, NULL, 'female', '/uploads/avatars/1749703097767-696713373.png', NULL, NULL, 1, '2025-06-12 12:37:32', NULL, 0, NULL, '2025-06-12 04:37:32', '2025-06-12 04:38:20'),
 (3, 9, NULL, 'Jane Elizabeth Smith', 'janesmith20', 'janes.smith@example.com', '', '', 'San Francisco, CA', '1985-05-19', '', NULL, NULL, 'female', NULL, NULL, NULL, 1, '2025-06-12 12:41:50', NULL, 0, NULL, '2025-06-12 04:41:50', '2025-06-12 04:41:50'),
-(7, 13, 'S1749790242780_13', 'John Michael Doe', 'johndoe123', 'johndoe@gmail.com', 'student', '123 Main Street, New York, NY', 'Marilao Bulacan', '1990-05-14', '09234567890', 'beginner', '', 'male', '', '', '{\"device_type\":\"Desktop,Mobile\",\"learning_style\":\"\"}', 1, '2025-06-13 06:24:33', '2025-06-13 06:24:33', 1, NULL, '2025-06-12 22:24:33', '2025-06-12 22:24:33');
+(7, 13, 'S1749790242780_13', 'John Michael Doja Catering', 'johndoe123', 'johndoe@gmail.com', 'student', '123 Main Street, New York, NY', 'Marilao Bulacan', '1990-05-03', '09234567890', 'beginner', '', 'male', '', '', '{\"device_type\":\"Desktop,Mobile\",\"learning_style\":\"\"}', 1, '2025-06-17 03:53:59', '2025-06-17 03:53:58', 1, NULL, '2025-06-12 22:24:33', '2025-06-16 19:53:59');
 
 --
 -- Triggers `profiles`
@@ -1806,7 +1825,7 @@ INSERT INTO `users` (`id`, `account_id`, `student_id`, `name`, `username`, `emai
 (1, 1, '1', 'test', 'test', 'crajeextremeyt@gmail.com', NULL, 'student', 'Valenzuela', 'Valenzuela', '2025-06-18', '09427184388', 'beginner', 'male', NULL, 1, '2025-06-04 16:31:22', NULL, '2025-06-04 08:31:22', '2025-06-04 08:31:22'),
 (7, 8, NULL, 'Jane Elizabeth Smith', 'janesmith85', 'jane.smith@example.com', '$2b$10$OzSQH5gU30AIxgq2mnCOI.3xmxrHxJCuUk/HT6w2B6b.RtfkGz002', '', '', 'San Francisco, CA', '1985-05-18', '', NULL, 'female', '/uploads/avatars/1749703097767-696713373.png', 1, '2025-06-12 12:37:32', NULL, '2025-06-12 04:37:32', '2025-06-12 04:38:20'),
 (8, 9, NULL, 'Jane Elizabeth Smith', 'janesmith20', 'janes.smith@example.com', '$2b$10$u84SVqHRRTQ7n.4PPmZZGu/Yn/r8MAExAr2Jdku.OO98vzpiEXG0m', '', '', 'San Francisco, CA', '1985-05-19', '', NULL, 'female', NULL, 1, '2025-06-12 12:41:50', NULL, '2025-06-12 04:41:50', '2025-06-12 04:41:50'),
-(14, 13, 'S1749790242780_13', 'John Michael Doe', 'johndoe123', 'johndoe@gmail.com', '$2b$10$OShZXEGGfgBuN7lXks/XfeuFvPemcypi5HE7rMbGffjHUTBmeAdWe', 'student', '123 Main Street, New York, NY', 'Marilao Bulacan', '1990-05-14', '09234567890', 'beginner', 'male', NULL, 1, '2025-06-13 06:24:33', NULL, '2025-06-12 22:24:33', '2025-06-12 22:24:33');
+(14, 13, 'S1749790242780_13', 'John Michael Doja Catering', 'johndoe123', 'johndoe@gmail.com', '$2b$10$13ICgI5IHOt9r/Yg7Jkj7uvI6F5ffSZcCOwGd4PafjeSEeKXd7Fxa', 'student', '123 Main Street, New York, NY', 'Marilao Bulacan', '1990-05-03', '09234567890', 'beginner', 'male', '', 1, '2025-06-17 03:53:59', NULL, '2025-06-12 22:24:33', '2025-06-16 19:53:59');
 
 -- --------------------------------------------------------
 
@@ -2038,7 +2057,7 @@ ALTER TABLE `accounts`
 -- AUTO_INCREMENT for table `activity_logs`
 --
 ALTER TABLE `activity_logs`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=37;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=56;
 
 --
 -- AUTO_INCREMENT for table `competency_progress`
