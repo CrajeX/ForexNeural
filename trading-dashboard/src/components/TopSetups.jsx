@@ -1126,7 +1126,7 @@ const TopSetups = ({ onAssetPairClick }) => {
               </div>
             </div>
 
-            <div style={{ marginTop: "12px" }}>
+            {/* <div style={{ marginTop: "12px" }}>
               <h4
                 style={{
                   fontSize: "12px",
@@ -1213,9 +1213,9 @@ const TopSetups = ({ onAssetPairClick }) => {
                 Rates, and Retail Sentiment. Scores are calculated using your
                 existing algorithm with real economic indicators.
               </div>
-            </div>
-
-            <div style={{ marginTop: "12px" }}>
+            </div> */}
+            
+            {/* <div style={{ marginTop: "12px" }}>
               <h4
                 style={{
                   fontSize: "12px",
@@ -1237,7 +1237,7 @@ const TopSetups = ({ onAssetPairClick }) => {
                 endpoints are unavailable, neutral scores are used to ensure the
                 component continues functioning.
               </div>
-            </div>
+            </div> */}
           </div>
         )}
 

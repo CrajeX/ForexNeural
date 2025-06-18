@@ -306,13 +306,46 @@ const TopSetupsCardView = ({ limit = 5, onAssetPairClick }) => {
   }, [fetchTopSetups]);
 
   const styles = {
-    container: {
-      backgroundColor: '#6B8E6B',
-      borderRadius: '12px',
-      padding: '20px',
-      color: 'white',
-      fontFamily: 'system-ui, -apple-system, sans-serif'
-    },
+container: {
+  backgroundColor: '#6B8E6B',
+  borderRadius: '12px',
+  color: 'white',
+  fontFamily: 'system-ui, -apple-system, sans-serif',
+  boxSizing: 'border-box',
+  margin: '0',
+  maxWidth: 'none',
+  padding: '20px',
+  
+  // Default for desktop
+  width: '77vw',
+  
+  // Small mobile
+  '@media (min-width: 300px) and(max-width: 375px)': {
+    padding: '12px',
+    borderRadius: '6px',
+    fontSize: '14px',
+    width: '200vw',
+  },
+  
+  // Mobile
+  '@media (max-width: 768px)': {
+    padding: '16px',
+    borderRadius: '8px',
+    width: '100vw',
+  },
+  
+  // Tablet
+  '@media (min-width: 769px) and (max-width: 1024px)': {
+    width: '100vw',
+    padding: '18px',
+  },
+  
+  // PC/Desktop
+  '@media (min-width: 1025px)': {
+    width: '77vw',
+    padding: '20px',
+  },
+},
     header: {
       display: 'flex',
       justifyContent: 'space-between',
@@ -413,7 +446,7 @@ const TopSetupsCardView = ({ limit = 5, onAssetPairClick }) => {
       <div style={styles.container}>
         <div style={styles.header}>
           <h3 style={styles.title}>Top Trading Setups</h3>
-          <button style={styles.viewAllButton}>View All</button>
+          
         </div>
         <div style={styles.loading}>Loading live data...</div>
       </div>
@@ -425,7 +458,7 @@ const TopSetupsCardView = ({ limit = 5, onAssetPairClick }) => {
       <div style={styles.container}>
         <div style={styles.header}>
           <h3 style={styles.title}>Top Trading Setups</h3>
-          <button style={styles.viewAllButton}>View All</button>
+          
         </div>
         <div style={styles.error}>Error loading data: {error}</div>
       </div>
@@ -436,7 +469,7 @@ const TopSetupsCardView = ({ limit = 5, onAssetPairClick }) => {
     <div style={styles.container}>
       <div style={styles.header}>
         <h3 style={styles.title}>Top Trading Setups</h3>
-        <button style={styles.viewAllButton}>View All</button>
+       
       </div>
       
       <div style={styles.cardsList}>

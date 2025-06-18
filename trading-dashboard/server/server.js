@@ -176,7 +176,7 @@ app.get('/api/check-auth', async (req, res) => {
 
         // Verify the account still exists in MySQL
         const [rows] = await pool.execute(
-            "SELECT account_id, username, roles FROM accounts WHERE account_id = ?",
+            "SELECT account_id,  roles FROM accounts WHERE account_id = ?",
             [req.session.user_id]
         );
 
@@ -240,7 +240,7 @@ app.post('/api/auth/login', async (req, res) => {
 
     // STEP 2: Get account info (auth details)
     const [accountRows] = await pools.execute(`
-      SELECT account_id, username, password_hash, token, account_status, 
+      SELECT account_id, password_hash, token, account_status, 
              last_login, failed_login_attempts, locked_until, created_at, updated_at
       FROM accounts 
       WHERE account_id = ?
@@ -339,7 +339,6 @@ app.post('/api/auth/login', async (req, res) => {
       account_id: account.account_id,
       student_id: student.student_id,
       person_id: student.person_id,
-      username: account.username,
       email: trimmedEmail,
       firstName: student.first_name,
       lastName: student.last_name,
@@ -421,20 +420,19 @@ app.post('/api/auth/login', async (req, res) => {
 
     // STEP 10: Sync to SQL users table (if not already)
     const [userExists] = await pool.execute(
-      "SELECT id FROM users WHERE email = ? OR username = ?",
-      [trimmedEmail, account.username]
+      "SELECT id FROM users WHERE email = ?",
+      [trimmedEmail]
     );
 
     if (userExists.length === 0) {
       await pool.execute(`
         INSERT INTO users 
-        (account_id, student_id, name, username, email, roles, address, birth_place, phone_no, trading_level, gender, birth_date, authenticated, login_time, created_at, updated_at)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())
+        (account_id, student_id, name, email, roles, address, birth_place, phone_no, trading_level, gender, birth_date, authenticated, login_time, created_at, updated_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())
       `, [
         account.account_id,
         student.student_id,
         userData.fullName,
-        account.username,
         trimmedEmail,
         primaryRole.role_name,
         student.address,
@@ -772,7 +770,6 @@ app.post('/api/register', async (req, res) => {
       student_id = null,
       email,
       password,
-      username,
       name,
       roles = 'student',
       address = '',
@@ -833,11 +830,10 @@ app.post('/api/register', async (req, res) => {
 
     // 4. Insert into `accounts`
     await pool.execute(`
-      INSERT INTO accounts (account_id, username, password, roles)
-      VALUES (?, ?, ?, ?)
+      INSERT INTO accounts (account_id,password, roles)
+      VALUES (?, ?, ?)
     `, [
       account_id,
-      username,
       hashedPassword,
       roles
     ]);
@@ -845,14 +841,13 @@ app.post('/api/register', async (req, res) => {
     // 5. Insert into `users`
     const [userResult] = await pool.execute(`
       INSERT INTO users 
-      (account_id, student_id, email, password, username, name, roles, address, birth_place, phone_no, trading_level, gender, birth_date, authenticated, login_time, created_at, updated_at)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      (account_id, student_id, email, password, name, roles, address, birth_place, phone_no, trading_level, gender, birth_date, authenticated, login_time, created_at, updated_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `, [
       account_id,
       student_id,
       email,
       hashedPassword,
-      username,
       name,
       roles,
       address,
@@ -870,13 +865,12 @@ app.post('/api/register', async (req, res) => {
     // 6. Insert into `profiles`
     await pool.execute(`
       INSERT INTO profiles
-      (account_id, student_id, name, username, email, roles, address, birth_place, birth_date, phone_no, trading_level, learning_style, gender, avatar, bio, preferences, authenticated, login_time, last_login, is_verified, verification_token, created_at, updated_at)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      (account_id, student_id, name, email, roles, address, birth_place, birth_date, phone_no, trading_level, learning_style, gender, avatar, bio, preferences, authenticated, login_time, last_login, is_verified, verification_token, created_at, updated_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `, [
       account_id,
       student_id,
       name,
-      username,
       email,
       roles,
       address,
@@ -922,7 +916,6 @@ app.put('/api/updateprofile', async (req, res) => {
       student_id = null,
       email,
       password,
-      username,
       name,
       roles = 'student',
       address = '',
@@ -981,19 +974,19 @@ app.put('/api/updateprofile', async (req, res) => {
       // Update accounts table
       await pool.execute(`
         UPDATE accounts 
-        SET username = ?, password = ?, roles = ?
+        SET password = ?, roles = ?
         WHERE account_id = ?
-      `, [username, hashedPassword, roles, account_id]);
+      `, [hashedPassword, roles, account_id]);
 
       // Update users table
       await pool.execute(`
         UPDATE users 
-        SET student_id = ?, email = ?, password = ?, username = ?, name = ?, 
+        SET student_id = ?, email = ?, password = ?, name = ?, 
             roles = ?, address = ?, birth_place = ?, phone_no = ?, trading_level = ?, 
             gender = ?, birth_date = ?, authenticated = ?, login_time = ?, updated_at = ?
         WHERE account_id = ?
       `, [
-        student_id, email, hashedPassword, username, name, roles, address, 
+        student_id, email, hashedPassword, name, roles, address, 
         birth_place, phone_no, trading_level, gender, birth_date, 
         authenticated ? 1 : 0, login_time, updated_at, account_id
       ]);
@@ -1001,14 +994,14 @@ app.put('/api/updateprofile', async (req, res) => {
       // Update profiles table
       await pool.execute(`
         UPDATE profiles
-        SET student_id = ?, name = ?, username = ?, email = ?, roles = ?, 
+        SET student_id = ?, name = ?, email = ?, roles = ?, 
             address = ?, birth_place = ?, birth_date = ?, phone_no = ?, 
             trading_level = ?, learning_style = ?, gender = ?, avatar = ?, 
             bio = ?, preferences = ?, authenticated = ?, login_time = ?, 
             last_login = ?, is_verified = ?, verification_token = ?, updated_at = ?
         WHERE account_id = ?
       `, [
-        student_id, name, username, email, roles, address, birth_place, 
+        student_id, name, email, roles, address, birth_place, 
         birth_date, phone_no, trading_level, learning_style, gender, avatar, 
         bio, preferences, authenticated ? 1 : 0, login_time, last_login, 
         is_verified ? 1 : 0, verification_token, updated_at, account_id
@@ -1031,17 +1024,17 @@ app.put('/api/updateprofile', async (req, res) => {
 
       // Insert into accounts
       await pool.execute(`
-        INSERT INTO accounts (account_id, username, password, roles)
+        INSERT INTO accounts (account_id, password, roles)
         VALUES (?, ?, ?, ?)
-      `, [account_id, username, hashedPassword, roles]);
+      `, [account_id, hashedPassword, roles]);
 
       // Insert into users
       const [userResult] = await pool.execute(`
         INSERT INTO users 
-        (account_id, student_id, email, password, username, name, roles, address, birth_place, phone_no, trading_level, gender, birth_date, authenticated, login_time, created_at, updated_at)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        (account_id, student_id, email, password, name, roles, address, birth_place, phone_no, trading_level, gender, birth_date, authenticated, login_time, created_at, updated_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `, [
-        account_id, student_id, email, hashedPassword, username, name, roles,
+        account_id, student_id, email, hashedPassword, name, roles,
         address, birth_place, phone_no, trading_level, gender, birth_date,
         authenticated ? 1 : 0, login_time, created_at, updated_at
       ]);
@@ -1049,10 +1042,10 @@ app.put('/api/updateprofile', async (req, res) => {
       // Insert into profiles
       await pool.execute(`
         INSERT INTO profiles
-        (account_id, student_id, name, username, email, roles, address, birth_place, birth_date, phone_no, trading_level, learning_style, gender, avatar, bio, preferences, authenticated, login_time, last_login, is_verified, verification_token, created_at, updated_at)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        (account_id, student_id, name, email, roles, address, birth_place, birth_date, phone_no, trading_level, learning_style, gender, avatar, bio, preferences, authenticated, login_time, last_login, is_verified, verification_token, created_at, updated_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `, [
-        account_id, student_id, name, username, email, roles, address, birth_place,
+        account_id, student_id, name, email, roles, address, birth_place,
         birth_date, phone_no, trading_level, learning_style, gender, avatar, bio,
         preferences, authenticated ? 1 : 0, login_time, last_login,
         is_verified ? 1 : 0, verification_token, created_at, updated_at
@@ -1100,7 +1093,7 @@ app.get('/api/profile/:account_id', async (req, res) => {
 
       // First check if user exists in users table
       const [userRows] = await pool.execute(
-        "SELECT account_id, student_id, name, username, email, roles, address, birth_place, birth_date, phone_no, trading_level, gender FROM users WHERE account_id = ?",
+        "SELECT account_id, student_id, name, email, roles, address, birth_place, birth_date, phone_no, trading_level, gender FROM users WHERE account_id = ?",
         [parseInt(account_id)]
       );
 
@@ -1111,13 +1104,12 @@ app.get('/api/profile/:account_id', async (req, res) => {
         // Create new profile from user data
         await pool.execute(`
           INSERT INTO profiles 
-          (account_id, student_id, name, username, email, roles, address, birth_place, birth_date, phone_no, trading_level, gender, authenticated, login_time, is_verified, created_at, updated_at)
-          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())
+          (account_id, student_id, name, email, roles, address, birth_place, birth_date, phone_no, trading_level, gender, authenticated, login_time, is_verified, created_at, updated_at)
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())
         `, [
           user.account_id,
           user.student_id,
           user.name,
-          user.username,
           user.email,
           user.roles,
           user.address || '',
@@ -1152,7 +1144,7 @@ app.get('/api/profile/:account_id', async (req, res) => {
 
           // Get account data
           const [accountRows] = await pool.execute(
-            "SELECT account_id, username, roles FROM accounts WHERE account_id = ?",
+            "SELECT account_id, roles FROM accounts WHERE account_id = ?",
             [parseInt(account_id)]
           );
 
@@ -1162,13 +1154,12 @@ app.get('/api/profile/:account_id', async (req, res) => {
             // Create new profile from student + account data
             await pool.execute(`
               INSERT INTO profiles 
-              (account_id, student_id, name, username, email, roles, address, birth_place, birth_date, phone_no, trading_level, learning_style, gender, authenticated, login_time, is_verified, created_at, updated_at)
-              VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())
+              (account_id, student_id, name, email, roles, address, birth_place, birth_date, phone_no, trading_level, learning_style, gender, authenticated, login_time, is_verified, created_at, updated_at)
+              VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())
             `, [
               account.account_id,
               student.student_id,
               student.name,
-              account.username,
               student.email,
               account.roles,
               student.address || '',
@@ -1584,10 +1575,9 @@ app.get('/api/search/users', async (req, res) => {
     const searchPattern = `%${q.trim()}%`;
     
     const [users] = await pool.execute(`
-      SELECT account_id, name, username, email, student_id, roles, avatar
+      SELECT account_id, name, email, student_id, roles, avatar
       FROM profiles 
       WHERE name LIKE ? 
-         OR username LIKE ? 
          OR email LIKE ? 
          OR student_id LIKE ?
       ORDER BY name ASC

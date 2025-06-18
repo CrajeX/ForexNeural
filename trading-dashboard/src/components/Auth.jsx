@@ -91,7 +91,7 @@ const LoginSignupPage = () => {
           isAuthenticated: true
         });
         
-        setSuccess(`Welcome back, ${data.user.name || data.user.username}! Your session is still active.`);
+        setSuccess(`Welcome back, ${data.user.name}! Your session is still active.`);
       }
     } catch (error) {
       console.log('ℹ️ No existing authentication found:', error.message);
@@ -203,7 +203,6 @@ const handleSubmit = async (e) => {
     const sessionData = {
       person_id: person.person_id,
       account_id: account.account_id,
-      username: account.username,
       account_status: account.account_status,
       email: person.email,
       name: fullName,
@@ -237,7 +236,6 @@ const handleSubmit = async (e) => {
       account_id: sessionData.person_id,
       student_id: sessionData.student_id,
       name: sessionData.name,
-      username: sessionData.username,
       email: sessionData.email,
       password: formData.password,
       roles: sessionData.role_name || 'student',
@@ -287,7 +285,6 @@ const handleSubmit = async (e) => {
       const needsUpdate = (
         existingProfile.name !== userPayload.name ||
         existingProfile.email !== userPayload.email ||
-        existingProfile.username !== userPayload.username ||
         existingProfile.address !== userPayload.address ||
         existingProfile.phone_no !== userPayload.phone_no ||
         existingProfile.birth_place !== userPayload.birth_place ||
@@ -307,8 +304,6 @@ const handleSubmit = async (e) => {
           console.log(`  Name: "${existingProfile.name}" → "${userPayload.name}"`);
         if (existingProfile.email !== userPayload.email) 
           console.log(`  Email: "${existingProfile.email}" → "${userPayload.email}"`);
-        if (existingProfile.username !== userPayload.username) 
-          console.log(`  Username: "${existingProfile.username}" → "${userPayload.username}"`);
         if (existingProfile.trading_level !== userPayload.trading_level) 
           console.log(`  Trading Level: "${existingProfile.trading_level}" → "${userPayload.trading_level}"`);
 
@@ -480,9 +475,6 @@ const handleSubmit = async (e) => {
                 Session Active
               </h3>
               <div style={{ fontSize: '14px', color: '#075985' }}>
-                <p style={{ margin: '4px 0' }}>
-                  <strong>User:</strong> {sessionInfo.user.name || sessionInfo.user.username}
-                </p>
                 <p style={{ margin: '4px 0' }}>
                   <strong>Email:</strong> {sessionInfo.user.email}
                 </p>

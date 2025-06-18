@@ -678,16 +678,22 @@ const TradingDashboard = () => {
       maxWidth: "90rem",
       margin: "0 auto",
     },
-     backButton: {
-      backgroundColor: "#6b7280",
-      color: "white",
-      border: "none",
-      borderRadius: "6px",
-      padding: "8px 16px",
-      fontSize: "14px",
-      cursor: "pointer",
-      marginBottom: "16px",
+   backButton: {
+    position: "absolute",
+    backgroundColor: "rgba(107, 114, 128, 0.3)", // Transparent by default
+    color: "white",
+    border: "none",
+    borderRadius: "6px",
+    padding: "8px 16px",
+    fontSize: "14px",
+    cursor: "pointer",
+    marginBottom: "16px",
+    transition: "background-color 0.3s ease", // Smooth transition
+    "&:hover": {
+      backgroundColor: "#6b7280", // Full opacity on hover
     },
+  },
+
   };
 
   const [dashboardSettings, setDashboardSettings] = useState({
@@ -984,7 +990,7 @@ headerContent: {
       borderRadius: `${dashboardSettings.cardBorderRadius}px`,
       padding: `${responsivePadding}px`,
       border: `1px solid ${colors.border}`,
-      transition: dashboardSettings.enableAnimations ? 'all 0.2s' : 'none'
+      transition: dashboardSettings.enableAnimations ? 'all 0.2s' : 'none',
     },
     welcomeSection: {
       background: `linear-gradient(to right, ${colors.accent}, ${colors.accentSecondary})`,
@@ -1269,148 +1275,7 @@ headerContent: {
   };
 
 
-  const MetricsGrid = () => {
-  const [metricsData, setMetricsData] = useState({
-    activePositions: 0,
-    winRate: 0,
-    riskScore: 0,
-    dailyPL: 0
-  });
-  const [loading, setLoading] = useState(true);
-
-  // Fetch live metrics data
-  const fetchMetricsData = useCallback(async () => {
-    try {
-      setLoading(true);
-      
-      // Fetch asset pairs data to calculate metrics
-      const response = await fetch("http://localhost:3000/api/asset-pairs");
-      if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-      
-      const result = await response.json();
-      if (result.success && result.data) {
-        const assetPairs = result.data;
-        
-        // Calculate metrics from real data
-        const totalPairs = assetPairs.length;
-        const bullishPairs = assetPairs.filter(pair => 
-          pair.description?.toLowerCase().includes('bull') || 
-          pair.baseAsset === 'EUR' || 
-          pair.baseAsset === 'GBP'
-        ).length;
-        
-        const winRate = totalPairs > 0 ? Math.round((bullishPairs / totalPairs) * 100) : 0;
-        const riskScore = Math.min(10, Math.max(1, Math.round(totalPairs / 2)));
-        const dailyPL = Math.round((winRate - 50) * 10); // Simulated P&L based on win rate
-        
-        setMetricsData({
-          activePositions: totalPairs,
-          winRate: winRate,
-          riskScore: riskScore,
-          dailyPL: dailyPL
-        });
-      }
-    } catch (error) {
-      console.error("❌ Error fetching metrics data:", error);
-      // Fallback to default values on error
-      setMetricsData({
-        activePositions: 7,
-        winRate: 68,
-        riskScore: 4.2,
-        dailyPL: 234
-      });
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    fetchMetricsData();
-  }, [fetchMetricsData]);
-
-  if (!dashboardSettings.showMetrics) return null;
-  
-  const metrics = [
-    { 
-      label: 'Active Positions', 
-      value: loading ? '...' : `${metricsData.activePositions}`, 
-      change: loading ? '...' : `+${Math.max(0, metricsData.activePositions - 5)}`, 
-      icon: Target, 
-      color: colors.logocolos 
-    },
-    { 
-      label: 'Win Rate', 
-      value: loading ? '...' : `${metricsData.winRate}%`, 
-      change: loading ? '...' : `${metricsData.winRate > 50 ? '+' : ''}${metricsData.winRate - 50}%`, 
-      icon: TrendingUp, 
-      color: colors.logocolos 
-    },
-    { 
-      label: 'Risk Score', 
-      value: loading ? '...' : `${metricsData.riskScore}/10`, 
-      change: loading ? '...' : `${metricsData.riskScore > 5 ? '+' : '-'}${Math.abs(metricsData.riskScore - 5).toFixed(1)}`, 
-      icon: Shield, 
-      color: colors.logocolos 
-    },
-    { 
-      label: 'Daily P&L', 
-      value: loading ? '...' : `${metricsData.dailyPL >= 0 ? '+' : ''}$${Math.abs(metricsData.dailyPL)}`, 
-      change: loading ? '...' : `${metricsData.dailyPL >= 0 ? '+' : ''}${Math.round(metricsData.dailyPL / 10)}%`, 
-      icon: Activity, 
-      color: colors.logocolos 
-    }
-  ];
-
-  return (
-    <div style={{
-      ...dynamicStyles.gridContainer,
-      ...dynamicStyles.metricsGrid
-    }}>
-      {metrics.map((metric, index) => (
-        <div key={index} style={dynamicStyles.card}>
-          <div style={{ 
-            display: 'flex', 
-            alignItems: 'center', 
-            justifyContent: 'space-between', 
-            marginBottom: mobile ? '12px' : '16px',
-            flexWrap: 'wrap',
-            gap: '8px'
-          }}>
-            <div style={{
-              padding: mobile ? '10px' : '12px',
-              backgroundColor: `${metric.color}20`,
-              borderRadius: `${dashboardSettings.cardBorderRadius}px`,
-              color: metric.color
-            }}>
-              <metric.icon size={mobile ? 18 : 20} />
-            </div>
-            <div style={{ 
-              fontSize: mobile ? '1rem' : '1.2rem', 
-              color: colors.logocolos, 
-              fontWeight: 'bold' 
-            }}>
-              {metric.change}
-            </div>
-          </div>
-          <div style={{
-            fontSize: mobile ? '20px' : tablet ? '22px' : dashboardSettings.fontSize === 'large' ? '28px' : dashboardSettings.fontSize === 'small' ? '20px' : '24px',
-            fontWeight: 'bold',
-            color: colors.text,
-            marginBottom: '4px'
-          }}>
-            {metric.value}
-          </div>
-          <div style={{ 
-            color: colors.textSecondary, 
-            fontSize: mobile ? '12px' : '14px' 
-          }}>
-            {metric.label}
-          </div>
-        </div>
-      ))}
-    </div>
-  );
-};
+ 
 
 const TopSetupsSection = () => {
   const [topSetups, setTopSetups] = useState([]);
@@ -1670,7 +1535,7 @@ const TopSetupsSection = () => {
         justifyContent: 'space-between', 
         marginBottom: mobile ? '16px' : '24px',
         flexWrap: 'wrap',
-        gap: '12px'
+        gap: '12px',
       }}>
         <h3 style={{
           fontSize: mobile ? '16px' : tablet ? '18px' : dashboardSettings.fontSize === 'large' ? '22px' : dashboardSettings.fontSize === 'small' ? '16px' : '18px',
@@ -1680,17 +1545,6 @@ const TopSetupsSection = () => {
         }}>
           Top Trading Setups {loading && '(Loading...)'}
         </h3>
-        <button style={{
-          padding: mobile ? '8px 12px' : '6px 12px',
-          backgroundColor: colors.accent,
-          color: '#ffffff',
-          border: 'none',
-          borderRadius: `${dashboardSettings.cardBorderRadius}px`,
-          fontSize: mobile ? '14px' : '12px',
-          cursor: 'pointer'
-        }}>
-          View All
-        </button>
       </div>
       
       <div style={{ display: 'flex', flexDirection: 'column', gap: mobile ? '12px' : '16px' }}>
@@ -1764,123 +1618,7 @@ const TopSetupsSection = () => {
     </div>
   );
 };
-  const SentimentSection = () => {
-    if (!dashboardSettings.showSentiment) return null;
-    
-    return (
-      <div style={dynamicStyles.card}>
-        <h3 style={{
-          fontSize: mobile ? '16px' : tablet ? '18px' : dashboardSettings.fontSize === 'large' ? '22px' : dashboardSettings.fontSize === 'small' ? '16px' : '18px',
-          fontWeight: 'bold',
-          color: colors.text,
-          marginBottom: mobile ? '16px' : '24px'
-        }}>
-          Market Sentiment
-        </h3>
-        
-        <div style={{ 
-          display: 'grid', 
-          gridTemplateColumns: mobile ? '1fr' : '1fr 1fr', 
-          gap: mobile ? '16px' : '24px' 
-        }}>
-          <div>
-            <div style={{ 
-              display: 'flex', 
-              alignItems: 'center', 
-              justifyContent: 'space-between', 
-              marginBottom: '12px' 
-            }}>
-              <span style={{ 
-                color: colors.textSecondary, 
-                fontSize: mobile ? '12px' : '14px' 
-              }}>
-                Institutional
-              </span>
-              <span style={{ 
-                color: colors.text, 
-                fontWeight: 'bold',
-                fontSize: mobile ? '14px' : '16px'
-              }}>
-                {STATIC_MARKET_DATA.marketSentiment.institutional}%
-              </span>
-            </div>
-            <div style={{
-              height: mobile ? '6px' : '8px',
-              backgroundColor: colors.border,
-              borderRadius: '4px',
-              overflow: 'hidden'
-            }}>
-              <div style={{
-                height: '100%',
-                width: `${STATIC_MARKET_DATA.marketSentiment.institutional}%`,
-                backgroundColor: colors.success,
-                transition: dashboardSettings.enableAnimations ? 'width 0.5s ease' : 'none'
-              }} />
-            </div>
-          </div>
-          
-          <div>
-            <div style={{ 
-              display: 'flex', 
-              alignItems: 'center', 
-              justifyContent: 'space-between', 
-              marginBottom: '12px' 
-            }}>
-              <span style={{ 
-                color: colors.textSecondary, 
-                fontSize: mobile ? '12px' : '14px' 
-              }}>
-                Retail
-              </span>
-              <span style={{ 
-                color: colors.text, 
-                fontWeight: 'bold',
-                fontSize: mobile ? '14px' : '16px'
-              }}>
-                {STATIC_MARKET_DATA.marketSentiment.retail}%
-              </span>
-            </div>
-            <div style={{
-              height: mobile ? '6px' : '8px',
-              backgroundColor: colors.border,
-              borderRadius: '4px',
-              overflow: 'hidden'
-            }}>
-              <div style={{
-                height: '100%',
-                width: `${STATIC_MARKET_DATA.marketSentiment.retail}%`,
-                backgroundColor: colors.warning,
-                transition: dashboardSettings.enableAnimations ? 'width 0.5s ease' : 'none'
-              }} />
-            </div>
-          </div>
-        </div>
-        
-        <div style={{
-          marginTop: mobile ? '16px' : '24px',
-          padding: mobile ? '12px' : '16px',
-          backgroundColor: colors.background,
-          borderRadius: `${dashboardSettings.cardBorderRadius}px`,
-          textAlign: 'center'
-        }}>
-          <div style={{ 
-            color: colors.textSecondary, 
-            fontSize: mobile ? '12px' : '14px', 
-            marginBottom: '8px' 
-          }}>
-            Overall Market Bias
-          </div>
-          <div style={{
-            fontSize: mobile ? '16px' : tablet ? '18px' : dashboardSettings.fontSize === 'large' ? '22px' : dashboardSettings.fontSize === 'small' ? '16px' : '18px',
-            fontWeight: 'bold',
-            color: colors.logocolos
-          }}>
-            {STATIC_MARKET_DATA.riskGauge}
-          </div>
-        </div>
-      </div>
-    );
-  };
+
 
   // Placeholder components for different sections
   const PlaceholderWidget = ({ title }) => (
@@ -1916,13 +1654,13 @@ const TopSetupsSection = () => {
         return (
           <div style={dynamicStyles.mainContentArea}>
             <WelcomeSection />
-            <MetricsGrid />
+           
             <div style={{
               ...dynamicStyles.gridContainer,
               ...dynamicStyles.contentGrid
             }}>
               <TopSetupsCardView/>
-              <SentimentSection />
+              
             </div>
           </div>
         );
@@ -1950,12 +1688,12 @@ const TopSetupsSection = () => {
         return (
            <div style={styles.container}>
                   <div style={styles.maxWidth}>
-                    <button 
+                    {/* <button 
                       style={styles.backButton}
                       onClick={navigateBackToSetups}
                     >
                       ← Back to Dashboard
-                    </button>
+                    </button> */}
                       <CurrencyProfile assetPairCode={assetPairCode} />
                   </div>
                 </div>
