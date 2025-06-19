@@ -1,0 +1,323 @@
+erDiagram
+    %% Core User Management Tables
+    accounts {
+        int account_id PK
+        string roles "student, admin, staff"
+        string username UK
+        string password
+        int reset_otp
+        timestamp reset_expr
+    }
+    
+    profiles {
+        int id PK
+        int account_id FK
+        string student_id
+        string name
+        string username UK
+        string email UK
+        string roles
+        text address
+        string birth_place
+        date birth_date
+        string phone_no
+        string trading_level
+        string learning_style
+        string gender
+        string avatar
+        text bio
+        json preferences
+        boolean authenticated
+        datetime login_time
+        datetime last_login
+        boolean is_verified
+        string verification_token
+        timestamp created_at
+        timestamp updated_at
+    }
+    
+    users {
+        int id PK
+        int account_id FK
+        string student_id
+        string name
+        string username UK
+        string email UK
+        string password
+        string roles
+        text address
+        string birth_place
+        date birth_date
+        string phone_no
+        string trading_level
+        string gender
+        string avatar
+        boolean authenticated
+        datetime login_time
+        datetime last_login
+        timestamp created_at
+        timestamp updated_at
+    }
+    
+    students {
+        string student_id PK
+        string name
+        int age
+        string gender
+        date birth_date
+        string birth_place
+        string email UK
+        text address
+        text background
+        string batch
+        decimal rating
+        text goals
+        string trading_level
+        string device_availability
+        string learning_style
+        date date_registered
+        int account_id FK
+        string phone_no
+    }
+    
+    user_sessions {
+        int id PK
+        string session_id UK
+        int account_id FK
+        string user_email
+        json user_data
+        boolean is_active
+        datetime expires_at
+        text user_agent
+        string ip_address
+        json device_info
+        timestamp last_activity
+        timestamp created_at
+        timestamp updated_at
+    }
+    
+    activity_logs {
+        int id PK
+        int account_id FK
+        string action
+        text description
+        string ip_address
+        text user_agent
+        json metadata
+        timestamp created_at
+    }
+    
+    system_settings {
+        int id PK
+        string setting_key UK
+        text setting_value
+        string setting_type
+        text description
+        boolean is_public
+        timestamp created_at
+        timestamp updated_at
+    }
+    
+    %% Financial Data Tables
+    assets {
+        string code PK
+        string name
+        string type "Currency, Commodity"
+        text description
+        datetime created_at
+        datetime updated_at
+    }
+    
+    asset_pairs {
+        string asset_pair_code PK
+        string base_asset FK
+        string quote_asset FK
+        text description
+        datetime created_at
+        datetime updated_at
+    }
+    
+    cot_data {
+        int id PK
+        string asset_code FK
+        int long_contracts
+        int short_contracts
+        int change_in_long
+        int change_in_short
+        double long_percent
+        double short_percent
+        double net_position
+        double net_change_percent
+        datetime created_at
+        datetime updated_at
+    }
+    
+    core_inflation {
+        int id PK
+        string asset_code FK
+        double core_inflation
+        double forecast
+        double net_change_percent
+        string result
+        datetime created_at
+        datetime updated_at
+    }
+    
+    employment_change {
+        int id PK
+        string asset_code FK
+        double employment_change
+        double forecast
+        double net_change_percent
+        string result
+        datetime created_at
+        datetime updated_at
+    }
+    
+    gdp_growth {
+        int id PK
+        string asset_code FK
+        double gdp_growth
+        double forecast
+        double change_in_gdp
+        string result
+        datetime created_at
+        datetime updated_at
+    }
+    
+    interest_rate {
+        int id PK
+        string asset_code FK
+        double interest_rate
+        double change_in_interest
+        datetime created_at
+        datetime updated_at
+    }
+    
+    mpmi {
+        int id PK
+        string asset_code FK
+        double service_pmi
+        double forecast
+        string result
+        datetime created_at
+        datetime updated_at
+    }
+    
+    nfp {
+        int id PK
+        string asset_code FK
+        double actual_nfp
+        double forecast
+        double net_change_percent
+        datetime created_at
+        datetime updated_at
+    }
+    
+    retail_sales {
+        int id PK
+        string asset_code FK
+        double retail_sales
+        double forecast
+        double net_change_percent
+        string result
+        datetime created_at
+        datetime updated_at
+    }
+    
+    spmi {
+        int id PK
+        string asset_code FK
+        double service_pmi
+        double forecast
+        string result
+        datetime created_at
+        datetime updated_at
+    }
+    
+    unemployment_rate {
+        int id PK
+        string asset_code FK
+        double unemployment_rate
+        double forecast
+        double net_change_percent
+        string result
+        datetime created_at
+        datetime updated_at
+    }
+    
+    retail_sentiment {
+        int id PK
+        string asset_pair_code FK
+        double retail_long
+        double retail_short
+        datetime created_at
+        datetime updated_at
+    }
+    
+    pair_score {
+        string asset_pair_code PK
+        int cot_score
+        int retail_sentiment_score
+        int gdp_growth_score
+        int core_inflation_score
+        int retail_sales_score
+        int spmi_score
+        int mpmi_score
+        int unemployment_rate_score
+        int employment_change_score
+        datetime created_at
+        datetime updated_at
+    }
+    
+    %% Views (represented as entities for clarity)
+    active_user_sessions {
+        int id
+        string session_id
+        int account_id
+        string name
+        string username
+        string email
+        string ip_address
+        text user_agent
+        timestamp last_activity
+        datetime expires_at
+        timestamp created_at
+    }
+    
+    user_statistics {
+        bigint total_users
+        bigint active_users
+        bigint students
+        bigint admins
+        bigint instructors
+        bigint new_users_30d
+        bigint active_24h
+    }
+    
+    %% Relationships
+    accounts ||--|| profiles : "has profile"
+    accounts ||--o| users : "has user record"
+    accounts ||--o| students : "has student record"
+    accounts ||--o{ user_sessions : "has sessions"
+    accounts ||--o{ activity_logs : "generates logs"
+    
+    assets ||--o{ asset_pairs : "base asset"
+    assets ||--o{ asset_pairs : "quote asset"
+    assets ||--o{ cot_data : "has COT data"
+    assets ||--o{ core_inflation : "has inflation data"
+    assets ||--o{ employment_change : "has employment data"
+    assets ||--o{ gdp_growth : "has GDP data"
+    assets ||--o{ interest_rate : "has interest data"
+    assets ||--o{ mpmi : "has MPMI data"
+    assets ||--o{ nfp : "has NFP data"
+    assets ||--o{ retail_sales : "has retail sales"
+    assets ||--o{ spmi : "has SPMI data"
+    assets ||--o{ unemployment_rate : "has unemployment data"
+    
+    asset_pairs ||--o{ retail_sentiment : "has sentiment"
+    asset_pairs ||--|| pair_score : "has score"
+    
+    %% View relationships (conceptual)
+    user_sessions ||--o| active_user_sessions : "derives from"
+    profiles ||--o| user_statistics : "aggregates"
