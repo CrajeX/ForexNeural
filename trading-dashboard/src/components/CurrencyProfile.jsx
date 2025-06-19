@@ -28,7 +28,11 @@ const CurrencyProfile = ({ assetPairCode: propAssetPairCode }) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const { assetPairCode: urlAssetPairCode } = useParams();
-  
+  const [nfpValues, setNFPValue] = useState({
+  actual: 0,
+  forecast: 0,
+  change: 0
+});
   // AI Integration State
   const [aiInsight, setAiInsight] = useState(null);
   const [aiLoading, setAiLoading] = useState(false);
@@ -145,7 +149,19 @@ const CurrencyProfile = ({ assetPairCode: propAssetPairCode }) => {
     if (score >= -1) return "Bearish";
     return "Very Bearish";
   };
-
+  const getNFPdata  = async () => {
+     if (profileData) {
+      return{
+        nfp:await extractNFPData(),
+      
+      }
+      
+     }
+     return{
+      nfp: { actual: 0, forecast: 0, change: 0 },
+     }
+            
+  }
   // Get economic data from profileData - REAL DATABASE DATA ONLY
   const getEconomicData = () => {
     if (profileData) {
@@ -156,7 +172,7 @@ const CurrencyProfile = ({ assetPairCode: propAssetPairCode }) => {
         // Extract REAL data from profileData.breakdown
         cotData: extractCOTData(),
         retailPosition: extractRetailPosition(),
-        nfp: extractNFPData(),
+
         employment: extractEmploymentData(),
         unemployment: extractUnemploymentData(),
         gdp: extractGDPData(),
@@ -285,15 +301,21 @@ const extractNFPData = async () => {
   }
 
   try {
-    const response = await fetch(`http://localhost:3000/api/economic-data/nfp/${assetCode}?limit=1`);
+    const response = await fetch(`http://localhost:3000/api/economic-data/nfp`);
     const result = await response.json();
 
     const nfpData = result?.data?.[0] || {};
+    setNFPValue(nfpData);
 
+    console.log("NFP Data",nfpValues)
+     console.log("Actual",nfpData.actual_nfp)
+      console.log("Forecast",nfpData.forecast)
+       console.log("Change",nfpData.net_change_percent)
     return {
-      actual: nfpData.actual || 0,
+      
+      actual: nfpData.actual_nfp || 0,
       forecast: nfpData.forecast || 0,
-      change: nfpData.change || 0,
+      change: nfpData.net_change_percent || 0,
     };
   } catch (err) {
     console.error("❌ Failed to fetch NFP data", err);
@@ -1327,6 +1349,9 @@ const extractNFPData = async () => {
     profileData?.bias ||
     getScoreLabel(Math.round(totalScore / metricsData.length));
   const economicData = getEconomicData();
+  
+  const nfpData = getNFPdata()
+  console.log("BASIC", nfpData)
   const assetPair = profileData?.assetPair || {
     baseAsset: "EUR",
     quoteAsset: "USD",
@@ -1810,17 +1835,19 @@ const extractNFPData = async () => {
                       <tr style={styles.tableRow}>
                         <td style={styles.tableCellCenter}>
                           <div style={styles.dataValue}>
-                            {economicData.nfp.actual.toLocaleString()}
+                        {nfpValues.actual_nfp}
+
                           </div>
                         </td>
                         <td style={styles.tableCellCenter}>
                           <div style={styles.dataValue}>
-                            {economicData.nfp.forecast.toLocaleString()}
+                          { nfpValues.forecast}
+
                           </div>
                         </td>
                         <td style={styles.tableCellCenter}>
                           <div style={styles.dataValue}>
-                            {economicData.nfp.change}%
+                            {nfpValues.net_change_percent}
                           </div>
                         </td>
                         <td style={styles.tableCellCenter}>

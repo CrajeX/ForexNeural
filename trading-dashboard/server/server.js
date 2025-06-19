@@ -3697,11 +3697,16 @@ app.get("/api/economic-data/interest/:asset_code", async (req, res) => {
 // ====================
 
 // Submit NFP (Non-Farm Payrolls) data - USD ONLY
+// ====================
+// FIXED NFP DATA API ROUTES
+// ====================
+
+// Submit NFP (Non-Farm Payrolls) data - USD ONLY
 app.post("/api/economic-data/nfp", async (req, res) => {
   try {
     const { asset_code, actualNfp, nfpForecast } = req.body;
 
-    console.log("📊 Submitting NFP data for asset:", asset_code);
+    // console.log("📊 Submitting NFP data for asset:", asset_code);
 
     // Validation - Only allow USD
     if (!asset_code) {
@@ -3794,39 +3799,123 @@ app.post("/api/economic-data/nfp", async (req, res) => {
   }
 });
 
-// Get NFP data (USD only)
-// Get NFP data (USD or any asset_code)
-app.get("/api/economic-data/nfp/:asset_code", async (req, res) => {
+// FIXED: Get NFP data (USD only) - Fixed spacing and added better error handling
+app.get("/api/economic-data/nfp", async (req, res) => {
   try {
-    const { limit = 10 } = req.query;
-    const { asset_code } = req.params;
-
-    console.log(`📈 Fetching NFP data for ${asset_code}`);
+    // console.log("📊 Fetching NFP data for USD");
+    
+    const { limit = 1 } = req.query; // Allow client to specify limit, default to 10
+    const parsedLimit = parseInt(limit);
+    
+    // Validate limit
+    if (isNaN(parsedLimit) || parsedLimit < 1 || parsedLimit > 100) {
+      return res.status(400).json({
+        success: false,
+        error: "Limit must be a number between 1 and 100"
+      });
+    }
 
     const [nfpData] = await pool.execute(
-      `SELECT * FROM nfp 
-       WHERE asset_code = ? 
+      `SELECT id, asset_code, actual_nfp, forecast, net_change_percent, created_at, updated_at 
+       FROM nfp 
+       WHERE asset_code = 'USD' 
        ORDER BY created_at DESC 
        LIMIT ?`,
-      [asset_code, parseInt(limit)]
+      [parsedLimit]
     );
+
+    // console.log(`✅ Found ${nfpData.length} NFP records for USD`);
 
     res.json({
       success: true,
-      asset_code,
+      asset_code: "USD",
       data: nfpData,
       count: nfpData.length,
+      limit: parsedLimit
     });
+    
   } catch (error) {
     console.error("❌ Get NFP data error:", error);
     res.status(500).json({
       success: false,
       error: "Server error fetching NFP data",
+      details: error.message
     });
   }
 });
 
+// ADDITIONAL: Get specific NFP record by ID
+app.get("/api/economic-data/nfp/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    console.log("🔍 Fetching NFP record with ID:", id);
+    
+    const [nfpData] = await pool.execute(
+      `SELECT * FROM nfp WHERE id = ? AND asset_code = 'USD'`,
+      [parseInt(id)]
+    );
+    
+    if (nfpData.length === 0) {
+      return res.status(404).json({
+        success: false,
+        error: "NFP record not found"
+      });
+    }
+    
+    res.json({
+      success: true,
+      data: nfpData[0]
+    });
+    
+  } catch (error) {
+    console.error("❌ Get NFP record error:", error);
+    res.status(500).json({
+      success: false,
+      error: "Server error fetching NFP record"
+    });
+  }
+});
 
+// ADDITIONAL: Get latest NFP data only
+app.get("/api/economic-data/nfp/latest", async (req, res) => {
+  try {
+    console.log("📊 Fetching latest NFP data for USD");
+    
+    const [nfpData] = await pool.execute(
+      `SELECT * FROM nfp 
+       WHERE asset_code = 'USD' 
+       ORDER BY created_at DESC 
+       LIMIT 1`
+    );
+    
+    if (nfpData.length === 0) {
+      return res.status(404).json({
+        success: false,
+        error: "No NFP data found for USD"
+      });
+    }
+    
+    console.log("✅ Latest NFP data found for USD");
+    
+    res.json({
+      success: true,
+      asset_code: "USD",
+      data: nfpData[0]
+    });
+    
+  } catch (error) {
+    console.error("❌ Get latest NFP data error:", error);
+    res.status(500).json({
+      success: false,
+      error: "Server error fetching latest NFP data"
+    });
+  }
+});
+
+// ====================
+// END FIXED NFP DATA API ROUTES
+// ====================
 // ====================
 // END NFP DATA API ROUTES
 // ====================

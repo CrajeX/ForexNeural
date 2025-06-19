@@ -1688,12 +1688,12 @@ const TopSetupsSection = () => {
         return (
            <div style={styles.container}>
                   <div style={styles.maxWidth}>
-                    {/* <button 
+                    <button 
                       style={styles.backButton}
                       onClick={navigateBackToSetups}
                     >
                       ← Back to Dashboard
-                    </button> */}
+                    </button>
                       <CurrencyProfile assetPairCode={assetPairCode} />
                   </div>
                 </div>
