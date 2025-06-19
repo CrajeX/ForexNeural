@@ -3795,23 +3795,25 @@ app.post("/api/economic-data/nfp", async (req, res) => {
 });
 
 // Get NFP data (USD only)
-app.get("/api/economic-data/nfp", async (req, res) => {
+// Get NFP data (USD or any asset_code)
+app.get("/api/economic-data/nfp/:asset_code", async (req, res) => {
   try {
     const { limit = 10 } = req.query;
+    const { asset_code } = req.params;
 
-    console.log("📈 Fetching NFP data for USD");
+    console.log(`📈 Fetching NFP data for ${asset_code}`);
 
     const [nfpData] = await pool.execute(
       `SELECT * FROM nfp 
-       WHERE asset_code = 'USD' 
+       WHERE asset_code = ? 
        ORDER BY created_at DESC 
        LIMIT ?`,
-      [parseInt(limit)]
+      [asset_code, parseInt(limit)]
     );
 
     res.json({
       success: true,
-      asset_code: "USD",
+      asset_code,
       data: nfpData,
       count: nfpData.length,
     });
@@ -3823,6 +3825,7 @@ app.get("/api/economic-data/nfp", async (req, res) => {
     });
   }
 });
+
 
 // ====================
 // END NFP DATA API ROUTES

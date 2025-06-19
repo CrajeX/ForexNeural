@@ -106,6 +106,7 @@ const TopSetupsCardView = ({ limit = 5, onAssetPairClick }) => {
         fetchWithFallback(`http://localhost:3000/api/economic-data/interest/${baseAsset}?limit=1`),
         fetchWithFallback(`http://localhost:3000/api/economic-data/interest/${quoteAsset}?limit=1`),
         fetchWithFallback(`http://localhost:3000/api/retail-sentiment/${assetPairCode}?limit=1`),
+        
       ]);
 
       return {
@@ -305,7 +306,7 @@ const TopSetupsCardView = ({ limit = 5, onAssetPairClick }) => {
     fetchTopSetups();
   }, [fetchTopSetups]);
 
-  const styles = {
+const styles = {
 container: {
   backgroundColor: '#6B8E6B',
   borderRadius: '12px',

@@ -273,15 +273,34 @@ const CurrencyProfile = ({ assetPairCode: propAssetPairCode }) => {
     };
   };
 
-  const extractNFPData = () => {
-    // NFP data is usually USD specific - check if it exists in your data structure
-    const nfpData = profileData?.economicData?.nfp;
+const extractNFPData = async () => {
+  const { quoteAsset, baseAsset } = profileData.assetPair;
+  let assetCode = null;
+
+  if (quoteAsset === "USD") assetCode = "USD";
+  else if (baseAsset === "USD") assetCode = "USD";
+
+  if (!assetCode) {
+    return { actual: 0, forecast: 0, change: 0 };
+  }
+
+  try {
+    const response = await fetch(`http://localhost:3000/api/economic-data/nfp/${assetCode}?limit=1`);
+    const result = await response.json();
+
+    const nfpData = result?.data?.[0] || {};
+
     return {
-      actual: nfpData?.actual || 0,
-      forecast: nfpData?.forecast || 0,
-      change: nfpData?.change || 0,
+      actual: nfpData.actual || 0,
+      forecast: nfpData.forecast || 0,
+      change: nfpData.change || 0,
     };
-  };
+  } catch (err) {
+    console.error("❌ Failed to fetch NFP data", err);
+    return { actual: 0, forecast: 0, change: 0 };
+  }
+};
+
 
   const extractEmploymentData = () => {
     const empIndicator = profileData?.breakdown?.find(
