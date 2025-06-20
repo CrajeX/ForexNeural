@@ -1,13 +1,12 @@
-
-import express from 'express';
-import mysql from 'mysql2/promise';
-import session from 'express-session';
-import bcrypt from 'bcrypt';
-import cors from 'cors';
-import dotenv from 'dotenv';
-import multer from 'multer';
-import path from 'path';
-import { fileURLToPath } from 'url';
+import express from "express";
+import mysql from "mysql2/promise";
+import session from "express-session";
+import bcrypt from "bcrypt";
+import cors from "cors";
+import dotenv from "dotenv";
+import multer from "multer";
+import path from "path";
+import { fileURLToPath } from "url";
 
 // ES6 module __dirname equivalent
 const __filename = fileURLToPath(import.meta.url);
@@ -20,208 +19,243 @@ const PORT = process.env.PORT || 3000;
 
 // Middleware
 app.use(express.json());
-app.use(cors({
-    origin: ['http://localhost:5173','https://atecon.netlify.app', 'http://localhost:3000','http://localhost:5174','https://8con.netlify.app'],
+app.use(
+  cors({
+    origin: [
+      "http://localhost:5175",
+      "https://atecon.netlify.app",
+      "http://localhost:3000",
+      "http://localhost:5174",
+      "https://8con.netlify.app",
+    ],
     credentials: true,
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization']
-}));
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+  })
+);
 
 // Static file serving for uploads
-app.use('/uploads', express.static('uploads'));
+app.use("/uploads", express.static("uploads"));
 
 // Session configuration
-app.use(session({
-    secret: process.env.SESSION_SECRET || 'your-secret-key-change-this',
+app.use(
+  session({
+    secret: process.env.SESSION_SECRET || "your-secret-key-change-this",
     resave: false,
     saveUninitialized: false,
     cookie: {
-        secure: false,
-        httpOnly: true,
-        maxAge: 24 * 60 * 60 * 1000,
-        sameSite: 'lax'
-    }
-}));
+      secure: false,
+      httpOnly: true,
+      maxAge: 24 * 60 * 60 * 1000,
+      sameSite: "lax",
+    },
+  })
+);
 
 // MySQL Database configuration
 const dbConfig = {
-    host: process.env.DB_HOST_EDGE || 'localhost',
-    user: process.env.DB_USER_EDGE || 'root',
-    password: process.env.DB_PASSWORD_EDGE || '',
-    database: process.env.DB_NAME || '8con',
-    charset: 'utf8',
-    connectionLimit: 10
+  host: process.env.DB_HOST_EDGE || "localhost",
+  user: process.env.DB_USER_EDGE || "root",
+  password: process.env.DB_PASSWORD_EDGE || "",
+  database: process.env.DB_NAME || "8con",
+  charset: "utf8",
+  connectionLimit: 10,
 };
 
 const dbEnrollment = {
-    host: process.env.DB_HOST || 'localhost',
-    user: process.env.DB_USER || 'root',
-    password: process.env.DB_PASSWORD || '',
-    database: process.env.DB_NAME_EDGE || '8cons',
-    charset: 'utf8',
-    connectionLimit: 10
+  host: process.env.DB_HOST || "localhost",
+  user: process.env.DB_USER || "root",
+  password: process.env.DB_PASSWORD || "",
+  database: process.env.DB_NAME_EDGE || "8cons",
+  charset: "utf8",
+  connectionLimit: 10,
 };
 let pool;
 let pools;
 
 // File upload configuration
 const storage = multer.diskStorage({
-    destination: (req, file, cb) => {
-        cb(null, 'uploads/avatars/');
-    },
-    filename: (req, file, cb) => {
-        cb(null, Date.now() + '-' + Math.round(Math.random() * 1E9) + path.extname(file.originalname));
-    }
+  destination: (req, file, cb) => {
+    cb(null, "uploads/avatars/");
+  },
+  filename: (req, file, cb) => {
+    cb(
+      null,
+      Date.now() +
+        "-" +
+        Math.round(Math.random() * 1e9) +
+        path.extname(file.originalname)
+    );
+  },
 });
 const upload = multer({ storage: storage });
 
 // Test MySQL database connection
 async function initDatabase() {
-    try {
-        pool = mysql.createPool(dbConfig);
-        pools = mysql.createPool(dbEnrollment);
-        const connection = await pool.getConnection();
-        const connections = await pools.getConnection();
-        console.log('✅ MySQL Database connected successfully');
-        connection.release();
-        return true;
-    } catch (error) {
-        console.error('❌ MySQL Database connection failed:', error.message);
-        return false;
-    }
+  try {
+    pool = mysql.createPool(dbConfig);
+    pools = mysql.createPool(dbEnrollment);
+    const connection = await pool.getConnection();
+    const connections = await pools.getConnection();
+    console.log("✅ MySQL Database connected successfully");
+    connection.release();
+    return true;
+  } catch (error) {
+    console.error("❌ MySQL Database connection failed:", error.message);
+    return false;
+  }
 }
 
 // Helper function to save session data to SQL
-async function saveSessionToSQL(sessionId, account_id, user_email, userData, req) {
-    try {
-        // Remove any existing session for this user (optional - for single session per user)
-        await pool.execute(
-            "DELETE FROM user_sessions WHERE account_id = ?",
-            [account_id]
-        );
-        
-        // Create new session record
-        const userAgent = req.headers['user-agent'] || '';
-        const ipAddress = req.ip || req.connection.remoteAddress || '';
-        const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
-        
-        await pool.execute(`
+async function saveSessionToSQL(
+  sessionId,
+  account_id,
+  user_email,
+  userData,
+  req
+) {
+  try {
+    // Remove any existing session for this user (optional - for single session per user)
+    await pool.execute("DELETE FROM user_sessions WHERE account_id = ?", [
+      account_id,
+    ]);
+
+    // Create new session record
+    const userAgent = req.headers["user-agent"] || "";
+    const ipAddress = req.ip || req.connection.remoteAddress || "";
+    const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
+
+    await pool.execute(
+      `
             INSERT INTO user_sessions 
             (session_id, account_id, user_email, user_data, is_active, expires_at, user_agent, ip_address, created_at, updated_at)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())
-        `, [
-            sessionId,
-            account_id,
-            user_email,
-            JSON.stringify(userData),
-            1,
-            expiresAt,
-            userAgent,
-            ipAddress
-        ]);
-        
-        console.log('💾 Session saved to SQL for account_id:', account_id);
-        return true;
-    } catch (error) {
-        console.error('❌ Error saving session to SQL:', error);
-        throw error;
-    }
+        `,
+      [
+        sessionId,
+        account_id,
+        user_email,
+        JSON.stringify(userData),
+        1,
+        expiresAt,
+        userAgent,
+        ipAddress,
+      ]
+    );
+
+    console.log("💾 Session saved to SQL for account_id:", account_id);
+    return true;
+  } catch (error) {
+    console.error("❌ Error saving session to SQL:", error);
+    throw error;
+  }
 }
 
 // Helper function to get session data from SQL
 async function getSessionFromSQL(account_id) {
-    try {
-        const [rows] = await pool.execute(`
+  try {
+    const [rows] = await pool.execute(
+      `
             SELECT * FROM user_sessions 
             WHERE account_id = ? AND is_active = 1 AND expires_at > NOW()
-        `, [account_id]);
-        
-        if (rows.length > 0) {
-            const session = rows[0];
-            console.log('📖 Session found in SQL for account_id:', account_id);
-            return {
-                ...session,
-                userData: JSON.parse(session.user_data)
-            };
-        } else {
-            console.log('❌ No active session found in SQL for account_id:', account_id);
-            return null;
-        }
-    } catch (error) {
-        console.error('❌ Error retrieving session from SQL:', error);
-        return null;
+        `,
+      [account_id]
+    );
+
+    if (rows.length > 0) {
+      const session = rows[0];
+      console.log("📖 Session found in SQL for account_id:", account_id);
+      return {
+        ...session,
+        userData: JSON.parse(session.user_data),
+      };
+    } else {
+      console.log(
+        "❌ No active session found in SQL for account_id:",
+        account_id
+      );
+      return null;
     }
+  } catch (error) {
+    console.error("❌ Error retrieving session from SQL:", error);
+    return null;
+  }
 }
 
 // Basic health check
-app.get('/health', (req, res) => {
-    res.json({ status: 'OK', timestamp: new Date().toISOString() });
+app.get("/health", (req, res) => {
+  res.json({ status: "OK", timestamp: new Date().toISOString() });
 });
 
 // Check authentication status - UPDATED to check SQL sessions
-app.get('/api/check-auth', async (req, res) => {
-    try {
-        if (!req.session.user_id) {
-            return res.json({ authenticated: false });
-        }
-
-        // First check if session exists in SQL
-        const sqlSession = await getSessionFromSQL(req.session.user_id);
-        
-        if (!sqlSession) {
-            // Session not found in SQL, destroy Express session
-            req.session.destroy(() => {});
-            return res.json({ authenticated: false, reason: 'Session not found in database' });
-        }
-
-        // Verify the account still exists in MySQL
-        const [rows] = await pool.execute(
-            "SELECT account_id,  roles FROM accounts WHERE account_id = ?",
-            [req.session.user_id]
-        );
-
-        if (rows.length === 0) {
-            // Account doesn't exist anymore, cleanup
-            await pool.execute("DELETE FROM user_sessions WHERE account_id = ?", [req.session.user_id]);
-            req.session.destroy(() => {});
-            return res.json({ authenticated: false, reason: 'Account not found' });
-        }
-
-        // Return the saved user data from SQL session
-        const userData = sqlSession.userData;
-        
-        res.json({
-            authenticated: true,
-            user: userData,
-            sessionInfo: {
-                createdAt: sqlSession.created_at,
-                expiresAt: sqlSession.expires_at,
-                lastActive: sqlSession.updated_at
-            },
-            saveToSessionStorage: true
-        });
-        
-    } catch (error) {
-        console.error('Check auth error:', error);
-        res.status(500).json({ error: 'Database error' });
+app.get("/api/check-auth", async (req, res) => {
+  try {
+    if (!req.session.user_id) {
+      return res.json({ authenticated: false });
     }
+
+    // First check if session exists in SQL
+    const sqlSession = await getSessionFromSQL(req.session.user_id);
+
+    if (!sqlSession) {
+      // Session not found in SQL, destroy Express session
+      req.session.destroy(() => {});
+      return res.json({
+        authenticated: false,
+        reason: "Session not found in database",
+      });
+    }
+
+    // Verify the account still exists in MySQL
+    const [rows] = await pool.execute(
+      "SELECT account_id,  roles FROM accounts WHERE account_id = ?",
+      [req.session.user_id]
+    );
+
+    if (rows.length === 0) {
+      // Account doesn't exist anymore, cleanup
+      await pool.execute("DELETE FROM user_sessions WHERE account_id = ?", [
+        req.session.user_id,
+      ]);
+      req.session.destroy(() => {});
+      return res.json({ authenticated: false, reason: "Account not found" });
+    }
+
+    // Return the saved user data from SQL session
+    const userData = sqlSession.userData;
+
+    res.json({
+      authenticated: true,
+      user: userData,
+      sessionInfo: {
+        createdAt: sqlSession.created_at,
+        expiresAt: sqlSession.expires_at,
+        lastActive: sqlSession.updated_at,
+      },
+      saveToSessionStorage: true,
+    });
+  } catch (error) {
+    console.error("Check auth error:", error);
+    res.status(500).json({ error: "Database error" });
+  }
 });
 
 // Login endpoint with SQL session storage
-app.post('/api/auth/login', async (req, res) => {
+app.post("/api/auth/login", async (req, res) => {
   try {
     const { email, password } = req.body;
-    console.log('🔐 Login attempt for email:', email);
+    console.log("🔐 Login attempt for email:", email);
 
     if (!email || !password) {
-      return res.status(400).json({ error: 'Email and password are required' });
+      return res.status(400).json({ error: "Email and password are required" });
     }
 
     const trimmedEmail = email.trim();
     const trimmedPassword = password.trim();
 
     // STEP 1: Get student info from MySQL with person details
-    const [studentRows] = await pools.execute(`
+    const [studentRows] = await pools.execute(
+      `
       SELECT s.account_id, s.student_id, s.person_id, s.registration_date, 
              s.graduation_status, s.graduation_date, s.gpa, s.academic_standing, s.notes,
              p.first_name, p.last_name, p.email, p.phone, p.address, 
@@ -229,43 +263,48 @@ app.post('/api/auth/login', async (req, res) => {
       FROM students s
       JOIN persons p ON s.person_id = p.person_id
       WHERE p.email = ?
-    `, [trimmedEmail]);
+    `,
+      [trimmedEmail]
+    );
 
     if (studentRows.length === 0) {
-      console.log('❌ No student found with email:', trimmedEmail);
-      return res.status(401).json({ error: 'Invalid email or password' });
+      console.log("❌ No student found with email:", trimmedEmail);
+      return res.status(401).json({ error: "Invalid email or password" });
     }
 
     const student = studentRows[0];
 
     // STEP 2: Get account info (auth details)
-    const [accountRows] = await pools.execute(`
+    const [accountRows] = await pools.execute(
+      `
       SELECT account_id, password_hash, token, account_status, 
              last_login, failed_login_attempts, locked_until, created_at, updated_at
       FROM accounts 
       WHERE account_id = ?
-    `, [student.account_id]);
+    `,
+      [student.account_id]
+    );
 
     if (accountRows.length === 0) {
-      console.log('❌ No account found for account_id:', student.account_id);
-      return res.status(401).json({ error: 'Invalid email or password' });
+      console.log("❌ No account found for account_id:", student.account_id);
+      return res.status(401).json({ error: "Invalid email or password" });
     }
 
     const account = accountRows[0];
 
     // Check if account is locked
     if (account.locked_until && new Date(account.locked_until) > new Date()) {
-      console.log('❌ Account is locked until:', account.locked_until);
-      return res.status(423).json({ 
-        error: 'Account is temporarily locked. Please try again later.',
-        lockedUntil: account.locked_until
+      console.log("❌ Account is locked until:", account.locked_until);
+      return res.status(423).json({
+        error: "Account is temporarily locked. Please try again later.",
+        lockedUntil: account.locked_until,
       });
     }
 
     // Check account status
-    if (account.account_status !== 'active') {
-      console.log('❌ Account is not active:', account.account_status);
-      return res.status(401).json({ error: 'Account is not active' });
+    if (account.account_status !== "active") {
+      console.log("❌ Account is not active:", account.account_status);
+      return res.status(401).json({ error: "Account is not active" });
     }
 
     // STEP 3: Password check (replace with real bcrypt logic)
@@ -276,10 +315,11 @@ app.post('/api/auth/login', async (req, res) => {
     */
 
     if (!passwordValid) {
-      console.log('❌ Password invalid');
-      
+      console.log("❌ Password invalid");
+
       // Increment failed login attempts
-      await pools.execute(`
+      await pools.execute(
+        `
         UPDATE accounts 
         SET failed_login_attempts = failed_login_attempts + 1,
             locked_until = CASE 
@@ -287,48 +327,61 @@ app.post('/api/auth/login', async (req, res) => {
               ELSE locked_until
             END
         WHERE account_id = ?
-      `, [account.account_id]);
-      
-      return res.status(401).json({ error: 'Invalid email or password' });
+      `,
+        [account.account_id]
+      );
+
+      return res.status(401).json({ error: "Invalid email or password" });
     }
 
     // STEP 4: Get account roles and role details
-    const [roleRows] = await pools.execute(`
+    const [roleRows] = await pools.execute(
+      `
       SELECT ar.role_id, ar.assigned_date, ar.assigned_by, ar.is_active, ar.expiry_date,
              r.role_name, r.permissions, r.description
       FROM account_roles ar
       JOIN roles r ON ar.role_id = r.role_id
       WHERE ar.account_id = ? AND ar.is_active = TRUE
       AND (ar.expiry_date IS NULL OR ar.expiry_date > NOW())
-    `, [account.account_id]);
+    `,
+      [account.account_id]
+    );
 
     if (roleRows.length === 0) {
-      console.log('❌ No active roles found for account_id:', account.account_id);
-      return res.status(401).json({ error: 'No active roles assigned to this account' });
+      console.log(
+        "❌ No active roles found for account_id:",
+        account.account_id
+      );
+      return res
+        .status(401)
+        .json({ error: "No active roles assigned to this account" });
     }
 
     // Get primary role (first active role)
     const primaryRole = roleRows[0];
-    const allRoles = roleRows.map(role => ({
+    const allRoles = roleRows.map((role) => ({
       roleId: role.role_id,
       roleName: role.role_name,
       permissions: role.permissions,
       assignedDate: role.assigned_date,
       isActive: role.is_active,
-      expiryDate: role.expiry_date
+      expiryDate: role.expiry_date,
     }));
 
     // STEP 5: Get trading level information if applicable
     let tradingLevelInfo = null;
     if (student.trading_level_id) {
-      const [tradingLevelRows] = await pools.execute(`
+      const [tradingLevelRows] = await pools.execute(
+        `
         SELECT level_id, level_name, level_description, minimum_score, 
                prerequisite_level_id, estimated_duration_weeks, 
                recommended_capital, risk_tolerance
         FROM trading_levels 
         WHERE level_id = ?
-      `, [student.trading_level_id]);
-      
+      `,
+        [student.trading_level_id]
+      );
+
       if (tradingLevelRows.length > 0) {
         tradingLevelInfo = tradingLevelRows[0];
       }
@@ -348,7 +401,7 @@ app.post('/api/auth/login', async (req, res) => {
       birthDate: student.birth_date,
       birthPlace: student.birth_place,
       gender: student.gender,
-      
+
       // Student specific data
       registrationDate: student.registration_date,
       graduationStatus: student.graduation_status,
@@ -356,31 +409,34 @@ app.post('/api/auth/login', async (req, res) => {
       gpa: student.gpa,
       academicStanding: student.academic_standing,
       notes: student.notes,
-      
+
       // Role information
       primaryRole: primaryRole.role_name,
       roleId: primaryRole.role_id,
       permissions: primaryRole.permissions,
       roles: allRoles,
-      
+
       // Trading level
       tradingLevel: tradingLevelInfo,
-      
+
       // Session info
       authenticated: true,
       loginTime: new Date().toISOString(),
-      lastLogin: account.last_login
+      lastLogin: account.last_login,
     };
 
     // STEP 7: Reset failed login attempts and update last login
-    await pools.execute(`
+    await pools.execute(
+      `
       UPDATE accounts 
       SET failed_login_attempts = 0, 
           locked_until = NULL, 
           last_login = NOW(),
           updated_at = NOW()
       WHERE account_id = ?
-    `, [account.account_id]);
+    `,
+      [account.account_id]
+    );
 
     // STEP 8: Create Express session
     req.session.user_id = account.account_id;
@@ -391,22 +447,26 @@ app.post('/api/auth/login', async (req, res) => {
     const existingSession = await getSessionFromSQL(account.account_id);
 
     if (existingSession) {
-      console.log('🔁 Reusing session');
+      console.log("🔁 Reusing session");
       await pools.execute(
         "UPDATE user_sessions SET updated_at = NOW(), user_agent = ?, ip_address = ? WHERE account_id = ?",
-        [req.headers['user-agent'] || '', req.ip || req.connection.remoteAddress || '', account.account_id]
+        [
+          req.headers["user-agent"] || "",
+          req.ip || req.connection.remoteAddress || "",
+          account.account_id,
+        ]
       );
 
       return res.json({
         success: true,
         user: existingSession.userData,
-        message: 'Login successful - existing session restored',
+        message: "Login successful - existing session restored",
         sessionInfo: {
           isExistingSession: true,
           createdAt: existingSession.created_at,
-          lastActive: existingSession.updated_at
+          lastActive: existingSession.updated_at,
         },
-        saveToSessionStorage: true
+        saveToSessionStorage: true,
       });
     } else {
       await saveSessionToSQL(
@@ -425,345 +485,355 @@ app.post('/api/auth/login', async (req, res) => {
     );
 
     if (userExists.length === 0) {
-      await pool.execute(`
+      await pool.execute(
+        `
         INSERT INTO users 
         (account_id, student_id, name, email, roles, address, birth_place, phone_no, trading_level, gender, birth_date, authenticated, login_time, created_at, updated_at)
         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())
-      `, [
-        account.account_id,
-        student.student_id,
-        userData.fullName,
-        trimmedEmail,
-        primaryRole.role_name,
-        student.address,
-        student.birth_place,
-        student.phone,
-        tradingLevelInfo ? tradingLevelInfo.level_name : null,
-        student.gender,
-        student.birth_date,
-        1,
-        new Date()
-      ]);
-      console.log('✅ SQL user synced');
+      `,
+        [
+          account.account_id,
+          student.student_id,
+          userData.fullName,
+          trimmedEmail,
+          primaryRole.role_name,
+          student.address,
+          student.birth_place,
+          student.phone,
+          tradingLevelInfo ? tradingLevelInfo.level_name : null,
+          student.gender,
+          student.birth_date,
+          1,
+          new Date(),
+        ]
+      );
+      console.log("✅ SQL user synced");
     }
 
     // STEP 11: Return success
     res.json({
       success: true,
       user: userData,
-      message: 'Login successful - new session created',
+      message: "Login successful - new session created",
       sessionInfo: {
         isExistingSession: false,
-        createdAt: new Date().toISOString()
+        createdAt: new Date().toISOString(),
       },
-      saveToSessionStorage: true
+      saveToSessionStorage: true,
     });
-
   } catch (error) {
-    console.error('❌ Login error:', error);
-    res.status(500).json({ error: 'Server error during login' });
+    console.error("❌ Login error:", error);
+    res.status(500).json({ error: "Server error during login" });
   }
 });
 
 // Logout endpoint to cleanup SQL session
-app.post('/api/logout', async (req, res) => {
-    try {
-        if (req.session.user_id) {
-            // Remove session from SQL
-            await pool.execute("DELETE FROM user_sessions WHERE account_id = ?", [req.session.user_id]);
-            console.log('🗑️ Removed SQL session for account_id:', req.session.user_id);
-        }
-        
-        req.session.destroy((err) => {
-            if (err) {
-                console.error('Logout error:', err);
-                return res.status(500).json({ error: 'Could not log out' });
-            }
-            res.clearCookie('connect.sid');
-            res.json({ 
-                success: true, 
-                message: 'Logged out successfully',
-                clearSessionStorage: true
-            });
-        });
-    } catch (error) {
-        console.error('❌ Logout error:', error);
-        res.status(500).json({ error: 'Server error during logout' });
+app.post("/api/logout", async (req, res) => {
+  try {
+    if (req.session.user_id) {
+      // Remove session from SQL
+      await pool.execute("DELETE FROM user_sessions WHERE account_id = ?", [
+        req.session.user_id,
+      ]);
+      console.log(
+        "🗑️ Removed SQL session for account_id:",
+        req.session.user_id
+      );
     }
+
+    req.session.destroy((err) => {
+      if (err) {
+        console.error("Logout error:", err);
+        return res.status(500).json({ error: "Could not log out" });
+      }
+      res.clearCookie("connect.sid");
+      res.json({
+        success: true,
+        message: "Logged out successfully",
+        clearSessionStorage: true,
+      });
+    });
+  } catch (error) {
+    console.error("❌ Logout error:", error);
+    res.status(500).json({ error: "Server error during logout" });
+  }
 });
 
 // Get current user data endpoint - UPDATED to use SQL session
-app.get('/api/user-data', async (req, res) => {
-    try {
-        if (!req.session.user_id) {
-            return res.status(401).json({ error: 'Not authenticated' });
-        }
-
-        // Get session data from SQL
-        const sqlSession = await getSessionFromSQL(req.session.user_id);
-        
-        if (!sqlSession) {
-            return res.status(401).json({ error: 'Session not found' });
-        }
-
-        const userData = sqlSession.userData;
-
-        res.json({
-            success: true,
-            user: userData,
-            sessionInfo: {
-                createdAt: sqlSession.created_at,
-                expiresAt: sqlSession.expires_at,
-                lastActive: sqlSession.updated_at
-            },
-            saveToSessionStorage: true
-        });
-
-    } catch (error) {
-        console.error('❌ Get user data error:', error);
-        res.status(500).json({ error: 'Database error' });
+app.get("/api/user-data", async (req, res) => {
+  try {
+    if (!req.session.user_id) {
+      return res.status(401).json({ error: "Not authenticated" });
     }
+
+    // Get session data from SQL
+    const sqlSession = await getSessionFromSQL(req.session.user_id);
+
+    if (!sqlSession) {
+      return res.status(401).json({ error: "Session not found" });
+    }
+
+    const userData = sqlSession.userData;
+
+    res.json({
+      success: true,
+      user: userData,
+      sessionInfo: {
+        createdAt: sqlSession.created_at,
+        expiresAt: sqlSession.expires_at,
+        lastActive: sqlSession.updated_at,
+      },
+      saveToSessionStorage: true,
+    });
+  } catch (error) {
+    console.error("❌ Get user data error:", error);
+    res.status(500).json({ error: "Database error" });
+  }
 });
 
 // Get all sessions for a user (for admin purposes)
-app.get('/api/user/sessions/:account_id', async (req, res) => {
-    try {
-        const { account_id } = req.params;
-        
-        const [sessions] = await pool.execute(`
+app.get("/api/user/sessions/:account_id", async (req, res) => {
+  try {
+    const { account_id } = req.params;
+
+    const [sessions] = await pool.execute(
+      `
             SELECT session_id, created_at, expires_at, updated_at, user_agent, ip_address 
             FROM user_sessions 
             WHERE account_id = ? AND is_active = 1 
             ORDER BY created_at DESC
-        `, [account_id]);
-        
-        res.json({
-            success: true,
-            sessions: sessions
-        });
-        
-    } catch (error) {
-        console.error('Get sessions error:', error);
-        res.status(500).json({ success: false, error: 'Server error' });
-    }
+        `,
+      [account_id]
+    );
+
+    res.json({
+      success: true,
+      sessions: sessions,
+    });
+  } catch (error) {
+    console.error("Get sessions error:", error);
+    res.status(500).json({ success: false, error: "Server error" });
+  }
 });
 
 // Cleanup expired sessions manually
-app.post('/api/cleanup-sessions', async (req, res) => {
-    try {
-        const [result] = await pool.execute(`
+app.post("/api/cleanup-sessions", async (req, res) => {
+  try {
+    const [result] = await pool.execute(`
             DELETE FROM user_sessions 
             WHERE expires_at < NOW() OR is_active = 0
         `);
-        
-        res.json({
-            success: true,
-            message: `Cleaned up ${result.affectedRows} expired sessions`
-        });
-        
-    } catch (error) {
-        console.error('Cleanup sessions error:', error);
-        res.status(500).json({ success: false, error: 'Server error' });
-    }
+
+    res.json({
+      success: true,
+      message: `Cleaned up ${result.affectedRows} expired sessions`,
+    });
+  } catch (error) {
+    console.error("Cleanup sessions error:", error);
+    res.status(500).json({ success: false, error: "Server error" });
+  }
 });
 
 // SQL-based Login Route (alternative endpoint)
-app.post('/api/login-mongo', async (req, res) => {
-    try {
-        const { email, password } = req.body;
-        
-        // Find user by email in SQL users table
-        const [users] = await pool.execute(
-            "SELECT * FROM users WHERE email = ?",
-            [email]
-        );
-        
-        if (users.length === 0) {
-            return res.status(401).json({ success: false, error: 'Invalid credentials' });
-        }
-        
-        const user = users[0];
-        
-        // Check password (uncomment for real password verification)
-        /*
+app.post("/api/login-mongo", async (req, res) => {
+  try {
+    const { email, password } = req.body;
+
+    // Find user by email in SQL users table
+    const [users] = await pool.execute("SELECT * FROM users WHERE email = ?", [
+      email,
+    ]);
+
+    if (users.length === 0) {
+      return res
+        .status(401)
+        .json({ success: false, error: "Invalid credentials" });
+    }
+
+    const user = users[0];
+
+    // Check password (uncomment for real password verification)
+    /*
         const isValidPassword = await bcrypt.compare(password, user.password);
         if (!isValidPassword) {
             return res.status(401).json({ success: false, error: 'Invalid credentials' });
         }
         */
-        
-        // Update last login
-        await pool.execute(
-            "UPDATE users SET last_login = NOW() WHERE id = ?",
-            [user.id]
-        );
-        
-        // Remove password from response
-        delete user.password;
-        
-        res.json({
-            success: true,
-            user: user,
-            message: 'Login successful'
-        });
-        
-    } catch (error) {
-        console.error('Login error:', error);
-        res.status(500).json({ success: false, error: 'Server error' });
-    }
+
+    // Update last login
+    await pool.execute("UPDATE users SET last_login = NOW() WHERE id = ?", [
+      user.id,
+    ]);
+
+    // Remove password from response
+    delete user.password;
+
+    res.json({
+      success: true,
+      user: user,
+      message: "Login successful",
+    });
+  } catch (error) {
+    console.error("Login error:", error);
+    res.status(500).json({ success: false, error: "Server error" });
+  }
 });
 
 // Get User Profile Route (SQL-based)
-app.get('/api/user/profile', async (req, res) => {
-    try {
-        const { account_id } = req.query;
+app.get("/api/user/profile", async (req, res) => {
+  try {
+    const { account_id } = req.query;
 
-        if (!account_id) {
-            return res.status(400).json({ success: false, error: 'Missing account_id' });
-        }
-
-        const [users] = await pool.execute(
-            "SELECT * FROM profiles WHERE account_id = ?",
-            [account_id]
-        );
-        
-        if (users.length === 0) {
-            return res.status(404).json({ success: false, error: 'User not found' });
-        }
-
-        const user = users[0];
-        delete user.password; // Remove password from response
-
-        res.json({ success: true, user });
-    } catch (error) {
-        console.error('Get profile error:', error);
-        res.status(500).json({ success: false, error: 'Server error' });
+    if (!account_id) {
+      return res
+        .status(400)
+        .json({ success: false, error: "Missing account_id" });
     }
+
+    const [users] = await pool.execute(
+      "SELECT * FROM profiles WHERE account_id = ?",
+      [account_id]
+    );
+
+    if (users.length === 0) {
+      return res.status(404).json({ success: false, error: "User not found" });
+    }
+
+    const user = users[0];
+    delete user.password; // Remove password from response
+
+    res.json({ success: true, user });
+  } catch (error) {
+    console.error("Get profile error:", error);
+    res.status(500).json({ success: false, error: "Server error" });
+  }
 });
 
 // Update User Profile Route (SQL-based)
-app.put('/api/user/profile', async (req, res) => {
-    try {
-        const { userId, ...updateData } = req.body;
-        
-        // Remove sensitive fields that shouldn't be updated via this route
-        delete updateData.password;
-        delete updateData.email; // Email changes should be handled separately
-        delete updateData.id;
-        
-        // Filter out undefined values and build dynamic UPDATE query
-        const filteredUpdateData = Object.fromEntries(
-            Object.entries(updateData).filter(([key, value]) => value !== undefined)
-        );
-        
-        const updateFields = Object.keys(filteredUpdateData);
-        const updateValues = Object.values(filteredUpdateData);
-        
-        if (updateFields.length === 0) {
-            return res.status(400).json({ success: false, error: 'No fields to update' });
-        }
-        
-        const setClause = updateFields.map(field => `${field} = ?`).join(', ');
-        updateValues.push(userId);
-        
-        // Start transaction to ensure both tables are updated atomically
-        const connection = await pool.getConnection();
-        
-        try {
-            await connection.beginTransaction();
-            
-            // Update users table
-          
-            // Update user table with the same data
-            await connection.execute(
-                `UPDATE user SET ${setClause}, updated_at = NOW() WHERE account_id = ?`,
-                updateValues
-            );
-            
-            // Update students table if name is being updated
-            if (filteredUpdateData.name) {
-                await connection.execute(
-                    `UPDATE students SET name = ? WHERE account_id = ?`,
-                    [filteredUpdateData.name, userId]
-                );
-                  await connection.execute(
-                `UPDATE students SET name = ? WHERE account_id = ?`,
-                updateValues
-            );
-            
-            }
-            
-            // Commit transaction
-            await connection.commit();
-            
-            // Get updated user data
-            const [users] = await pool.execute(
-                "SELECT * FROM users WHERE account_id = ?",
-                [userId]
-            );
-            
-            if (users.length === 0) {
-                return res.status(404).json({ success: false, error: 'User not found' });
-            }
-            
-            const user = users[0];
-            delete user.password;
-            
-            res.json({ success: true, user });
-            
-        } catch (transactionError) {
-            // Rollback transaction on error
-            await connection.rollback();
-            throw transactionError;
-        } finally {
-            // Release connection back to pool
-            connection.release();
-        }
-        
-    } catch (error) {
-        console.error('Update profile error:', error);
-        res.status(500).json({ success: false, error: 'Server error' });
+app.put("/api/user/profile", async (req, res) => {
+  try {
+    const { userId, ...updateData } = req.body;
+
+    // Remove sensitive fields that shouldn't be updated via this route
+    delete updateData.password;
+    delete updateData.email; // Email changes should be handled separately
+    delete updateData.id;
+
+    // Filter out undefined values and build dynamic UPDATE query
+    const filteredUpdateData = Object.fromEntries(
+      Object.entries(updateData).filter(([key, value]) => value !== undefined)
+    );
+
+    const updateFields = Object.keys(filteredUpdateData);
+    const updateValues = Object.values(filteredUpdateData);
+
+    if (updateFields.length === 0) {
+      return res
+        .status(400)
+        .json({ success: false, error: "No fields to update" });
     }
+
+    const setClause = updateFields.map((field) => `${field} = ?`).join(", ");
+    updateValues.push(userId);
+
+    // Start transaction to ensure both tables are updated atomically
+    const connection = await pool.getConnection();
+
+    try {
+      await connection.beginTransaction();
+
+      // Update users table
+
+      // Update user table with the same data
+      await connection.execute(
+        `UPDATE user SET ${setClause}, updated_at = NOW() WHERE account_id = ?`,
+        updateValues
+      );
+
+      // Update students table if name is being updated
+      if (filteredUpdateData.name) {
+        await connection.execute(
+          `UPDATE students SET name = ? WHERE account_id = ?`,
+          [filteredUpdateData.name, userId]
+        );
+        await connection.execute(
+          `UPDATE students SET name = ? WHERE account_id = ?`,
+          updateValues
+        );
+      }
+
+      // Commit transaction
+      await connection.commit();
+
+      // Get updated user data
+      const [users] = await pool.execute(
+        "SELECT * FROM users WHERE account_id = ?",
+        [userId]
+      );
+
+      if (users.length === 0) {
+        return res
+          .status(404)
+          .json({ success: false, error: "User not found" });
+      }
+
+      const user = users[0];
+      delete user.password;
+
+      res.json({ success: true, user });
+    } catch (transactionError) {
+      // Rollback transaction on error
+      await connection.rollback();
+      throw transactionError;
+    } finally {
+      // Release connection back to pool
+      connection.release();
+    }
+  } catch (error) {
+    console.error("Update profile error:", error);
+    res.status(500).json({ success: false, error: "Server error" });
+  }
 });
 
 // Upload Avatar Route (SQL-based)
-app.post('/api/user/avatar', upload.single('avatar'), async (req, res) => {
-    try {
-        if (!req.file) {
-            return res.status(400).json({ success: false, error: 'No file uploaded' });
-        }
-        
-        const { userId } = req.body;
-        const avatarUrl = `/uploads/avatars/${req.file.filename}`;
-        
-        await pool.execute(
-            "UPDATE users SET avatar = ?, updated_at = NOW() WHERE id = ?",
-            [avatarUrl, userId]
-        );
-        
-        // Get updated user
-        const [users] = await pool.execute(
-            "SELECT * FROM users WHERE id = ?",
-            [userId]
-        );
-        
-        const user = users[0];
-        delete user.password;
-        
-        res.json({ 
-            success: true, 
-            avatarUrl,
-            user 
-        });
-    } catch (error) {
-        console.error('Upload avatar error:', error);
-        res.status(500).json({ success: false, error: 'Server error' });
+app.post("/api/user/avatar", upload.single("avatar"), async (req, res) => {
+  try {
+    if (!req.file) {
+      return res
+        .status(400)
+        .json({ success: false, error: "No file uploaded" });
     }
+
+    const { userId } = req.body;
+    const avatarUrl = `/uploads/avatars/${req.file.filename}`;
+
+    await pool.execute(
+      "UPDATE users SET avatar = ?, updated_at = NOW() WHERE id = ?",
+      [avatarUrl, userId]
+    );
+
+    // Get updated user
+    const [users] = await pool.execute("SELECT * FROM users WHERE id = ?", [
+      userId,
+    ]);
+
+    const user = users[0];
+    delete user.password;
+
+    res.json({
+      success: true,
+      avatarUrl,
+      user,
+    });
+  } catch (error) {
+    console.error("Upload avatar error:", error);
+    res.status(500).json({ success: false, error: "Server error" });
+  }
 });
 
 // Create User Route (Registration) - SQL-based
 // Create User Route (Registration) - SQL-based
-app.post('/api/register', async (req, res) => {
+app.post("/api/register", async (req, res) => {
   try {
     const {
       account_id,
@@ -771,24 +841,24 @@ app.post('/api/register', async (req, res) => {
       email,
       password,
       name,
-      roles = 'student',
-      address = '',
-      birth_place = '',
-      birth_date = '',
-      gender = '',
-      phone_no = '',
+      roles = "student",
+      address = "",
+      birth_place = "",
+      birth_date = "",
+      gender = "",
+      phone_no = "",
       trading_level = null,
-      learning_style = '',
+      learning_style = "",
       avatar = null,
-      bio = '',
-      preferences = '{}',
+      bio = "",
+      preferences = "{}",
       authenticated = true,
       login_time = new Date(),
       last_login = null,
       is_verified = true,
       verification_token = null,
       created_at = new Date(),
-      updated_at = new Date()
+      updated_at = new Date(),
     } = req.body;
 
     // 1. Validate person/account_id via external DB
@@ -800,7 +870,7 @@ app.post('/api/register', async (req, res) => {
     if (personRows.length === 0) {
       return res.status(404).json({
         success: false,
-        error: "Person not found in external 'persons' database"
+        error: "Person not found in external 'persons' database",
       });
     }
 
@@ -808,7 +878,7 @@ app.post('/api/register', async (req, res) => {
     if (account_id !== fetchedPersonId) {
       return res.status(400).json({
         success: false,
-        error: 'Account ID mismatch with external person record'
+        error: "Account ID mismatch with external person record",
       });
     }
 
@@ -821,7 +891,7 @@ app.post('/api/register', async (req, res) => {
     if (existingUsers.length > 0) {
       return res.status(400).json({
         success: false,
-        error: 'User with this account ID already exists'
+        error: "User with this account ID already exists",
       });
     }
 
@@ -829,87 +899,93 @@ app.post('/api/register', async (req, res) => {
     const hashedPassword = await bcrypt.hash(password, 10);
 
     // 4. Insert into `accounts`
-    await pool.execute(`
+    await pool.execute(
+      `
       INSERT INTO accounts (account_id,password, roles)
       VALUES (?, ?, ?)
-    `, [
-      account_id,
-      hashedPassword,
-      roles
-    ]);
+    `,
+      [account_id, hashedPassword, roles]
+    );
 
     // 5. Insert into `users`
-    const [userResult] = await pool.execute(`
+    const [userResult] = await pool.execute(
+      `
       INSERT INTO users 
       (account_id, student_id, email, password, name, roles, address, birth_place, phone_no, trading_level, gender, birth_date, authenticated, login_time, created_at, updated_at)
       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    `, [
-      account_id,
-      student_id,
-      email,
-      hashedPassword,
-      name,
-      roles,
-      address,
-      birth_place,
-      phone_no,
-      trading_level,
-      gender,
-      birth_date,
-      authenticated ? 1 : 0,
-      login_time,
-      created_at,
-      updated_at
-    ]);
+    `,
+      [
+        account_id,
+        student_id,
+        email,
+        hashedPassword,
+        name,
+        roles,
+        address,
+        birth_place,
+        phone_no,
+        trading_level,
+        gender,
+        birth_date,
+        authenticated ? 1 : 0,
+        login_time,
+        created_at,
+        updated_at,
+      ]
+    );
 
     // 6. Insert into `profiles`
-    await pool.execute(`
+    await pool.execute(
+      `
       INSERT INTO profiles
       (account_id, student_id, name, email, roles, address, birth_place, birth_date, phone_no, trading_level, learning_style, gender, avatar, bio, preferences, authenticated, login_time, last_login, is_verified, verification_token, created_at, updated_at)
       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    `, [
-      account_id,
-      student_id,
-      name,
-      email,
-      roles,
-      address,
-      birth_place,
-      birth_date,
-      phone_no,
-      trading_level,
-      learning_style,
-      gender,
-      avatar,
-      bio,
-      preferences,
-      authenticated ? 1 : 0,
-      login_time,
-      last_login,
-      is_verified ? 1 : 0,
-      verification_token,
-      created_at,
-      updated_at
-    ]);
+    `,
+      [
+        account_id,
+        student_id,
+        name,
+        email,
+        roles,
+        address,
+        birth_place,
+        birth_date,
+        phone_no,
+        trading_level,
+        learning_style,
+        gender,
+        avatar,
+        bio,
+        preferences,
+        authenticated ? 1 : 0,
+        login_time,
+        last_login,
+        is_verified ? 1 : 0,
+        verification_token,
+        created_at,
+        updated_at,
+      ]
+    );
 
     // 7. Respond with user (without password)
-    const [users] = await pool.execute("SELECT * FROM users WHERE id = ?", [userResult.insertId]);
+    const [users] = await pool.execute("SELECT * FROM users WHERE id = ?", [
+      userResult.insertId,
+    ]);
     const user = users[0];
     delete user.password;
 
     res.status(201).json({
       success: true,
       user,
-      message: 'User registered successfully in accounts, users, and profiles'
+      message: "User registered successfully in accounts, users, and profiles",
     });
-
   } catch (error) {
-    console.error('Registration error:', error);
-    res.status(500).json({ success: false, error: 'Server error' });
+    console.error("Registration error:", error);
+    res.status(500).json({ success: false, error: "Server error" });
   }
 });
 
-app.put('/api/updateprofile', async (req, res) => {
+app.put("/api/updateprofile", async (req, res) => {
   try {
     const {
       account_id,
@@ -917,24 +993,24 @@ app.put('/api/updateprofile', async (req, res) => {
       email,
       password,
       name,
-      roles = 'student',
-      address = '',
-      birth_place = '',
-      birth_date = '',
-      gender = '',
-      phone_no = '',
+      roles = "student",
+      address = "",
+      birth_place = "",
+      birth_date = "",
+      gender = "",
+      phone_no = "",
       trading_level = null,
-      learning_style = '',
+      learning_style = "",
       avatar = null,
-      bio = '',
-      preferences = '{}',
+      bio = "",
+      preferences = "{}",
       authenticated = true,
       login_time = new Date(),
       last_login = null,
       is_verified = true,
       verification_token = null,
       created_at = new Date(),
-      updated_at = new Date()
+      updated_at = new Date(),
     } = req.body;
 
     // 1. Validate person/account_id via external DB
@@ -946,7 +1022,7 @@ app.put('/api/updateprofile', async (req, res) => {
     if (personRows.length === 0) {
       return res.status(404).json({
         success: false,
-        error: "Person not found in external 'persons' database"
+        error: "Person not found in external 'persons' database",
       });
     }
 
@@ -954,7 +1030,7 @@ app.put('/api/updateprofile', async (req, res) => {
     if (account_id !== fetchedPersonId) {
       return res.status(400).json({
         success: false,
-        error: 'Account ID mismatch with external person record'
+        error: "Account ID mismatch with external person record",
       });
     }
 
@@ -972,27 +1048,46 @@ app.put('/api/updateprofile', async (req, res) => {
       console.log(`🔄 Updating existing user with account_id: ${account_id}`);
 
       // Update accounts table
-      await pool.execute(`
+      await pool.execute(
+        `
         UPDATE accounts 
         SET password = ?, roles = ?
         WHERE account_id = ?
-      `, [hashedPassword, roles, account_id]);
+      `,
+        [hashedPassword, roles, account_id]
+      );
 
       // Update users table
-      await pool.execute(`
+      await pool.execute(
+        `
         UPDATE users 
         SET student_id = ?, email = ?, password = ?, name = ?, 
             roles = ?, address = ?, birth_place = ?, phone_no = ?, trading_level = ?, 
             gender = ?, birth_date = ?, authenticated = ?, login_time = ?, updated_at = ?
         WHERE account_id = ?
-      `, [
-        student_id, email, hashedPassword, name, roles, address, 
-        birth_place, phone_no, trading_level, gender, birth_date, 
-        authenticated ? 1 : 0, login_time, updated_at, account_id
-      ]);
+      `,
+        [
+          student_id,
+          email,
+          hashedPassword,
+          name,
+          roles,
+          address,
+          birth_place,
+          phone_no,
+          trading_level,
+          gender,
+          birth_date,
+          authenticated ? 1 : 0,
+          login_time,
+          updated_at,
+          account_id,
+        ]
+      );
 
       // Update profiles table
-      await pool.execute(`
+      await pool.execute(
+        `
         UPDATE profiles
         SET student_id = ?, name = ?, email = ?, roles = ?, 
             address = ?, birth_place = ?, birth_date = ?, phone_no = ?, 
@@ -1000,72 +1095,135 @@ app.put('/api/updateprofile', async (req, res) => {
             bio = ?, preferences = ?, authenticated = ?, login_time = ?, 
             last_login = ?, is_verified = ?, verification_token = ?, updated_at = ?
         WHERE account_id = ?
-      `, [
-        student_id, name, email, roles, address, birth_place, 
-        birth_date, phone_no, trading_level, learning_style, gender, avatar, 
-        bio, preferences, authenticated ? 1 : 0, login_time, last_login, 
-        is_verified ? 1 : 0, verification_token, updated_at, account_id
-      ]);
+      `,
+        [
+          student_id,
+          name,
+          email,
+          roles,
+          address,
+          birth_place,
+          birth_date,
+          phone_no,
+          trading_level,
+          learning_style,
+          gender,
+          avatar,
+          bio,
+          preferences,
+          authenticated ? 1 : 0,
+          login_time,
+          last_login,
+          is_verified ? 1 : 0,
+          verification_token,
+          updated_at,
+          account_id,
+        ]
+      );
 
       // Get updated user data
-      const [users] = await pool.execute("SELECT * FROM users WHERE account_id = ?", [account_id]);
+      const [users] = await pool.execute(
+        "SELECT * FROM users WHERE account_id = ?",
+        [account_id]
+      );
       const user = users[0];
       delete user.password;
 
       res.status(200).json({
         success: true,
         user,
-        message: 'User profile updated successfully'
+        message: "User profile updated successfully",
       });
-
     } else {
       // USER DOESN'T EXIST - CREATE NEW RECORDS
       console.log(`📝 Creating new user with account_id: ${account_id}`);
 
       // Insert into accounts
-      await pool.execute(`
+      await pool.execute(
+        `
         INSERT INTO accounts (account_id, password, roles)
         VALUES (?, ?, ?, ?)
-      `, [account_id, hashedPassword, roles]);
+      `,
+        [account_id, hashedPassword, roles]
+      );
 
       // Insert into users
-      const [userResult] = await pool.execute(`
+      const [userResult] = await pool.execute(
+        `
         INSERT INTO users 
         (account_id, student_id, email, password, name, roles, address, birth_place, phone_no, trading_level, gender, birth_date, authenticated, login_time, created_at, updated_at)
         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-      `, [
-        account_id, student_id, email, hashedPassword, name, roles,
-        address, birth_place, phone_no, trading_level, gender, birth_date,
-        authenticated ? 1 : 0, login_time, created_at, updated_at
-      ]);
+      `,
+        [
+          account_id,
+          student_id,
+          email,
+          hashedPassword,
+          name,
+          roles,
+          address,
+          birth_place,
+          phone_no,
+          trading_level,
+          gender,
+          birth_date,
+          authenticated ? 1 : 0,
+          login_time,
+          created_at,
+          updated_at,
+        ]
+      );
 
       // Insert into profiles
-      await pool.execute(`
+      await pool.execute(
+        `
         INSERT INTO profiles
         (account_id, student_id, name, email, roles, address, birth_place, birth_date, phone_no, trading_level, learning_style, gender, avatar, bio, preferences, authenticated, login_time, last_login, is_verified, verification_token, created_at, updated_at)
         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-      `, [
-        account_id, student_id, name, email, roles, address, birth_place,
-        birth_date, phone_no, trading_level, learning_style, gender, avatar, bio,
-        preferences, authenticated ? 1 : 0, login_time, last_login,
-        is_verified ? 1 : 0, verification_token, created_at, updated_at
-      ]);
+      `,
+        [
+          account_id,
+          student_id,
+          name,
+          email,
+          roles,
+          address,
+          birth_place,
+          birth_date,
+          phone_no,
+          trading_level,
+          learning_style,
+          gender,
+          avatar,
+          bio,
+          preferences,
+          authenticated ? 1 : 0,
+          login_time,
+          last_login,
+          is_verified ? 1 : 0,
+          verification_token,
+          created_at,
+          updated_at,
+        ]
+      );
 
       // Get new user data
-      const [users] = await pool.execute("SELECT * FROM users WHERE id = ?", [userResult.insertId]);
+      const [users] = await pool.execute("SELECT * FROM users WHERE id = ?", [
+        userResult.insertId,
+      ]);
       const user = users[0];
       delete user.password;
 
       res.status(201).json({
         success: true,
         user,
-        message: 'User registered successfully in accounts, users, and profiles'
+        message:
+          "User registered successfully in accounts, users, and profiles",
       });
     }
-
   } catch (error) {
-    console.error('Profile update/create error:', error);
-    res.status(500).json({ success: false, error: 'Server error' });
+    console.error("Profile update/create error:", error);
+    res.status(500).json({ success: false, error: "Server error" });
   }
 });
 // ====================
@@ -1074,22 +1232,22 @@ app.put('/api/updateprofile', async (req, res) => {
 
 // Get user profile by account_id
 // Get profile endpoint
-app.get('/api/profile/:account_id', async (req, res) => {
+app.get("/api/profile/:account_id", async (req, res) => {
   try {
     const { account_id } = req.params;
-    
-    console.log('🔍 Fetching profile for account_id:', account_id);
-    
+
+    console.log("🔍 Fetching profile for account_id:", account_id);
+
     const [profiles] = await pool.execute(
       "SELECT * FROM profiles WHERE account_id = ?",
       [parseInt(account_id)]
     );
-    
+
     let profile;
-    
+
     if (profiles.length === 0) {
       // If profile doesn't exist, try to create one from existing user data
-      console.log('📝 Profile not found, checking for existing user data...');
+      console.log("📝 Profile not found, checking for existing user data...");
 
       // First check if user exists in users table
       const [userRows] = await pool.execute(
@@ -1099,29 +1257,32 @@ app.get('/api/profile/:account_id', async (req, res) => {
 
       if (userRows.length > 0) {
         const user = userRows[0];
-        console.log('📝 Found user data, creating profile...');
+        console.log("📝 Found user data, creating profile...");
 
         // Create new profile from user data
-        await pool.execute(`
+        await pool.execute(
+          `
           INSERT INTO profiles 
           (account_id, student_id, name, email, roles, address, birth_place, birth_date, phone_no, trading_level, gender, authenticated, login_time, is_verified, created_at, updated_at)
           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())
-        `, [
-          user.account_id,
-          user.student_id,
-          user.name,
-          user.email,
-          user.roles,
-          user.address || '',
-          user.birth_place || '',
-          user.birth_date,
-          user.phone_no || '',
-          user.trading_level,
-          user.gender || '',
-          1, // authenticated
-          new Date(),
-          1  // is_verified
-        ]);
+        `,
+          [
+            user.account_id,
+            user.student_id,
+            user.name,
+            user.email,
+            user.roles,
+            user.address || "",
+            user.birth_place || "",
+            user.birth_date,
+            user.phone_no || "",
+            user.trading_level,
+            user.gender || "",
+            1, // authenticated
+            new Date(),
+            1, // is_verified
+          ]
+        );
 
         // Get the newly created profile
         const [newProfiles] = await pool.execute(
@@ -1130,7 +1291,7 @@ app.get('/api/profile/:account_id', async (req, res) => {
         );
         profile = newProfiles[0];
 
-        console.log('✅ New profile created from user data');
+        console.log("✅ New profile created from user data");
       } else {
         // Check students table as fallback
         const [studentRows] = await pool.execute(
@@ -1140,7 +1301,7 @@ app.get('/api/profile/:account_id', async (req, res) => {
 
         if (studentRows.length > 0) {
           const student = studentRows[0];
-          console.log('📝 Found student data, creating profile...');
+          console.log("📝 Found student data, creating profile...");
 
           // Get account data
           const [accountRows] = await pool.execute(
@@ -1152,27 +1313,30 @@ app.get('/api/profile/:account_id', async (req, res) => {
             const account = accountRows[0];
 
             // Create new profile from student + account data
-            await pool.execute(`
+            await pool.execute(
+              `
               INSERT INTO profiles 
               (account_id, student_id, name, email, roles, address, birth_place, birth_date, phone_no, trading_level, learning_style, gender, authenticated, login_time, is_verified, created_at, updated_at)
               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())
-            `, [
-              account.account_id,
-              student.student_id,
-              student.name,
-              student.email,
-              account.roles,
-              student.address || '',
-              student.birth_place || '',
-              student.birth_date,
-              student.phone_no || '',
-              student.trading_level,
-              student.learning_style || '',
-              student.gender || '',
-              1, // authenticated
-              new Date(),
-              1  // is_verified
-            ]);
+            `,
+              [
+                account.account_id,
+                student.student_id,
+                student.name,
+                student.email,
+                account.roles,
+                student.address || "",
+                student.birth_place || "",
+                student.birth_date,
+                student.phone_no || "",
+                student.trading_level,
+                student.learning_style || "",
+                student.gender || "",
+                1, // authenticated
+                new Date(),
+                1, // is_verified
+              ]
+            );
 
             // Get the newly created profile
             const [newProfiles] = await pool.execute(
@@ -1181,82 +1345,80 @@ app.get('/api/profile/:account_id', async (req, res) => {
             );
             profile = newProfiles[0];
 
-            console.log('✅ New profile created from student data');
+            console.log("✅ New profile created from student data");
           } else {
             return res.status(404).json({
               success: false,
-              error: 'Account data not found',
-              exists: false
+              error: "Account data not found",
+              exists: false,
             });
           }
         } else {
           return res.status(404).json({
             success: false,
-            error: 'No user data found for this account',
-            exists: false
+            error: "No user data found for this account",
+            exists: false,
           });
         }
       }
     } else {
       profile = profiles[0];
-      console.log('✅ Profile found');
+      console.log("✅ Profile found");
     }
-    
+
     res.json({
       success: true,
       profile: profile,
-      exists: true
+      exists: true,
     });
-    
   } catch (error) {
-    console.error('❌ Get profile error:', error);
-    res.status(500).json({ 
-      success: false, 
-      error: 'Server error fetching profile',
-      exists: false
+    console.error("❌ Get profile error:", error);
+    res.status(500).json({
+      success: false,
+      error: "Server error fetching profile",
+      exists: false,
     });
   }
 });
 
 // Enhanced check profile existence endpoint
-app.get('/api/profile/check/:account_id', async (req, res) => {
+app.get("/api/profile/check/:account_id", async (req, res) => {
   try {
     const { account_id } = req.params;
-    
-    console.log('🔍 Checking profile existence for account_id:', account_id);
-    
+
+    console.log("🔍 Checking profile existence for account_id:", account_id);
+
     const [profiles] = await pool.execute(
       "SELECT account_id FROM profiles WHERE account_id = ?",
       [parseInt(account_id)]
     );
-    
+
     const exists = profiles.length > 0;
-    
+
     res.json({
       success: true,
       exists: exists,
-      account_id: parseInt(account_id)
+      account_id: parseInt(account_id),
     });
-    
   } catch (error) {
-    console.error('❌ Check profile error:', error);
-    res.status(500).json({ 
-      success: false, 
-      error: 'Server error checking profile',
-      exists: false
+    console.error("❌ Check profile error:", error);
+    res.status(500).json({
+      success: false,
+      error: "Server error checking profile",
+      exists: false,
     });
   }
 });
 
 // Update user profile
-app.put('/api/profile/:account_id', async (req, res) => {
+app.put("/api/profile/:account_id", async (req, res) => {
   try {
     const { account_id } = req.params;
     const updateData = req.body;
-    
-    console.log('🔄 Updating profile for account_id:', account_id);
-    console.log('📝 Update data:', updateData);
-    
+
+    console.log("🔄 Updating profile for account_id:", account_id);
+    console.log("📝 Update data:", updateData);
+
     // Remove sensitive fields that shouldn't be updated
     delete updateData.id;
     delete updateData.created_at;
@@ -1266,53 +1428,50 @@ app.put('/api/profile/:account_id', async (req, res) => {
     delete updateData.login_time;
     delete updateData.last_login;
     delete updateData.updated_at;
-    
+
     // Remove fields not in the allowed list
     delete updateData.learning_style;
     delete updateData.bio;
     delete updateData.preferences;
     delete updateData.is_verified;
     delete updateData.verification_token;
-    
+
     // Filter out undefined values and build dynamic UPDATE query
     const filteredUpdateData = Object.fromEntries(
       Object.entries(updateData).filter(([key, value]) => value !== undefined)
     );
-    
+
     const updateFields = Object.keys(filteredUpdateData);
     const updateValues = Object.values(filteredUpdateData);
-    
+
     if (updateFields.length === 0) {
-      return res.status(400).json({ 
-        success: false, 
-        error: 'No fields to update' 
+      return res.status(400).json({
+        success: false,
+        error: "No fields to update",
       });
     }
-    
-    const setClause = updateFields.map(field => `${field} = ?`).join(', ');
+
+    const setClause = updateFields.map((field) => `${field} = ?`).join(", ");
     updateValues.push(parseInt(account_id));
-    
+
     // Start transaction to ensure all tables are updated atomically
     const connection = await pool.getConnection();
-    
+
     try {
       await connection.beginTransaction();
-      
+
       // Update profiles table
       await connection.execute(
         `UPDATE profiles SET ${setClause}, updated_at = NOW() WHERE account_id = ?`,
         updateValues
       );
-      
+
       // Update users table with the same data
       await connection.execute(
         `UPDATE users SET ${setClause}, updated_at = NOW() WHERE account_id = ?`,
         updateValues
       );
-      
-   
-    
-      
+
       // Update students table if name is being updated
       if (filteredUpdateData.name) {
         await connection.execute(
@@ -1320,31 +1479,30 @@ app.put('/api/profile/:account_id', async (req, res) => {
           [filteredUpdateData.name, parseInt(account_id)]
         );
       }
-      
+
       // Commit transaction
       await connection.commit();
-      
+
       // Get updated profile
       const [profiles] = await pool.execute(
         "SELECT * FROM profiles WHERE account_id = ?",
         [parseInt(account_id)]
       );
-      
+
       if (profiles.length === 0) {
-        return res.status(404).json({ 
-          success: false, 
-          error: 'Profile not found' 
+        return res.status(404).json({
+          success: false,
+          error: "Profile not found",
         });
       }
-      
-      console.log('✅ Profile updated successfully');
-      
+
+      console.log("✅ Profile updated successfully");
+
       res.json({
         success: true,
         profile: profiles[0],
-        message: 'Profile updated successfully'
+        message: "Profile updated successfully",
       });
-      
     } catch (transactionError) {
       // Rollback transaction on error
       await connection.rollback();
@@ -1353,161 +1511,165 @@ app.put('/api/profile/:account_id', async (req, res) => {
       // Release connection back to pool
       connection.release();
     }
-    
   } catch (error) {
-    console.error('❌ Update profile error:', error);
-    res.status(500).json({ 
-      success: false, 
-      error: 'Server error updating profile' 
+    console.error("❌ Update profile error:", error);
+    res.status(500).json({
+      success: false,
+      error: "Server error updating profile",
     });
   }
 });
 
 // Upload profile avatar
-app.post('/api/profile/:account_id/avatar', upload.single('avatar'), async (req, res) => {
-  try {
-    const { account_id } = req.params;
-    
-    if (!req.file) {
-      return res.status(400).json({ 
-        success: false, 
-        error: 'No file uploaded' 
+app.post(
+  "/api/profile/:account_id/avatar",
+  upload.single("avatar"),
+  async (req, res) => {
+    try {
+      const { account_id } = req.params;
+
+      if (!req.file) {
+        return res.status(400).json({
+          success: false,
+          error: "No file uploaded",
+        });
+      }
+
+      console.log("📷 Uploading avatar for account_id:", account_id);
+
+      const avatarUrl = `/uploads/avatars/${req.file.filename}`;
+
+      await pool.execute(
+        "UPDATE profiles SET avatar = ?, updated_at = NOW() WHERE account_id = ?",
+        [avatarUrl, parseInt(account_id)]
+      );
+
+      // Get updated profile
+      const [profiles] = await pool.execute(
+        "SELECT * FROM profiles WHERE account_id = ?",
+        [parseInt(account_id)]
+      );
+
+      if (profiles.length === 0) {
+        return res.status(404).json({
+          success: false,
+          error: "Profile not found",
+        });
+      }
+
+      console.log("✅ Avatar updated successfully");
+
+      res.json({
+        success: true,
+        avatarUrl: avatarUrl,
+        profile: profiles[0],
+        message: "Avatar updated successfully",
+      });
+    } catch (error) {
+      console.error("❌ Upload avatar error:", error);
+      res.status(500).json({
+        success: false,
+        error: "Server error uploading avatar",
       });
     }
-    
-    console.log('📷 Uploading avatar for account_id:', account_id);
-    
-    const avatarUrl = `/uploads/avatars/${req.file.filename}`;
-    
-    await pool.execute(
-      "UPDATE profiles SET avatar = ?, updated_at = NOW() WHERE account_id = ?",
-      [avatarUrl, parseInt(account_id)]
-    );
-    
-    // Get updated profile
-    const [profiles] = await pool.execute(
-      "SELECT * FROM profiles WHERE account_id = ?",
-      [parseInt(account_id)]
-    );
-    
-    if (profiles.length === 0) {
-      return res.status(404).json({ 
-        success: false, 
-        error: 'Profile not found' 
-      });
-    }
-    
-    console.log('✅ Avatar updated successfully');
-    
-    res.json({ 
-      success: true, 
-      avatarUrl: avatarUrl,
-      profile: profiles[0],
-      message: 'Avatar updated successfully'
-    });
-    
-  } catch (error) {
-    console.error('❌ Upload avatar error:', error);
-    res.status(500).json({ 
-      success: false, 
-      error: 'Server error uploading avatar' 
-    });
   }
-});
+);
 
 // Get all profiles (admin endpoint)
-app.get('/api/profiles', async (req, res) => {
+app.get("/api/profiles", async (req, res) => {
   try {
-    const { page = 1, limit = 10, search = '' } = req.query;
+    const { page = 1, limit = 10, search = "" } = req.query;
     const offset = (page - 1) * limit;
-    
-    let whereClause = '';
+
+    let whereClause = "";
     let queryParams = [];
-    
+
     if (search) {
-      whereClause = 'WHERE name LIKE ? OR email LIKE ? OR student_id LIKE ?';
+      whereClause = "WHERE name LIKE ? OR email LIKE ? OR student_id LIKE ?";
       const searchPattern = `%${search}%`;
       queryParams = [searchPattern, searchPattern, searchPattern];
     }
-    
+
     // Get profiles with pagination
-    const [profiles] = await pool.execute(`
+    const [profiles] = await pool.execute(
+      `
       SELECT * FROM profiles 
       ${whereClause}
       ORDER BY updated_at DESC 
       LIMIT ? OFFSET ?
-    `, [...queryParams, parseInt(limit), parseInt(offset)]);
-    
+    `,
+      [...queryParams, parseInt(limit), parseInt(offset)]
+    );
+
     // Get total count
-    const [countResult] = await pool.execute(`
+    const [countResult] = await pool.execute(
+      `
       SELECT COUNT(*) as total FROM profiles ${whereClause}
-    `, queryParams);
-    
+    `,
+      queryParams
+    );
+
     const total = countResult[0].total;
-    
+
     res.json({
       success: true,
       profiles: profiles,
       pagination: {
         current: parseInt(page),
         pages: Math.ceil(total / limit),
-        total: total
-      }
+        total: total,
+      },
     });
-    
   } catch (error) {
-    console.error('❌ Get profiles error:', error);
-    res.status(500).json({ 
-      success: false, 
-      error: 'Server error fetching profiles' 
+    console.error("❌ Get profiles error:", error);
+    res.status(500).json({
+      success: false,
+      error: "Server error fetching profiles",
     });
   }
 });
 
 // Delete profile (admin endpoint) - CONTINUATION
-app.delete('/api/profile/:account_id', async (req, res) => {
+app.delete("/api/profile/:account_id", async (req, res) => {
   try {
     const { account_id } = req.params;
-    
-    console.log('🗑️ Deleting profile for account_id:', account_id);
-    
+
+    console.log("🗑️ Deleting profile for account_id:", account_id);
+
     // Check if profile exists
     const [profiles] = await pool.execute(
       "SELECT * FROM profiles WHERE account_id = ?",
       [parseInt(account_id)]
     );
-    
+
     if (profiles.length === 0) {
-      return res.status(404).json({ 
-        success: false, 
-        error: 'Profile not found' 
+      return res.status(404).json({
+        success: false,
+        error: "Profile not found",
       });
     }
-    
+
     // Delete the profile
-    await pool.execute(
-      "DELETE FROM profiles WHERE account_id = ?",
-      [parseInt(account_id)]
-    );
-    
+    await pool.execute("DELETE FROM profiles WHERE account_id = ?", [
+      parseInt(account_id),
+    ]);
+
     // Also cleanup related sessions
-    await pool.execute(
-      "DELETE FROM user_sessions WHERE account_id = ?",
-      [parseInt(account_id)]
-    );
-    
-    console.log('✅ Profile deleted successfully');
-    
+    await pool.execute("DELETE FROM user_sessions WHERE account_id = ?", [
+      parseInt(account_id),
+    ]);
+
+    console.log("✅ Profile deleted successfully");
+
     res.json({
       success: true,
-      message: 'Profile deleted successfully'
+      message: "Profile deleted successfully",
     });
-    
   } catch (error) {
-    console.error('❌ Delete profile error:', error);
-    res.status(500).json({ 
-      success: false, 
-      error: 'Server error deleting profile' 
+    console.error("❌ Delete profile error:", error);
+    res.status(500).json({
+      success: false,
+      error: "Server error deleting profile",
     });
   }
 });
@@ -1517,64 +1679,66 @@ app.delete('/api/profile/:account_id', async (req, res) => {
 // ====================
 
 // Get user statistics (admin dashboard)
-app.get('/api/stats', async (req, res) => {
+app.get("/api/stats", async (req, res) => {
   try {
     // Get total users
-    const [totalUsers] = await pool.execute("SELECT COUNT(*) as count FROM profiles");
-    
+    const [totalUsers] = await pool.execute(
+      "SELECT COUNT(*) as count FROM profiles"
+    );
+
     // Get active sessions
     const [activeSessions] = await pool.execute(
       "SELECT COUNT(*) as count FROM user_sessions WHERE is_active = 1 AND expires_at > NOW()"
     );
-    
+
     // Get users by role
     const [roleStats] = await pool.execute(`
       SELECT roles, COUNT(*) as count 
       FROM profiles 
       GROUP BY roles
     `);
-    
+
     // Get recent registrations (last 30 days)
     const [recentUsers] = await pool.execute(`
       SELECT COUNT(*) as count 
       FROM profiles 
       WHERE created_at >= DATE_SUB(NOW(), INTERVAL 30 DAY)
     `);
-    
+
     res.json({
       success: true,
       stats: {
         totalUsers: totalUsers[0].count,
         activeSessions: activeSessions[0].count,
         recentRegistrations: recentUsers[0].count,
-        roleDistribution: roleStats
-      }
+        roleDistribution: roleStats,
+      },
     });
-    
   } catch (error) {
-    console.error('❌ Get stats error:', error);
-    res.status(500).json({ 
-      success: false, 
-      error: 'Server error fetching statistics' 
+    console.error("❌ Get stats error:", error);
+    res.status(500).json({
+      success: false,
+      error: "Server error fetching statistics",
     });
   }
 });
 
 // Search users endpoint
-app.get('/api/search/users', async (req, res) => {
+app.get("/api/search/users", async (req, res) => {
   try {
     const { q, limit = 10 } = req.query;
-    
+
     if (!q || q.trim().length < 2) {
       return res.status(400).json({
         success: false,
-        error: 'Search query must be at least 2 characters'
+        error: "Search query must be at least 2 characters",
       });
     }
-    
+
     const searchPattern = `%${q.trim()}%`;
-    
-    const [users] = await pool.execute(`
+
+    const [users] = await pool.execute(
+      `
       SELECT account_id, name, email, student_id, roles, avatar
       FROM profiles 
       WHERE name LIKE ? 
@@ -1582,40 +1746,47 @@ app.get('/api/search/users', async (req, res) => {
          OR student_id LIKE ?
       ORDER BY name ASC
       LIMIT ?
-    `, [searchPattern, searchPattern, searchPattern, searchPattern, parseInt(limit)]);
-    
+    `,
+      [
+        searchPattern,
+        searchPattern,
+        searchPattern,
+        searchPattern,
+        parseInt(limit),
+      ]
+    );
+
     res.json({
       success: true,
       users: users,
-      count: users.length
+      count: users.length,
     });
-    
   } catch (error) {
-    console.error('❌ Search users error:', error);
-    res.status(500).json({ 
-      success: false, 
-      error: 'Server error searching users' 
+    console.error("❌ Search users error:", error);
+    res.status(500).json({
+      success: false,
+      error: "Server error searching users",
     });
   }
 });
 
 // Bulk operations endpoint (admin)
-app.post('/api/bulk/users', async (req, res) => {
+app.post("/api/bulk/users", async (req, res) => {
   try {
     const { action, account_ids } = req.body;
-    
+
     if (!action || !Array.isArray(account_ids) || account_ids.length === 0) {
       return res.status(400).json({
         success: false,
-        error: 'Invalid action or account_ids'
+        error: "Invalid action or account_ids",
       });
     }
-    
-    const placeholders = account_ids.map(() => '?').join(',');
+
+    const placeholders = account_ids.map(() => "?").join(",");
     let result;
-    
+
     switch (action) {
-      case 'delete':
+      case "delete":
         // Delete profiles
         await pool.execute(
           `DELETE FROM profiles WHERE account_id IN (${placeholders})`,
@@ -1628,8 +1799,8 @@ app.post('/api/bulk/users', async (req, res) => {
         );
         result = { message: `Deleted ${account_ids.length} users` };
         break;
-        
-      case 'deactivate':
+
+      case "deactivate":
         await pool.execute(
           `UPDATE profiles SET authenticated = 0, updated_at = NOW() WHERE account_id IN (${placeholders})`,
           account_ids
@@ -1641,164 +1812,164 @@ app.post('/api/bulk/users', async (req, res) => {
         );
         result = { message: `Deactivated ${account_ids.length} users` };
         break;
-        
-      case 'activate':
+
+      case "activate":
         await pool.execute(
           `UPDATE profiles SET authenticated = 1, updated_at = NOW() WHERE account_id IN (${placeholders})`,
           account_ids
         );
         result = { message: `Activated ${account_ids.length} users` };
         break;
-        
+
       default:
         return res.status(400).json({
           success: false,
-          error: 'Invalid action. Supported: delete, deactivate, activate'
+          error: "Invalid action. Supported: delete, deactivate, activate",
         });
     }
-    
+
     res.json({
       success: true,
-      ...result
+      ...result,
     });
-    
   } catch (error) {
-    console.error('❌ Bulk operation error:', error);
-    res.status(500).json({ 
-      success: false, 
-      error: 'Server error performing bulk operation' 
+    console.error("❌ Bulk operation error:", error);
+    res.status(500).json({
+      success: false,
+      error: "Server error performing bulk operation",
     });
   }
 });
 
 // Password reset request endpoint
-app.post('/api/password-reset/request', async (req, res) => {
+app.post("/api/password-reset/request", async (req, res) => {
   try {
     const { email } = req.body;
-    
+
     if (!email) {
       return res.status(400).json({
         success: false,
-        error: 'Email is required'
+        error: "Email is required",
       });
     }
-    
+
     // Check if user exists
     const [users] = await pool.execute(
       "SELECT account_id, name FROM profiles WHERE email = ?",
       [email.trim()]
     );
-    
+
     if (users.length === 0) {
       // Don't reveal if email exists or not
       return res.json({
         success: true,
-        message: 'If the email exists, a reset link has been sent'
+        message: "If the email exists, a reset link has been sent",
       });
     }
-    
+
     // Generate reset token (in production, use crypto.randomBytes)
-    const resetToken = Math.random().toString(36).substring(2, 15) + 
-                      Math.random().toString(36).substring(2, 15);
+    const resetToken =
+      Math.random().toString(36).substring(2, 15) +
+      Math.random().toString(36).substring(2, 15);
     const expiresAt = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
-    
+
     // Store reset token
-    await pool.execute(`
+    await pool.execute(
+      `
       INSERT INTO password_resets (email, token, expires_at, created_at) 
       VALUES (?, ?, ?, NOW())
       ON DUPLICATE KEY UPDATE 
       token = VALUES(token), 
       expires_at = VALUES(expires_at), 
       created_at = NOW()
-    `, [email.trim(), resetToken, expiresAt]);
-    
+    `,
+      [email.trim(), resetToken, expiresAt]
+    );
+
     // In production, send email here
     console.log(`🔑 Password reset token for ${email}: ${resetToken}`);
-    
+
     res.json({
       success: true,
-      message: 'If the email exists, a reset link has been sent',
+      message: "If the email exists, a reset link has been sent",
       // Remove this in production
-      resetToken: resetToken
+      resetToken: resetToken,
     });
-    
   } catch (error) {
-    console.error('❌ Password reset request error:', error);
-    res.status(500).json({ 
-      success: false, 
-      error: 'Server error processing password reset request' 
+    console.error("❌ Password reset request error:", error);
+    res.status(500).json({
+      success: false,
+      error: "Server error processing password reset request",
     });
   }
 });
 
 // Password reset confirmation endpoint
-app.post('/api/password-reset/confirm', async (req, res) => {
+app.post("/api/password-reset/confirm", async (req, res) => {
   try {
     const { email, token, newPassword } = req.body;
-    
+
     if (!email || !token || !newPassword) {
       return res.status(400).json({
         success: false,
-        error: 'Email, token, and new password are required'
+        error: "Email, token, and new password are required",
       });
     }
-    
+
     // Validate reset token
     const [resets] = await pool.execute(
       "SELECT * FROM password_resets WHERE email = ? AND token = ? AND expires_at > NOW()",
       [email.trim(), token]
     );
-    
+
     if (resets.length === 0) {
       return res.status(400).json({
         success: false,
-        error: 'Invalid or expired reset token'
+        error: "Invalid or expired reset token",
       });
     }
-    
+
     // Hash new password
     const hashedPassword = await bcrypt.hash(newPassword, 10);
-    
+
     // Update password in accounts table
     const [users] = await pool.execute(
       "SELECT account_id FROM profiles WHERE email = ?",
       [email.trim()]
     );
-    
+
     if (users.length > 0) {
       await pool.execute(
         "UPDATE accounts SET password = ? WHERE account_id = ?",
         [hashedPassword, users[0].account_id]
       );
-      
+
       // Delete used reset token
       await pool.execute(
         "DELETE FROM password_resets WHERE email = ? AND token = ?",
         [email.trim(), token]
       );
-      
+
       // Logout all sessions for this user
-      await pool.execute(
-        "DELETE FROM user_sessions WHERE account_id = ?",
-        [users[0].account_id]
-      );
-      
+      await pool.execute("DELETE FROM user_sessions WHERE account_id = ?", [
+        users[0].account_id,
+      ]);
+
       res.json({
         success: true,
-        message: 'Password updated successfully'
+        message: "Password updated successfully",
       });
     } else {
       return res.status(404).json({
         success: false,
-        error: 'User not found'
+        error: "User not found",
       });
     }
-    
   } catch (error) {
-    console.error('❌ Password reset confirm error:', error);
-    res.status(500).json({ 
-      success: false, 
-      error: 'Server error confirming password reset' 
+    console.error("❌ Password reset confirm error:", error);
+    res.status(500).json({
+      success: false,
+      error: "Server error confirming password reset",
     });
   }
 });
@@ -2655,8 +2826,6 @@ app.get("/api/economic-data/cot/:asset_code", async (req, res) => {
     const { asset_code } = req.params;
     const { limit = 10 } = req.query;
 
-   
-
     const [cotData] = await pool.execute(
       `SELECT * FROM cot_data 
        WHERE asset_code = ? 
@@ -2921,7 +3090,6 @@ app.get("/api/economic-data/unemployment/:asset_code", async (req, res) => {
     const { asset_code } = req.params;
     const { limit = 10 } = req.query;
 
-
     const [unemploymentData] = await pool.execute(
       `SELECT * FROM unemployment_rate 
        WHERE asset_code = ? 
@@ -2951,7 +3119,6 @@ app.get("/api/economic-data/employment/:asset_code", async (req, res) => {
     const { asset_code } = req.params;
     const { limit = 10 } = req.query;
 
-    
     const [employmentData] = await pool.execute(
       `SELECT * FROM employment_change 
        WHERE asset_code = ? 
@@ -3541,8 +3708,6 @@ app.get("/api/economic-data/inflation/:asset_code", async (req, res) => {
     const { asset_code } = req.params;
     const { limit = 10 } = req.query;
 
-   
-
     const [inflationData] = await pool.execute(
       `SELECT * FROM core_inflation 
        WHERE asset_code = ? 
@@ -3662,8 +3827,6 @@ app.get("/api/economic-data/interest/:asset_code", async (req, res) => {
   try {
     const { asset_code } = req.params;
     const { limit = 10 } = req.query;
-
-    
 
     const [interestData] = await pool.execute(
       `SELECT * FROM interest_rate 
@@ -3803,15 +3966,15 @@ app.post("/api/economic-data/nfp", async (req, res) => {
 app.get("/api/economic-data/nfp", async (req, res) => {
   try {
     // console.log("📊 Fetching NFP data for USD");
-    
+
     const { limit = 1 } = req.query; // Allow client to specify limit, default to 10
     const parsedLimit = parseInt(limit);
-    
+
     // Validate limit
     if (isNaN(parsedLimit) || parsedLimit < 1 || parsedLimit > 100) {
       return res.status(400).json({
         success: false,
-        error: "Limit must be a number between 1 and 100"
+        error: "Limit must be a number between 1 and 100",
       });
     }
 
@@ -3831,15 +3994,14 @@ app.get("/api/economic-data/nfp", async (req, res) => {
       asset_code: "USD",
       data: nfpData,
       count: nfpData.length,
-      limit: parsedLimit
+      limit: parsedLimit,
     });
-    
   } catch (error) {
     console.error("❌ Get NFP data error:", error);
     res.status(500).json({
       success: false,
       error: "Server error fetching NFP data",
-      details: error.message
+      details: error.message,
     });
   }
 });
@@ -3848,31 +4010,30 @@ app.get("/api/economic-data/nfp", async (req, res) => {
 app.get("/api/economic-data/nfp/:id", async (req, res) => {
   try {
     const { id } = req.params;
-    
+
     console.log("🔍 Fetching NFP record with ID:", id);
-    
+
     const [nfpData] = await pool.execute(
       `SELECT * FROM nfp WHERE id = ? AND asset_code = 'USD'`,
       [parseInt(id)]
     );
-    
+
     if (nfpData.length === 0) {
       return res.status(404).json({
         success: false,
-        error: "NFP record not found"
+        error: "NFP record not found",
       });
     }
-    
+
     res.json({
       success: true,
-      data: nfpData[0]
+      data: nfpData[0],
     });
-    
   } catch (error) {
     console.error("❌ Get NFP record error:", error);
     res.status(500).json({
       success: false,
-      error: "Server error fetching NFP record"
+      error: "Server error fetching NFP record",
     });
   }
 });
@@ -3881,34 +4042,33 @@ app.get("/api/economic-data/nfp/:id", async (req, res) => {
 app.get("/api/economic-data/nfp/latest", async (req, res) => {
   try {
     console.log("📊 Fetching latest NFP data for USD");
-    
+
     const [nfpData] = await pool.execute(
       `SELECT * FROM nfp 
        WHERE asset_code = 'USD' 
        ORDER BY created_at DESC 
        LIMIT 1`
     );
-    
+
     if (nfpData.length === 0) {
       return res.status(404).json({
         success: false,
-        error: "No NFP data found for USD"
+        error: "No NFP data found for USD",
       });
     }
-    
+
     console.log("✅ Latest NFP data found for USD");
-    
+
     res.json({
       success: true,
       asset_code: "USD",
-      data: nfpData[0]
+      data: nfpData[0],
     });
-    
   } catch (error) {
     console.error("❌ Get latest NFP data error:", error);
     res.status(500).json({
       success: false,
-      error: "Server error fetching latest NFP data"
+      error: "Server error fetching latest NFP data",
     });
   }
 });
@@ -4026,8 +4186,6 @@ app.get("/api/retail-sentiment/:asset_pair_code", async (req, res) => {
   try {
     const { asset_pair_code } = req.params;
     const { limit = 10 } = req.query;
-
-  
 
     const [sentimentData] = await pool.execute(
       `SELECT * FROM retail_sentiment 

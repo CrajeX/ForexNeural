@@ -29,10 +29,10 @@ const CurrencyProfile = ({ assetPairCode: propAssetPairCode }) => {
   const [error, setError] = useState(null);
   const { assetPairCode: urlAssetPairCode } = useParams();
   const [nfpValues, setNFPValue] = useState({
-  actual: 0,
-  forecast: 0,
-  change: 0
-});
+    actual: 0,
+    forecast: 0,
+    change: 0,
+  });
   // AI Integration State
   const [aiInsight, setAiInsight] = useState(null);
   const [aiLoading, setAiLoading] = useState(false);
@@ -149,19 +149,31 @@ const CurrencyProfile = ({ assetPairCode: propAssetPairCode }) => {
     if (score >= -1) return "Bearish";
     return "Very Bearish";
   };
-  const getNFPdata  = async () => {
-     if (profileData) {
-      return{
-        nfp:await extractNFPData(),
-      
-      }
-      
-     }
-     return{
+  const convertScoreToPercentage = (score) => {
+    // Convert from -19 to +19 range to 1-100 range
+    const minScore = -19;
+    const maxScore = 19;
+    const minPercentage = 1;
+    const maxPercentage = 100;
+
+    // Linear interpolation formula
+    const percentage =
+      ((score - minScore) / (maxScore - minScore)) *
+        (maxPercentage - minPercentage) +
+      minPercentage;
+
+    return Math.round(percentage);
+  };
+  const getNFPdata = async () => {
+    if (profileData) {
+      return {
+        nfp: await extractNFPData(),
+      };
+    }
+    return {
       nfp: { actual: 0, forecast: 0, change: 0 },
-     }
-            
-  }
+    };
+  };
   // Get economic data from profileData - REAL DATABASE DATA ONLY
   const getEconomicData = () => {
     if (profileData) {
@@ -289,40 +301,40 @@ const CurrencyProfile = ({ assetPairCode: propAssetPairCode }) => {
     };
   };
 
-const extractNFPData = async () => {
-  const { quoteAsset, baseAsset } = profileData.assetPair;
-  let assetCode = null;
+  const extractNFPData = async () => {
+    const { quoteAsset, baseAsset } = profileData.assetPair;
+    let assetCode = null;
 
-  if (quoteAsset === "USD") assetCode = "USD";
-  else if (baseAsset === "USD") assetCode = "USD";
+    if (quoteAsset === "USD") assetCode = "USD";
+    else if (baseAsset === "USD") assetCode = "USD";
 
-  if (!assetCode) {
-    return { actual: 0, forecast: 0, change: 0 };
-  }
+    if (!assetCode) {
+      return { actual: 0, forecast: 0, change: 0 };
+    }
 
-  try {
-    const response = await fetch(`http://localhost:3000/api/economic-data/nfp`);
-    const result = await response.json();
+    try {
+      const response = await fetch(
+        `http://localhost:3000/api/economic-data/nfp`
+      );
+      const result = await response.json();
 
-    const nfpData = result?.data?.[0] || {};
-    setNFPValue(nfpData);
+      const nfpData = result?.data?.[0] || {};
+      setNFPValue(nfpData);
 
-    console.log("NFP Data",nfpValues)
-     console.log("Actual",nfpData.actual_nfp)
-      console.log("Forecast",nfpData.forecast)
-       console.log("Change",nfpData.net_change_percent)
-    return {
-      
-      actual: nfpData.actual_nfp || 0,
-      forecast: nfpData.forecast || 0,
-      change: nfpData.net_change_percent || 0,
-    };
-  } catch (err) {
-    console.error("❌ Failed to fetch NFP data", err);
-    return { actual: 0, forecast: 0, change: 0 };
-  }
-};
-
+      console.log("NFP Data", nfpValues);
+      console.log("Actual", nfpData.actual_nfp);
+      console.log("Forecast", nfpData.forecast);
+      console.log("Change", nfpData.net_change_percent);
+      return {
+        actual: nfpData.actual_nfp || 0,
+        forecast: nfpData.forecast || 0,
+        change: nfpData.net_change_percent || 0,
+      };
+    } catch (err) {
+      console.error("❌ Failed to fetch NFP data", err);
+      return { actual: 0, forecast: 0, change: 0 };
+    }
+  };
 
   const extractEmploymentData = () => {
     const empIndicator = profileData?.breakdown?.find(
@@ -487,11 +499,19 @@ const extractNFPData = async () => {
     const interestIndicator = profileData?.breakdown?.find(
       (ind) => ind.name === "Interest Rates"
     );
-    if (!interestIndicator) return { baseChange: 0, quoteChange: 0 };
+    if (!interestIndicator)
+      return {
+        baseChange: 0,
+        quoteChange: 0,
+        baseActual: 0, // Add this
+        quoteActual: 0, // Add this
+      };
 
     return {
       baseChange: interestIndicator?.baseData?.["Change in Interest"] || 0,
       quoteChange: interestIndicator?.quoteData?.["Change in Interest"] || 0,
+      baseActual: interestIndicator?.baseData?.["Interest Rate"] || 0, // Add this
+      quoteActual: interestIndicator?.quoteData?.["Interest Rate"] || 0, // Add this
     };
   };
 
@@ -757,7 +777,7 @@ const extractNFPData = async () => {
               >
                 <span style={{ color: "black" }}>
                   {aiInsight.base_currency.code}:{" "}
-                  {aiInsight.base_currency.score}/100
+                  {convertScoreToPercentage(aiInsight.base_currency.score)}/100
                 </span>
                 <span
                   style={{
@@ -771,7 +791,7 @@ const extractNFPData = async () => {
               <div style={{ display: "flex", justifyContent: "space-between" }}>
                 <span style={{ color: "black" }}>
                   {aiInsight.quote_currency.code}:{" "}
-                  {aiInsight.quote_currency.score}/100
+                  {convertScoreToPercentage(aiInsight.quote_currency.score)}/100
                 </span>
                 <span
                   style={{
@@ -793,7 +813,8 @@ const extractNFPData = async () => {
                   }}
                 >
                   <span style={{ fontWeight: "600", color: "#1e293b" }}>
-                    Total Score: {aiInsight.total_score}
+                    Total Score:{" "}
+                    {convertScoreToPercentage(aiInsight.total_score)}
                   </span>
                 </div>
               )}
@@ -962,8 +983,6 @@ const extractNFPData = async () => {
                 </div>
               </div>
             )}
-
-          
           </div>
         )}
 
@@ -983,350 +1002,352 @@ const extractNFPData = async () => {
     );
   };
 
- const styles = {
-  container: {
-    minHeight: "100vh",
-    backgroundColor: "#f8fafc",
-    padding: "20px",
-    fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
-    fontSize: "11px",
-  },
-  
-  backButton: {
-    marginBottom: "12px",
-    backgroundColor: "#2563eb",
-    color: "white",
-    padding: "6px 12px",
-    borderRadius: "4px",
-    border: "none",
-    cursor: "pointer",
-    fontSize: "11px",
-    fontWeight: "500",
-  },
-  
-  pairTitle: {
-    fontSize: "20px",
-    fontWeight: "bold",
-    textAlign: "center",
-    margin: "0 0 -30px 0",
-    color: "#1a202c",
-    letterSpacing: "1px",
-  },
-  
-  mainGrid: {
-    display: "grid",
-    gridTemplateColumns: "220px 1fr 1fr", // L | C | R
-    gridTemplateRows: "auto auto", // Row 1: L C R, Row 2: B spans all
-    gap: "10px",
-    maxWidth: "1400px",
-    margin: "0 auto",
-    alignItems: "start",
-  },
-  
-  leftColumn: {
-    gridColumn: "1", // L position
-    gridRow: "1", 
-    display: "flex",
-    flexDirection: "column",
-    gap: "6px",
-  },
-  
-  centerColumn: {
-    gridColumn: "2", // C position
-    gridRow: "1",
-    display: "flex",
-    flexDirection: "column",
-    gap: "6px",
-  },
-  
-  rightColumn: {
-    gridColumn: "3", // R position  
-    gridRow: "1",
-    display: "flex",
-    flexDirection: "column",
-    gap: "6px",
-  },
-  
-  // Bottom section (B) spans all three columns
-  bottomGrid: {
-    gridColumn: "1 / -1", // B spans L + C + R
-    gridRow: "2",
-    display: "flex",
-    flexDirection: "column",
-    gap: "6px",
-    marginTop: "6px",
-  },
-  
-  card: {
-    backgroundColor: "white",
-    marginTop: "5px",
-    borderRadius: "6px",
-    boxShadow: "0 2px 6px rgba(0,0,0,0.08)",
-    border: "1px solid #e2e8f0",
-    height: "fit-content",
-    margin: "0", // Remove any default margins
-  },
-  
-  sectionHeader: {
-    backgroundColor: "#5DADE2",
-    color: "white",
-    padding: "6px 8px",
-    borderRadius: "4px 4px 0 0",
-    margin: "-8px -8px 8px -8px",
-    fontSize: "10px",
-    fontWeight: "600",
-    textAlign: "center",
-    textTransform: "uppercase",
-    letterSpacing: "0.5px",
-    width: "23.8rem",
-     transform: "translateX(.5rem)", 
-  },
-  
-    aiSectionHeader: {
-    backgroundColor: "#5DADE2",
-    color: "white",
-    padding: "6px 8px",
-    borderRadius: "4px 4px 0 0",
-    margin: "-8px -8px 8px -8px",
-    fontSize: "10px",
-    fontWeight: "600",
-    textAlign: "center",
-    textTransform: "uppercase",
-    letterSpacing: "0.5px",
-    width: "12rem",
-     transform: "translateX(.7rem)", 
-  },
+  const styles = {
+    container: {
+      minHeight: "100vh",
+      backgroundColor: "#f8fafc",
+      padding: "20px",
+      fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
+      fontSize: "11px",
+    },
 
-  biasCard: {
-    textAlign: "center",
-    padding: "4px",
-    height:"13rem"
-  },
-  
-  biasGauge: {
-    width: "140px",
-    height: "80px",
-    margin: "0 auto 8px",
-    position: "relative",
-  },
-  
-  biasLabel: {
-    fontSize: "14px",
-    fontWeight: "bold",
-    marginBottom: "4px",
-  },
-  
-  biasValue: {
-    fontSize: "11px",
-    color: "#4a5568",
-    fontWeight: "500",
-  },
-  
-  metricsTable: {
-    width: "100%",
-    borderCollapse: "separate",
-    borderSpacing: "0 2px",
-  },
-  
-  metricRow: {
-    backgroundColor: "#f8fafc",
-  },
-  
-  metricCell: {
-    padding: "4px 6px",
-    textAlign: "left",
-    borderRadius: "3px",
-    fontSize: "10px",
-    color: "#2d3748",
-  },
-  
-  metricScore: {
-    textAlign: "center",
-    fontWeight: "bold",
-    color: "white",
-    borderRadius: "3px",
-    width: "35px",
-    padding: "3px 4px",
-    fontSize: "10px",
-  },
-  
-  cotChartsContainer: {
-    display: "grid",
-    gridTemplateColumns: "1fr 1fr",
-    gap: "8px", // Reduced gap
-    marginBottom: "8px", // Reduced margin
-  },
-  
-  cotChart: {
-    textAlign: "center",
-  },
-  
-  cotTitle: {
-    margin: "0 0 8px 0",
-    fontSize: "12px",
-    fontWeight: "600",
-    color: "#2d3748",
-  },
-  
-  cotStats: {
-    fontSize: "9px",
-    marginTop: "4px",
-    color: "#4a5568",
-  },
-  
-  economicTable: {
-    width: "100%",
-    borderCollapse: "separate",
-    borderSpacing: "0",
-    border: "1px solid #E2E8F0",
-    borderRadius: "4px",
-    overflow: "hidden",
-    fontSize: "9px",
-  },
-  
-  tableHeaderRow: {
-    backgroundColor: "#F7FAFC",
-  },
-  
-  tableHeader: {
-    padding: "4px 6px",
-    textAlign: "center",
-    fontWeight: "600",
-    fontSize: "9px",
-    color: "#2D3748",
-    borderBottom: "1px solid #E2E8F0",
-    textTransform: "uppercase",
-    letterSpacing: "0.3px",
-  },
-  
-  tableRow: {
-    borderBottom: "1px solid #E2E8F0",
-    backgroundColor: "white",
-  },
-  
-  tableCell: {
-    padding: "4px 6px",
-    textAlign: "left",
-    borderRight: "1px solid #E2E8F0",
-    verticalAlign: "middle",
-    fontSize: "9px",
-  },
-  
-  tableCellCenter: {
-    padding: "4px 6px",
-    textAlign: "center",
-    borderRight: "1px solid #E2E8F0",
-    verticalAlign: "middle",
-    fontSize: "9px",
-  },
-  
-  tableCellLabel: {
-    fontWeight: "600",
-    color: "#2D3748",
-    fontSize: "9px",
-  },
-  
-  sectionTitleRow: {
-    backgroundColor: "#5DADE2",
-    color: "white",
-  },
-  
-  sectionTitleCell: {
-    padding: "6px 8px",
-    textAlign: "center",
-    fontWeight: "600",
-    fontSize: "10px",
-    textTransform: "uppercase",
-    letterSpacing: "0.5px",
-    borderBottom: "1px solid #E2E8F0",
-  },
-  
-  dataSection: {
-    backgroundColor: "#EBF8FF",
-    borderRadius: "6px",
-    padding: "6px", // Reduced padding
-    marginBottom: "6px", // Reduced margin
-    border: "1px solid #BEE3F8",
-  },
-  
-  dataHeader: {
-    backgroundColor: "#5DADE2",
-    color: "white",
-    padding: "3px 5px", // Reduced padding
-    borderRadius: "3px",
-    fontSize: "9px",
-    fontWeight: "600",
-    textAlign: "center",
-    marginBottom: "4px", // Reduced margin
-    textTransform: "uppercase",
-  },
-  
-  dataValue: {
-    color: "#4a5568",
-    fontWeight: "500",
-    fontSize: "9px",
-  },
-  
-  insightCard: {
-    backgroundColor: "white",
-    boxShadow: "0 2px 6px rgba(0,0,0,0.08)",
-    border: "1px  #2d3748",
-    borderRadius: "6px",
-    padding: "12px",
-    minHeight: "80px",
-  },
-  
-  insightText: {
-    fontSize: "12px",
-    fontStyle: "italic",
-    color: "#2d3748",
-    lineHeight: "1.3",
-  },
-  
-  loading: {
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    height: "50vh",
-    fontSize: "14px",
-    color: "#666",
-  },
-  
-  spinner: {
-    display: "inline-block",
-    width: "20px",
-    height: "20px",
-    border: "2px solid transparent",
-    borderTop: "2px solid #2563eb",
-    borderRadius: "50%",
-    animation: "spin 1s linear infinite",
-  },
-  
-  errorContainer: {
-    minHeight: "100vh",
-    backgroundColor: "#f9fafb",
-    padding: "16px",
-  },
-  
-  errorContent: {
-    maxWidth: "512px",
-    margin: "0 auto",
-  },
-  
-  errorCard: {
-    backgroundColor: "#fef2f2",
-    border: "1px solid #fecaca",
-    borderRadius: "6px",
-    padding: "20px",
-    textAlign: "center",
-  },
-  
-  errorText: {
-    color: "#dc2626",
-    marginBottom: "12px",
-    fontSize: "12px",
-  },
-};
+    backButton: {
+      marginBottom: "12px",
+      backgroundColor: "#2563eb",
+      color: "white",
+      padding: "6px 12px",
+      borderRadius: "4px",
+      border: "none",
+      cursor: "pointer",
+      fontSize: "11px",
+      fontWeight: "500",
+    },
+
+    pairTitle: {
+      fontSize: "20px",
+      fontWeight: "bold",
+      textAlign: "center",
+      margin: "0 0 -30px 0",
+      color: "#1a202c",
+      letterSpacing: "1px",
+    },
+
+    mainGrid: {
+      display: "grid",
+      gridTemplateColumns: "220px 1fr 1fr", // L | C | R
+      gridTemplateRows: "auto auto", // Row 1: L C R, Row 2: B spans all
+      gap: "10px",
+      maxWidth: "1400px",
+      margin: "0 auto",
+      alignItems: "start",
+    },
+
+    leftColumn: {
+      gridColumn: "1", // L position
+      gridRow: "1",
+      display: "flex",
+      flexDirection: "column",
+      gap: "6px",
+    },
+
+    centerColumn: {
+      gridColumn: "2", // C position
+      gridRow: "1",
+      display: "flex",
+      flexDirection: "column",
+      gap: "6px",
+    },
+
+    rightColumn: {
+      gridColumn: "3", // R position
+      gridRow: "1",
+      display: "flex",
+      flexDirection: "column",
+      gap: "6px",
+    },
+
+    // Bottom section (B) spans all three columns
+    bottomGrid: {
+      gridColumn: "1 / -1", // B spans L + C + R
+      gridRow: "2",
+      display: "flex",
+      flexDirection: "column",
+      gap: "6px",
+      marginTop: "6px",
+    },
+
+    card: {
+      backgroundColor: "white",
+      marginTop: "5px",
+      borderRadius: "6px",
+      boxShadow: "0 2px 6px rgba(0,0,0,0.08)",
+      border: "1px solid #e2e8f0",
+      height: "fit-content",
+      margin: "0", // Remove any default margins
+    },
+
+    sectionHeader: {
+      backgroundColor: "#5DADE2",
+      color: "white",
+      padding: "6px 8px",
+      borderRadius: "4px 4px 0 0",
+      margin: "-8px -8px 8px -8px",
+      fontSize: "10px",
+      fontWeight: "600",
+      textAlign: "center",
+      textTransform: "uppercase",
+      letterSpacing: "0.5px",
+      width: "23.8rem",
+      transform: "translateX(.5rem)",
+      width: "100%", // if inside a flex item
+      maxWidth: "calc(100% * 5 / 3)", // replace totalColumns with actual number
+    },
+
+    aiSectionHeader: {
+      backgroundColor: "#5DADE2",
+      color: "white",
+      padding: "6px 8px",
+      borderRadius: "4px 4px 0 0",
+      margin: "-8px -8px 8px -8px",
+      fontSize: "10px",
+      fontWeight: "600",
+      textAlign: "center",
+      textTransform: "uppercase",
+      letterSpacing: "0.5px",
+      width: "12rem",
+      transform: "translateX(.7rem)",
+    },
+
+    biasCard: {
+      textAlign: "center",
+      padding: "4px",
+      height: "13rem",
+    },
+
+    biasGauge: {
+      width: "140px",
+      height: "80px",
+      margin: "0 auto 8px",
+      position: "relative",
+    },
+
+    biasLabel: {
+      fontSize: "14px",
+      fontWeight: "bold",
+      marginBottom: "4px",
+    },
+
+    biasValue: {
+      fontSize: "11px",
+      color: "#4a5568",
+      fontWeight: "500",
+    },
+
+    metricsTable: {
+      width: "100%",
+      borderCollapse: "separate",
+      borderSpacing: "0 2px",
+    },
+
+    metricRow: {
+      backgroundColor: "#f8fafc",
+    },
+
+    metricCell: {
+      padding: "4px 6px",
+      textAlign: "left",
+      borderRadius: "3px",
+      fontSize: "10px",
+      color: "#2d3748",
+    },
+
+    metricScore: {
+      textAlign: "center",
+      fontWeight: "bold",
+      color: "white",
+      borderRadius: "3px",
+      width: "35px",
+      padding: "3px 4px",
+      fontSize: "10px",
+    },
+
+    cotChartsContainer: {
+      display: "grid",
+      gridTemplateColumns: "1fr 1fr",
+      gap: "8px", // Reduced gap
+      marginBottom: "8px", // Reduced margin
+    },
+
+    cotChart: {
+      textAlign: "center",
+    },
+
+    cotTitle: {
+      margin: "0 0 8px 0",
+      fontSize: "12px",
+      fontWeight: "600",
+      color: "#2d3748",
+    },
+
+    cotStats: {
+      fontSize: "9px",
+      marginTop: "4px",
+      color: "#4a5568",
+    },
+
+    economicTable: {
+      width: "100%",
+      borderCollapse: "separate",
+      borderSpacing: "0",
+      border: "1px solid #E2E8F0",
+      borderRadius: "4px",
+      overflow: "hidden",
+      fontSize: "9px",
+    },
+
+    tableHeaderRow: {
+      backgroundColor: "#F7FAFC",
+    },
+
+    tableHeader: {
+      padding: "4px 6px",
+      textAlign: "center",
+      fontWeight: "600",
+      fontSize: "9px",
+      color: "#2D3748",
+      borderBottom: "1px solid #E2E8F0",
+      textTransform: "uppercase",
+      letterSpacing: "0.3px",
+    },
+
+    tableRow: {
+      borderBottom: "1px solid #E2E8F0",
+      backgroundColor: "white",
+    },
+
+    tableCell: {
+      padding: "4px 6px",
+      textAlign: "left",
+      borderRight: "1px solid #E2E8F0",
+      verticalAlign: "middle",
+      fontSize: "9px",
+    },
+
+    tableCellCenter: {
+      padding: "4px 6px",
+      textAlign: "center",
+      borderRight: "1px solid #E2E8F0",
+      verticalAlign: "middle",
+      fontSize: "9px",
+    },
+
+    tableCellLabel: {
+      fontWeight: "600",
+      color: "#2D3748",
+      fontSize: "9px",
+    },
+
+    sectionTitleRow: {
+      backgroundColor: "#5DADE2",
+      color: "white",
+    },
+
+    sectionTitleCell: {
+      padding: "6px 8px",
+      textAlign: "center",
+      fontWeight: "600",
+      fontSize: "10px",
+      textTransform: "uppercase",
+      letterSpacing: "0.5px",
+      borderBottom: "1px solid #E2E8F0",
+    },
+
+    dataSection: {
+      backgroundColor: "#EBF8FF",
+      borderRadius: "6px",
+      padding: "6px", // Reduced padding
+      marginBottom: "6px", // Reduced margin
+      border: "1px solid #BEE3F8",
+    },
+
+    dataHeader: {
+      backgroundColor: "#5DADE2",
+      color: "white",
+      padding: "3px 5px", // Reduced padding
+      borderRadius: "3px",
+      fontSize: "9px",
+      fontWeight: "600",
+      textAlign: "center",
+      marginBottom: "4px", // Reduced margin
+      textTransform: "uppercase",
+    },
+
+    dataValue: {
+      color: "#4a5568",
+      fontWeight: "500",
+      fontSize: "9px",
+    },
+
+    insightCard: {
+      backgroundColor: "white",
+      boxShadow: "0 2px 6px rgba(0,0,0,0.08)",
+      border: "1px  #2d3748",
+      borderRadius: "6px",
+      padding: "12px",
+      minHeight: "80px",
+    },
+
+    insightText: {
+      fontSize: "12px",
+      fontStyle: "italic",
+      color: "#2d3748",
+      lineHeight: "1.3",
+    },
+
+    loading: {
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      height: "50vh",
+      fontSize: "14px",
+      color: "#666",
+    },
+
+    spinner: {
+      display: "inline-block",
+      width: "20px",
+      height: "20px",
+      border: "2px solid transparent",
+      borderTop: "2px solid #2563eb",
+      borderRadius: "50%",
+      animation: "spin 1s linear infinite",
+    },
+
+    errorContainer: {
+      minHeight: "100vh",
+      backgroundColor: "#f9fafb",
+      padding: "16px",
+    },
+
+    errorContent: {
+      maxWidth: "512px",
+      margin: "0 auto",
+    },
+
+    errorCard: {
+      backgroundColor: "#fef2f2",
+      border: "1px solid #fecaca",
+      borderRadius: "6px",
+      padding: "20px",
+      textAlign: "center",
+    },
+
+    errorText: {
+      color: "#dc2626",
+      marginBottom: "12px",
+      fontSize: "12px",
+    },
+  };
 
   if (error) {
     return (
@@ -1343,158 +1364,171 @@ const extractNFPData = async () => {
     );
   }
 
-// Add this Speedometer component at the top of your file
-const Speedometer = ({ score, bias, getBiasColor }) => {
-  // Convert score to angle (score range: -19 to +19, angle range: -90 to +90 degrees)
-  const getAngle = (score) => {
-    const clampedScore = Math.max(-19, Math.min(19, score));
-    return (clampedScore / 19) * 90; // Maps -19 to -90°, +19 to +90°
-  };
+  // Add this Speedometer component at the top of your file
+  const Speedometer = ({ score, bias, getBiasColor }) => {
+    // Convert score to angle (score range: -19 to +19, angle range: -90 to +90 degrees)
+    const getAngle = (score) => {
+      const clampedScore = Math.max(-19, Math.min(19, score));
+      return (clampedScore / 19) * 90; // Maps -19 to -90°, +19 to +90°
+    };
 
-  const angle = getAngle(score);
-  
-  // Calculate needle position - COMPACT DIMENSIONS
-  const centerX = 80;
-  const centerY = 80;
-  const needleLength = 55;
-  const needleX = centerX + needleLength * Math.sin((angle * Math.PI) / 180);
-  const needleY = centerY - needleLength * Math.cos((angle * Math.PI) / 180);
+    const angle = getAngle(score);
 
-  // Color zones using getBiasColor function
-  const zones = [
-    { start: -90, end: -54, color: getBiasColor("Very Bearish"), label: "Very Bearish" },
-    { start: -54, end: -18, color: getBiasColor("Bearish"), label: "Bearish" },
-    { start: -18, end: 18, color: getBiasColor("Neutral"), label: "Neutral" },
-    { start: 18, end: 54, color: getBiasColor("Bullish"), label: "Bullish" },
-    { start: 54, end: 90, color: getBiasColor("Very Bullish"), label: "Very Bullish" }
-  ];
+    // Calculate needle position - COMPACT DIMENSIONS
+    const centerX = 80;
+    const centerY = 80;
+    const needleLength = 55;
+    const needleX = centerX + needleLength * Math.sin((angle * Math.PI) / 180);
+    const needleY = centerY - needleLength * Math.cos((angle * Math.PI) / 180);
 
-  // Create SVG path for each zone - COMPACT RADII
-  const createArcPath = (startAngle, endAngle, innerRadius, outerRadius) => {
-    const startAngleRad = (startAngle * Math.PI) / 180;
-    const endAngleRad = (endAngle * Math.PI) / 180;
-    
-    const x1 = centerX + innerRadius * Math.sin(startAngleRad);
-    const y1 = centerY - innerRadius * Math.cos(startAngleRad);
-    const x2 = centerX + outerRadius * Math.sin(startAngleRad);
-    const y2 = centerY - outerRadius * Math.cos(startAngleRad);
-    
-    const x3 = centerX + outerRadius * Math.sin(endAngleRad);
-    const y3 = centerY - outerRadius * Math.cos(endAngleRad);
-    const x4 = centerX + innerRadius * Math.sin(endAngleRad);
-    const y4 = centerY - innerRadius * Math.cos(endAngleRad);
-    
-    const largeArcFlag = endAngle - startAngle > 180 ? 1 : 0;
-    
-    return `M ${x1} ${y1} L ${x2} ${y2} A ${outerRadius} ${outerRadius} 0 ${largeArcFlag} 1 ${x3} ${y3} L ${x4} ${y4} A ${innerRadius} ${innerRadius} 0 ${largeArcFlag} 0 ${x1} ${y1} Z`;
-  };
+    // Color zones using getBiasColor function
+    const zones = [
+      {
+        start: -90,
+        end: -54,
+        color: getBiasColor("Very Bearish"),
+        label: "Very Bearish",
+      },
+      {
+        start: -54,
+        end: -18,
+        color: getBiasColor("Bearish"),
+        label: "Bearish",
+      },
+      { start: -18, end: 18, color: getBiasColor("Neutral"), label: "Neutral" },
+      { start: 18, end: 54, color: getBiasColor("Bullish"), label: "Bullish" },
+      {
+        start: 54,
+        end: 90,
+        color: getBiasColor("Very Bullish"),
+        label: "Very Bullish",
+      },
+    ];
 
-  return (
-    <div style={{ 
-      display: 'flex', 
-      flexDirection: 'column', 
-      alignItems: 'center', 
-      marginBottom: '12px' 
-    }}>
-      <svg width="160" height="100" style={{ overflow: 'visible' }}>
-        {/* Background arc - COMPACT */}
-        <path
-          d={createArcPath(-90, 90, 40, 65)}
-          fill="#f1f5f9"
-          stroke="#e2e8f0"
-          strokeWidth="1"
-        />
-        
-        {/* Colored zones - COMPACT */}
-        {zones.map((zone, index) => (
+    // Create SVG path for each zone - COMPACT RADII
+    const createArcPath = (startAngle, endAngle, innerRadius, outerRadius) => {
+      const startAngleRad = (startAngle * Math.PI) / 180;
+      const endAngleRad = (endAngle * Math.PI) / 180;
+
+      const x1 = centerX + innerRadius * Math.sin(startAngleRad);
+      const y1 = centerY - innerRadius * Math.cos(startAngleRad);
+      const x2 = centerX + outerRadius * Math.sin(startAngleRad);
+      const y2 = centerY - outerRadius * Math.cos(startAngleRad);
+
+      const x3 = centerX + outerRadius * Math.sin(endAngleRad);
+      const y3 = centerY - outerRadius * Math.cos(endAngleRad);
+      const x4 = centerX + innerRadius * Math.sin(endAngleRad);
+      const y4 = centerY - innerRadius * Math.cos(endAngleRad);
+
+      const largeArcFlag = endAngle - startAngle > 180 ? 1 : 0;
+
+      return `M ${x1} ${y1} L ${x2} ${y2} A ${outerRadius} ${outerRadius} 0 ${largeArcFlag} 1 ${x3} ${y3} L ${x4} ${y4} A ${innerRadius} ${innerRadius} 0 ${largeArcFlag} 0 ${x1} ${y1} Z`;
+    };
+
+    return (
+      <div
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          marginBottom: "12px",
+        }}
+      >
+        <svg width="160" height="100" style={{ overflow: "visible" }}>
+          {/* Background arc - COMPACT */}
           <path
-            key={index}
-            d={createArcPath(zone.start, zone.end, 40, 65)}
-            fill={zone.color}
+            d={createArcPath(-90, 90, 40, 65)}
+            fill="#f1f5f9"
+            stroke="#e2e8f0"
+            strokeWidth="1"
+          />
+
+          {/* Colored zones - COMPACT */}
+          {zones.map((zone, index) => (
+            <path
+              key={index}
+              d={createArcPath(zone.start, zone.end, 40, 65)}
+              fill={zone.color}
+              stroke="white"
+              strokeWidth="1"
+            />
+          ))}
+
+          {/* Scale marks - COMPACT */}
+          {[-19, -10, 0, 10, 19].map((value) => {
+            const markAngle = (value / 19) * 90;
+            const markX1 = centerX + 60 * Math.sin((markAngle * Math.PI) / 180);
+            const markY1 = centerY - 60 * Math.cos((markAngle * Math.PI) / 180);
+            const markX2 = centerX + 70 * Math.sin((markAngle * Math.PI) / 180);
+            const markY2 = centerY - 70 * Math.cos((markAngle * Math.PI) / 180);
+
+            return (
+              <g key={value}>
+                <line
+                  x1={markX1}
+                  y1={markY1}
+                  x2={markX2}
+                  y2={markY2}
+                  stroke="#1a202c"
+                  strokeWidth="1.5"
+                />
+                <text
+                  x={centerX + 75 * Math.sin((markAngle * Math.PI) / 180)}
+                  y={centerY - 75 * Math.cos((markAngle * Math.PI) / 180) + 3}
+                  textAnchor="middle"
+                  fontSize="9"
+                  fill="#4a5568"
+                  fontWeight="600"
+                >
+                  {value > 0 ? `+${value}` : value}
+                </text>
+              </g>
+            );
+          })}
+
+          {/* Center circle - COMPACT */}
+          <circle
+            cx={centerX}
+            cy={centerY}
+            r="5"
+            fill="#2d3748"
             stroke="white"
             strokeWidth="1"
           />
-        ))}
-        
-        {/* Scale marks - COMPACT */}
-        {[-19, -10, 0, 10, 19].map((value) => {
-          const markAngle = (value / 19) * 90;
-          const markX1 = centerX + 60 * Math.sin((markAngle * Math.PI) / 180);
-          const markY1 = centerY - 60 * Math.cos((markAngle * Math.PI) / 180);
-          const markX2 = centerX + 70 * Math.sin((markAngle * Math.PI) / 180);
-          const markY2 = centerY - 70 * Math.cos((markAngle * Math.PI) / 180);
-          
-          return (
-            <g key={value}>
-              <line
-                x1={markX1}
-                y1={markY1}
-                x2={markX2}
-                y2={markY2}
-                stroke="#1a202c"
-                strokeWidth="1.5"
-              />
-              <text
-                x={centerX + 75 * Math.sin((markAngle * Math.PI) / 180)}
-                y={centerY - 75 * Math.cos((markAngle * Math.PI) / 180) + 3}
-                textAnchor="middle"
-                fontSize="9"
-                fill="#4a5568"
-                fontWeight="600"
-              >
-                {value > 0 ? `+${value}` : value}
-              </text>
-            </g>
-          );
-        })}
-        
-        {/* Center circle - COMPACT */}
-        <circle
-          cx={centerX}
-          cy={centerY}
-          r="5"
-          fill="#2d3748"
-          stroke="white"
-          strokeWidth="1"
-        />
-        
-        {/* Needle - COMPACT */}
-        <line
-          x1={centerX}
-          y1={centerY}
-          x2={needleX}
-          y2={needleY}
-          stroke="#2d3748"
-          strokeWidth="2.5"
-          strokeLinecap="round"
-        />
-        
-        {/* Needle tip - COMPACT */}
-        <circle
-          cx={needleX}
-          cy={needleY}
-          r="2.5"
-          fill="#2d3748"
-        />
-      </svg>
-      
-      {/* Current reading - COMPACT TEXT */}
-      <div style={{ 
-        textAlign: 'center', 
-        marginTop: '5px',
-        fontSize: '10px',
-        color: '#4a5568'
-      }}>
-        <div style={{ fontWeight: '600', fontSize: '11px' }}>Score: {score}</div>
-        <div style={{ color: '#718096', fontSize: '9px' }}>Market Bias</div>
+
+          {/* Needle - COMPACT */}
+          <line
+            x1={centerX}
+            y1={centerY}
+            x2={needleX}
+            y2={needleY}
+            stroke="#2d3748"
+            strokeWidth="2.5"
+            strokeLinecap="round"
+          />
+
+          {/* Needle tip - COMPACT */}
+          <circle cx={needleX} cy={needleY} r="2.5" fill="#2d3748" />
+        </svg>
+
+        {/* Current reading - COMPACT TEXT */}
+        <div
+          style={{
+            textAlign: "center",
+            marginTop: "5px",
+            fontSize: "10px",
+            color: "#4a5568",
+          }}
+        >
+          <div style={{ fontWeight: "600", fontSize: "11px" }}>
+            Score: {score}
+          </div>
+          <div style={{ color: "#718096", fontSize: "9px" }}>Market Bias</div>
+        </div>
       </div>
-    </div>
-  );
-};
+    );
+  };
 
-
-
- 
   const metricsData = createMetricsData();
   const totalScore =
     profileData?.totalScore ||
@@ -1503,9 +1537,9 @@ const Speedometer = ({ score, bias, getBiasColor }) => {
     profileData?.bias ||
     getScoreLabel(Math.round(totalScore / metricsData.length));
   const economicData = getEconomicData();
-  
-  const nfpData = getNFPdata()
-  console.log("BASIC", nfpData)
+
+  const nfpData = getNFPdata();
+  console.log("BASIC", nfpData);
   const assetPair = profileData?.assetPair || {
     baseAsset: "EUR",
     quoteAsset: "USD",
@@ -1519,36 +1553,33 @@ const Speedometer = ({ score, bias, getBiasColor }) => {
           {/* Metric Bias Gauge */}
           <div style={styles.card}>
             <div style={styles.biasCard}>
-                        {/* Asset Pair Title */}
-                      
-                  
-                      {/* Asset Pair Title */}
-              
-                  {/* Speed Meter */}
-                  <Speedometer score={totalScore} bias={bias} getBiasColor={getBiasColor} />
-                  
+              {/* Asset Pair Title */}
 
-                         <div style={{ paddingBottom:"1.5rem"}}>
-                          <h1 style={styles.pairTitle}>
-                          {assetPair.baseAsset}
-                          {assetPair.quoteAsset}
-                        </h1>
-                        </div>
-                  {/* Bias Label */}
-                  <div style={{ ...styles.biasLabel, color: getBiasColor(bias) }}>
-                    {bias}
-                    
-                  </div>
-               
-                  {/* Score Text */}
-                  {/* <div style={styles.biasValue}>Score {totalScore}</div> */}
+              {/* Asset Pair Title */}
 
-        
-            
+              {/* Speed Meter */}
+              <Speedometer
+                score={totalScore}
+                bias={bias}
+                getBiasColor={getBiasColor}
+              />
+
+              <div style={{ paddingBottom: "1.5rem" }}>
+                <h1 style={styles.pairTitle}>
+                  {assetPair.baseAsset}
+                  {assetPair.quoteAsset}
+                </h1>
+              </div>
+              {/* Bias Label */}
+              <div style={{ ...styles.biasLabel, color: getBiasColor(bias) }}>
+                {bias}
+              </div>
+
+              {/* Score Text */}
+              {/* <div style={styles.biasValue}>Score {totalScore}</div> */}
             </div>
           </div>
 
-        
           {/* 8ConEdge AI Insight - Enhanced with AI Integration */}
           {renderAiInsightCard()}
         </div>
@@ -1724,9 +1755,6 @@ const Speedometer = ({ score, bias, getBiasColor }) => {
                       Actual
                     </th>
                     <th style={{ ...styles.tableHeader, fontWeight: "bold" }}>
-                      Forecast
-                    </th>
-                    <th style={{ ...styles.tableHeader, fontWeight: "bold" }}>
                       Change
                     </th>
                     <th style={{ ...styles.tableHeader, fontWeight: "bold" }}>
@@ -1750,14 +1778,8 @@ const Speedometer = ({ score, bias, getBiasColor }) => {
                           </td>
                           <td style={styles.tableCellCenter}>
                             <div style={styles.dataValue}>
-                              {economicData.interestRate.baseChange > 0
-                                ? "+"
-                                : ""}
-                              {economicData.interestRate.baseChange}%
+                              {economicData.interestRate.baseActual}%{" "}
                             </div>
-                          </td>
-                          <td style={styles.tableCellCenter}>
-                            <div style={styles.dataValue}>-</div>
                           </td>
                           <td style={styles.tableCellCenter}>
                             <div style={styles.dataValue}>
@@ -1783,11 +1805,8 @@ const Speedometer = ({ score, bias, getBiasColor }) => {
                           </td>
                           <td style={styles.tableCellCenter}>
                             <div style={styles.dataValue}>
-                              {economicData.interestRate.quoteChange}%
+                              {economicData.interestRate.quoteActual}%{" "}
                             </div>
-                          </td>
-                          <td style={styles.tableCellCenter}>
-                            <div style={styles.dataValue}>-</div>
                           </td>
                           <td style={styles.tableCellCenter}>
                             <div style={styles.dataValue}>
@@ -1965,7 +1984,7 @@ const Speedometer = ({ score, bias, getBiasColor }) => {
                   <>
                     <thead>
                       <tr style={styles.sectionTitleRow}>
-                        <th style={styles.sectionTitleCell} colSpan="4">
+                        <th style={styles.sectionTitleCell} colSpan="5">
                           NFP (USA)
                         </th>
                       </tr>
@@ -1980,14 +1999,12 @@ const Speedometer = ({ score, bias, getBiasColor }) => {
                       <tr style={styles.tableRow}>
                         <td style={styles.tableCellCenter}>
                           <div style={styles.dataValue}>
-                        {nfpValues.actual_nfp}
-
+                            {nfpValues.actual_nfp}
                           </div>
                         </td>
                         <td style={styles.tableCellCenter}>
                           <div style={styles.dataValue}>
-                          { nfpValues.forecast}
-
+                            {nfpValues.forecast}
                           </div>
                         </td>
                         <td style={styles.tableCellCenter}>
@@ -2632,49 +2649,49 @@ const Speedometer = ({ score, bias, getBiasColor }) => {
       </div>
       {/* Bottom Section with Three Charts */}
       <div style={styles.bottomGrid}>
-          {/* Trading Reminders */}
-            <div
-              style={{
-                backgroundColor: "#fef3c7",
-                padding: "8px",
-                borderRadius: "4px",
-                border: "1px solid #f59e0b",
-              }}
-            >
+        {/* Trading Reminders */}
+        <div
+          style={{
+            backgroundColor: "#fef3c7",
+            padding: "8px",
+            borderRadius: "4px",
+            border: "1px solid #f59e0b",
+          }}
+        >
+          <div
+            style={{
+              fontWeight: "600",
+              marginBottom: "6px",
+              color: "#92400e",
+            }}
+          >
+            ⚠️ Trading Reminders
+          </div>
+          {aiInsight?.reminders &&
+            Array.isArray(aiInsight.reminders) &&
+            aiInsight.reminders.slice(0, 4).map((reminder, index) => (
               <div
+                key={index}
                 style={{
-                  fontWeight: "600",
-                  marginBottom: "6px",
-                  color: "#92400e",
+                  fontSize: "10px",
+                  marginBottom: "2px",
+                  color: "#78350f",
                 }}
               >
-                ⚠️ Trading Reminders
+                • {reminder}
               </div>
-        {aiInsight?.reminders && 
-                Array.isArray(aiInsight.reminders) &&
-                aiInsight.reminders.slice(0, 4).map((reminder, index) => (
-                  <div
-                    key={index}
-                    style={{
-                      fontSize: "10px",
-                      marginBottom: "2px",
-                      color: "#78350f",
-                    }}
-                  >
-                    • {reminder}
-                  </div>
-                ))}
-              <div
-                style={{
-                  fontSize: "9px",
-                  marginTop: "4px",
-                  fontStyle: "italic",
-                  color: "#92400e",
-                }}
-              >
-                This is data analysis only - not financial advice
-              </div>
-            </div>
+            ))}
+          <div
+            style={{
+              fontSize: "9px",
+              marginTop: "4px",
+              fontStyle: "italic",
+              color: "#92400e",
+            }}
+          >
+            This is data analysis only - not financial advice
+          </div>
+        </div>
       </div>
     </div>
   );

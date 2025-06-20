@@ -4,7 +4,7 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "concurrently \"node .\\server\\server.js\"  \"node .\\server\\serverEnrollment.js\" \"vite\" \"python3 .\\server\\ai_server.py\" ",
+    "dev": "concurrently \"node .\\server\\server.js\"  \"node .\\server\\serverEnrollment.js\" \"vite\" \"python .\\server\\ai_server.py\" ",
     "dev:backend": "node server.js",
     "dev:frontend": "vite",
     "build": "vite build",

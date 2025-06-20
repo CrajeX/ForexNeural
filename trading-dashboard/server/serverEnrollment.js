@@ -2883,7 +2883,7 @@ const JWT_SECRET = process.env.JWT_SECRET || crypto.randomBytes(64).toString('he
 // MIDDLEWARE CONFIGURATION
 // ============================================================================
 app.use(cors({
-    origin: ['http://localhost:5173','https://atecon.netlify.app','http://localhost:5174','https://8con.netlify.app'],
+    origin: ['http://localhost:5175','https://atecon.netlify.app','http://localhost:5174','https://8con.netlify.app'],
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization']
