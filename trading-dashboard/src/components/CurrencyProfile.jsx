@@ -1097,7 +1097,6 @@ const CurrencyProfile = ({ assetPairCode: propAssetPairCode }) => {
       textAlign: "center",
       textTransform: "uppercase",
       letterSpacing: "0.5px",
-      width: "23.8rem",
       transform: "translateX(.5rem)",
       width: "100%", // if inside a flex item
       maxWidth: "calc(100% * 5 / 3)", // replace totalColumns with actual number
