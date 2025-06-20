@@ -11,7 +11,7 @@ const TopSetups = ({ onAssetPairClick }) => {
   const [sortedBy, setSortedBy] = useState("totalScore");
   const [rawAssetPairs, setRawAssetPairs] = useState([]);
   const [biasFilter, setBiasFilter] = useState("All");
-  
+
   // Add state for currency profile navigation
   const [currentAssetPair, setCurrentAssetPair] = useState(null);
   const [showCurrencyProfile, setShowCurrencyProfile] = useState(false);
@@ -22,7 +22,7 @@ const TopSetups = ({ onAssetPairClick }) => {
       onAssetPairClick(assetPairCode);
     }
     // Also trigger currency profile navigation
-    console.log(assetPairCode)
+    console.log(assetPairCode);
     navigateToCurrencyProfile(assetPairCode);
   };
 
@@ -57,11 +57,14 @@ const TopSetups = ({ onAssetPairClick }) => {
         console.log(`✅ Loaded ${result.data.length} asset pairs`);
 
         // FIXED: Remove duplicates before processing
-        const uniquePairs = result.data.filter((pair, index, self) => 
-          index === self.findIndex(p => p.value === pair.value)
+        const uniquePairs = result.data.filter(
+          (pair, index, self) =>
+            index === self.findIndex((p) => p.value === pair.value)
         );
 
-        console.log(`📋 Processing ${uniquePairs.length} unique asset pairs...`);
+        console.log(
+          `📋 Processing ${uniquePairs.length} unique asset pairs...`
+        );
 
         // Process each asset pair to get economic data
         const assetPairsWithMetrics = await Promise.all(
@@ -477,7 +480,8 @@ const TopSetups = ({ onAssetPairClick }) => {
     if (totalScore >= 12) output = "Very Bullish";
     else if (totalScore >= 5) output = "Bullish";
     else if (totalScore >= -4) output = "Neutral";
-    else if (totalScore >= -11) output = "Bearish";  // FIXED: was -5, should be -11
+    else if (totalScore >= -11)
+      output = "Bearish"; // FIXED: was -5, should be -11
     else output = "Very Bearish";
 
     return {
@@ -710,14 +714,10 @@ const TopSetups = ({ onAssetPairClick }) => {
     return (
       <div style={styles.container}>
         <div style={styles.maxWidth}>
-          <button 
-            style={styles.backButton}
-            onClick={navigateBackToSetups}
-            
-          >
+          <button style={styles.backButton} onClick={navigateBackToSetups}>
             ← Back to Top Setups
           </button>
-           <CurrencyProfile assetPairCode={currentAssetPair} />
+          <CurrencyProfile assetPairCode={currentAssetPair} />
         </div>
       </div>
     );
@@ -873,8 +873,12 @@ const TopSetups = ({ onAssetPairClick }) => {
                         // FIXED: Search logic - check both asset_pair_code AND description
                         const searchText = filterText.toLowerCase();
                         const matchesSearch =
-                          pair.asset_pair_code?.toLowerCase().includes(searchText) ||
-                          pair.description?.toLowerCase().includes(searchText) ||
+                          pair.asset_pair_code
+                            ?.toLowerCase()
+                            .includes(searchText) ||
+                          pair.description
+                            ?.toLowerCase()
+                            .includes(searchText) ||
                           pair.baseAsset?.toLowerCase().includes(searchText) ||
                           pair.quoteAsset?.toLowerCase().includes(searchText);
 
@@ -887,9 +891,12 @@ const TopSetups = ({ onAssetPairClick }) => {
                         <tr
                           key={pair.asset_pair_code}
                           style={index % 2 === 0 ? styles.tr : styles.trEven}
-                          onClick={() => handleAssetPairClick(pair.asset_pair_code)}
+                          onClick={() =>
+                            handleAssetPairClick(pair.asset_pair_code)
+                          }
                           onMouseOver={(e) => {
-                            e.target.closest("tr").style.backgroundColor = "#e5f3ff";
+                            e.target.closest("tr").style.backgroundColor =
+                              "#e5f3ff";
                           }}
                           onMouseOut={(e) => {
                             e.target.closest("tr").style.backgroundColor =
@@ -1126,7 +1133,7 @@ const TopSetups = ({ onAssetPairClick }) => {
               </div>
             </div>
 
-            {/* <div style={{ marginTop: "12px" }}>
+            <div style={{ marginTop: "12px" }}>
               <h4
                 style={{
                   fontSize: "12px",
@@ -1144,7 +1151,8 @@ const TopSetups = ({ onAssetPairClick }) => {
                   lineHeight: "1.4",
                 }}
               >
-                📊 <strong>Click on any asset pair row</strong> to view detailed breakdown and analysis of each economic indicator.
+                📊 <strong>Click on any asset pair row</strong> to view detailed
+                breakdown and analysis of each economic indicator.
               </div>
             </div>
 
@@ -1166,11 +1174,11 @@ const TopSetups = ({ onAssetPairClick }) => {
                   lineHeight: "1.4",
                 }}
               >
-                <strong>COT:</strong> Base asset positive net change +1; Quote asset
-                positive net change -1
+                <strong>COT:</strong> Base asset positive net change +1; Quote
+                asset positive net change -1
                 <br />
-                <strong>Retail Position:</strong> Long% &gt; Short% = -1; otherwise
-                +1
+                <strong>Retail Position:</strong> Long% &gt; Short% = -1;
+                otherwise +1
                 <br />
                 <strong>Employment:</strong> Base/Quote beats forecast +1/-1;
                 misses forecast -1/+1
@@ -1178,8 +1186,9 @@ const TopSetups = ({ onAssetPairClick }) => {
                 <strong>Unemployment:</strong> Base exceeds forecast -1; Quote
                 exceeds forecast +1
                 <br />
-                <strong>Economic Growth (GDP/PMI/Retail):</strong> Base beats forecast +1,
-                misses forecast -1; Quote beats forecast -1, misses forecast +1
+                <strong>Economic Growth (GDP/PMI/Retail):</strong> Base beats
+                forecast +1, misses forecast -1; Quote beats forecast -1, misses
+                forecast +1
                 <br />
                 <strong>Inflation:</strong> Base exceeds forecast +1; Quote
                 exceeds forecast -1
@@ -1213,9 +1222,9 @@ const TopSetups = ({ onAssetPairClick }) => {
                 Rates, and Retail Sentiment. Scores are calculated using your
                 existing algorithm with real economic indicators.
               </div>
-            </div> */}
-            
-            {/* <div style={{ marginTop: "12px" }}>
+            </div>
+
+            <div style={{ marginTop: "12px" }}>
               <h4
                 style={{
                   fontSize: "12px",
@@ -1237,7 +1246,7 @@ const TopSetups = ({ onAssetPairClick }) => {
                 endpoints are unavailable, neutral scores are used to ensure the
                 component continues functioning.
               </div>
-            </div> */}
+            </div>
           </div>
         )}
 

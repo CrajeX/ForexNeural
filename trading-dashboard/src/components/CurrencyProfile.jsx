@@ -904,7 +904,7 @@ const CurrencyProfile = ({ assetPairCode: propAssetPairCode }) => {
                       marginBottom: "4px",
                     }}
                   >
-                    ⚠️ Risk Factors
+                    ⚠️ Bearish Factors
                   </div>
                   {aiInsight.summary.risk_factors.map((risk, index) => (
                     <div
