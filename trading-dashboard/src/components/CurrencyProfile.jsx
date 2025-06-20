@@ -1100,6 +1100,7 @@ const extractNFPData = async () => {
   biasCard: {
     textAlign: "center",
     padding: "4px",
+    height:"13rem"
   },
   
   biasGauge: {
@@ -1267,8 +1268,9 @@ const extractNFPData = async () => {
   },
   
   insightCard: {
-    backgroundColor: "#f7fafc",
-    border: "2px solid #2d3748",
+    backgroundColor: "white",
+    boxShadow: "0 2px 6px rgba(0,0,0,0.08)",
+    border: "1px  #2d3748",
     borderRadius: "6px",
     padding: "12px",
     minHeight: "80px",
@@ -1341,6 +1343,158 @@ const extractNFPData = async () => {
     );
   }
 
+// Add this Speedometer component at the top of your file
+const Speedometer = ({ score, bias, getBiasColor }) => {
+  // Convert score to angle (score range: -19 to +19, angle range: -90 to +90 degrees)
+  const getAngle = (score) => {
+    const clampedScore = Math.max(-19, Math.min(19, score));
+    return (clampedScore / 19) * 90; // Maps -19 to -90°, +19 to +90°
+  };
+
+  const angle = getAngle(score);
+  
+  // Calculate needle position - COMPACT DIMENSIONS
+  const centerX = 80;
+  const centerY = 80;
+  const needleLength = 55;
+  const needleX = centerX + needleLength * Math.sin((angle * Math.PI) / 180);
+  const needleY = centerY - needleLength * Math.cos((angle * Math.PI) / 180);
+
+  // Color zones using getBiasColor function
+  const zones = [
+    { start: -90, end: -54, color: getBiasColor("Very Bearish"), label: "Very Bearish" },
+    { start: -54, end: -18, color: getBiasColor("Bearish"), label: "Bearish" },
+    { start: -18, end: 18, color: getBiasColor("Neutral"), label: "Neutral" },
+    { start: 18, end: 54, color: getBiasColor("Bullish"), label: "Bullish" },
+    { start: 54, end: 90, color: getBiasColor("Very Bullish"), label: "Very Bullish" }
+  ];
+
+  // Create SVG path for each zone - COMPACT RADII
+  const createArcPath = (startAngle, endAngle, innerRadius, outerRadius) => {
+    const startAngleRad = (startAngle * Math.PI) / 180;
+    const endAngleRad = (endAngle * Math.PI) / 180;
+    
+    const x1 = centerX + innerRadius * Math.sin(startAngleRad);
+    const y1 = centerY - innerRadius * Math.cos(startAngleRad);
+    const x2 = centerX + outerRadius * Math.sin(startAngleRad);
+    const y2 = centerY - outerRadius * Math.cos(startAngleRad);
+    
+    const x3 = centerX + outerRadius * Math.sin(endAngleRad);
+    const y3 = centerY - outerRadius * Math.cos(endAngleRad);
+    const x4 = centerX + innerRadius * Math.sin(endAngleRad);
+    const y4 = centerY - innerRadius * Math.cos(endAngleRad);
+    
+    const largeArcFlag = endAngle - startAngle > 180 ? 1 : 0;
+    
+    return `M ${x1} ${y1} L ${x2} ${y2} A ${outerRadius} ${outerRadius} 0 ${largeArcFlag} 1 ${x3} ${y3} L ${x4} ${y4} A ${innerRadius} ${innerRadius} 0 ${largeArcFlag} 0 ${x1} ${y1} Z`;
+  };
+
+  return (
+    <div style={{ 
+      display: 'flex', 
+      flexDirection: 'column', 
+      alignItems: 'center', 
+      marginBottom: '12px' 
+    }}>
+      <svg width="160" height="100" style={{ overflow: 'visible' }}>
+        {/* Background arc - COMPACT */}
+        <path
+          d={createArcPath(-90, 90, 40, 65)}
+          fill="#f1f5f9"
+          stroke="#e2e8f0"
+          strokeWidth="1"
+        />
+        
+        {/* Colored zones - COMPACT */}
+        {zones.map((zone, index) => (
+          <path
+            key={index}
+            d={createArcPath(zone.start, zone.end, 40, 65)}
+            fill={zone.color}
+            stroke="white"
+            strokeWidth="1"
+          />
+        ))}
+        
+        {/* Scale marks - COMPACT */}
+        {[-19, -10, 0, 10, 19].map((value) => {
+          const markAngle = (value / 19) * 90;
+          const markX1 = centerX + 60 * Math.sin((markAngle * Math.PI) / 180);
+          const markY1 = centerY - 60 * Math.cos((markAngle * Math.PI) / 180);
+          const markX2 = centerX + 70 * Math.sin((markAngle * Math.PI) / 180);
+          const markY2 = centerY - 70 * Math.cos((markAngle * Math.PI) / 180);
+          
+          return (
+            <g key={value}>
+              <line
+                x1={markX1}
+                y1={markY1}
+                x2={markX2}
+                y2={markY2}
+                stroke="#1a202c"
+                strokeWidth="1.5"
+              />
+              <text
+                x={centerX + 75 * Math.sin((markAngle * Math.PI) / 180)}
+                y={centerY - 75 * Math.cos((markAngle * Math.PI) / 180) + 3}
+                textAnchor="middle"
+                fontSize="9"
+                fill="#4a5568"
+                fontWeight="600"
+              >
+                {value > 0 ? `+${value}` : value}
+              </text>
+            </g>
+          );
+        })}
+        
+        {/* Center circle - COMPACT */}
+        <circle
+          cx={centerX}
+          cy={centerY}
+          r="5"
+          fill="#2d3748"
+          stroke="white"
+          strokeWidth="1"
+        />
+        
+        {/* Needle - COMPACT */}
+        <line
+          x1={centerX}
+          y1={centerY}
+          x2={needleX}
+          y2={needleY}
+          stroke="#2d3748"
+          strokeWidth="2.5"
+          strokeLinecap="round"
+        />
+        
+        {/* Needle tip - COMPACT */}
+        <circle
+          cx={needleX}
+          cy={needleY}
+          r="2.5"
+          fill="#2d3748"
+        />
+      </svg>
+      
+      {/* Current reading - COMPACT TEXT */}
+      <div style={{ 
+        textAlign: 'center', 
+        marginTop: '5px',
+        fontSize: '10px',
+        color: '#4a5568'
+      }}>
+        <div style={{ fontWeight: '600', fontSize: '11px' }}>Score: {score}</div>
+        <div style={{ color: '#718096', fontSize: '9px' }}>Market Bias</div>
+      </div>
+    </div>
+  );
+};
+
+
+
+ 
   const metricsData = createMetricsData();
   const totalScore =
     profileData?.totalScore ||
@@ -1365,41 +1519,32 @@ const extractNFPData = async () => {
           {/* Metric Bias Gauge */}
           <div style={styles.card}>
             <div style={styles.biasCard}>
-                {/* Asset Pair Title */}
-          <h1 style={styles.pairTitle}>
-            {assetPair.baseAsset}
-            {assetPair.quoteAsset}
-          </h1>
-          
-              {/* Gauge Chart */}
-              <div style={styles.biasGauge}>
-                <ResponsiveContainer width="100%" height="100%">
-                  <RadialBarChart
-                    cx="50%"
-                    cy="80%"
-                    innerRadius="60%"
-                    outerRadius="90%"
-                    startAngle={180}
-                    endAngle={0}
-                    data={[
-                      {
-                        value: totalScore,
-                        fill: getBiasColor(bias),
-                      },
-                    ]}
-                  >
-                    <RadialBar dataKey="value" cornerRadius={8} />
-                  </RadialBarChart>
-                </ResponsiveContainer>
-              </div>
+                        {/* Asset Pair Title */}
+                      
+                  
+                      {/* Asset Pair Title */}
+              
+                  {/* Speed Meter */}
+                  <Speedometer score={totalScore} bias={bias} getBiasColor={getBiasColor} />
+                  
 
-              {/* Bias Label */}
-              <div style={{ ...styles.biasLabel, color: getBiasColor(bias) }}>
-                {bias}
-              </div>
+                         <div style={{ paddingBottom:"1.5rem"}}>
+                          <h1 style={styles.pairTitle}>
+                          {assetPair.baseAsset}
+                          {assetPair.quoteAsset}
+                        </h1>
+                        </div>
+                  {/* Bias Label */}
+                  <div style={{ ...styles.biasLabel, color: getBiasColor(bias) }}>
+                    {bias}
+                    
+                  </div>
+               
+                  {/* Score Text */}
+                  {/* <div style={styles.biasValue}>Score {totalScore}</div> */}
 
-              {/* Score Text */}
-              <div style={styles.biasValue}>Score {totalScore}</div>
+        
+            
             </div>
           </div>
 
