@@ -1,4 +1,3 @@
-
 import React, {
   useState,
   useEffect,
@@ -42,25 +41,27 @@ const useCurrencies = () => {
       );
 
       if (!response.ok) {
-        throw new Error(`Failed to fetch currencies: ${response.status} ${response.statusText}`);
+        throw new Error(
+          `Failed to fetch currencies: ${response.status} ${response.statusText}`
+        );
       }
 
       const data = await response.json();
-      
+
       // Ensure data is an array and handle potential null/undefined values
       const safeData = Array.isArray(data) ? data : [];
-      
+
       // Remove duplicates based on currency code and filter out invalid entries
       const uniqueAssets = safeData
-        .filter(asset => asset && asset.code && asset.name) // Filter out invalid entries
+        .filter((asset) => asset && asset.code && asset.name) // Filter out invalid entries
         .reduce((acc, asset) => {
           // Only add if we haven't seen this currency code before
-          if (!acc.find(item => item.code === asset.code)) {
+          if (!acc.find((item) => item.code === asset.code)) {
             acc.push(asset);
           }
           return acc;
         }, []);
-      
+
       const currencyOptions = uniqueAssets
         .map((asset) => ({
           value: asset.code,
@@ -68,10 +69,19 @@ const useCurrencies = () => {
         }))
         .sort((a, b) => {
           // Sort with major currencies first
-          const majorCurrencies = ['USD', 'EUR', 'GBP', 'JPY', 'AUD', 'CAD', 'CHF', 'NZD'];
+          const majorCurrencies = [
+            "USD",
+            "EUR",
+            "GBP",
+            "JPY",
+            "AUD",
+            "CAD",
+            "CHF",
+            "NZD",
+          ];
           const aIndex = majorCurrencies.indexOf(a.value);
           const bIndex = majorCurrencies.indexOf(b.value);
-          
+
           if (aIndex !== -1 && bIndex !== -1) {
             return aIndex - bIndex; // Both are major currencies, sort by order
           } else if (aIndex !== -1) {
@@ -124,38 +134,57 @@ const useAssetPairs = () => {
       });
 
       if (!response.ok) {
-        throw new Error(`Failed to fetch asset pairs: ${response.status} ${response.statusText}`);
+        throw new Error(
+          `Failed to fetch asset pairs: ${response.status} ${response.statusText}`
+        );
       }
 
       const result = await response.json();
-      
+
       // Better data handling and validation
       const rawData = result.data || result || [];
       const safeData = Array.isArray(rawData) ? rawData : [];
-      
+
       // Remove duplicates based on asset pair code/value and filter out invalid entries
       const uniquePairs = safeData
-        .filter(pair => pair && (pair.value || pair.code || pair.name)) // Filter out invalid entries
+        .filter((pair) => pair && (pair.value || pair.code || pair.name)) // Filter out invalid entries
         .reduce((acc, pair) => {
           const pairValue = pair.value || pair.code || pair.name;
           // Only add if we haven't seen this pair value before
-          if (!acc.find(item => (item.value || item.code || item.name) === pairValue)) {
+          if (
+            !acc.find(
+              (item) => (item.value || item.code || item.name) === pairValue
+            )
+          ) {
             acc.push(pair);
           }
           return acc;
         }, []);
-      
+
       const assetPairOptions = uniquePairs
         .map((pair) => ({
           value: pair.value || pair.code || pair.name,
-          label: pair.label || pair.name || `${pair.base || ''}/${pair.quote || ''}` || pair.code || pair.value,
+          label:
+            pair.label ||
+            pair.name ||
+            `${pair.base || ""}/${pair.quote || ""}` ||
+            pair.code ||
+            pair.value,
         }))
         .sort((a, b) => {
           // Sort with major pairs first
-          const majorPairs = ['EURUSD', 'GBPUSD', 'USDJPY', 'AUDUSD', 'USDCAD', 'USDCHF', 'NZDUSD'];
+          const majorPairs = [
+            "EURUSD",
+            "GBPUSD",
+            "USDJPY",
+            "AUDUSD",
+            "USDCAD",
+            "USDCHF",
+            "NZDUSD",
+          ];
           const aIndex = majorPairs.indexOf(a.value);
           const bIndex = majorPairs.indexOf(b.value);
-          
+
           if (aIndex !== -1 && bIndex !== -1) {
             return aIndex - bIndex; // Both are major pairs, sort by order
           } else if (aIndex !== -1) {
@@ -193,13 +222,15 @@ const useAssetPairs = () => {
   return { assetPairs, loading, error, retry };
 };
 
-// Validation functions - Updated to only validate non-empty fields
 const validateField = (field, value) => {
   const errors = {};
 
+  // Convert value to string and check if it has content
+  const stringValue = String(value || "").trim();
+
   // Only validate if field has a value
-  if (value && value.trim() !== "") {
-    const numValue = parseFloat(value);
+  if (stringValue !== "") {
+    const numValue = parseFloat(stringValue);
 
     if (isNaN(numValue)) {
       errors[field] = "Must be a valid number";
@@ -258,8 +289,8 @@ const ErrorMessage = ({ message, onRetry, type = "error" }) => {
         )}
       </div>
       {onRetry && (
-        <button 
-          onClick={handleRetry} 
+        <button
+          onClick={handleRetry}
           className="retry-button"
           disabled={retrying}
         >
@@ -281,9 +312,9 @@ const ErrorMessage = ({ message, onRetry, type = "error" }) => {
 const LoadingSkeleton = ({ lines = 3 }) => (
   <div className="loading-skeleton">
     {[...Array(lines)].map((_, i) => (
-      <div 
-        key={i} 
-        className={`skeleton-line ${i === lines - 1 ? 'short' : ''}`}
+      <div
+        key={i}
+        className={`skeleton-line ${i === lines - 1 ? "short" : ""}`}
         style={{ animationDelay: `${i * 0.1}s` }}
       />
     ))}
@@ -309,7 +340,7 @@ const SearchableSelect = ({
     if (!searchTerm.trim()) {
       return options;
     }
-    
+
     return options.filter((option) => {
       const searchLower = searchTerm.toLowerCase().trim();
       return (
@@ -336,7 +367,8 @@ const SearchableSelect = ({
 
     if (isOpen) {
       document.addEventListener("mousedown", handleClickOutside);
-      return () => document.removeEventListener("mousedown", handleClickOutside);
+      return () =>
+        document.removeEventListener("mousedown", handleClickOutside);
     }
   }, [isOpen]);
 
@@ -358,7 +390,9 @@ const SearchableSelect = ({
   return (
     <div className="searchable-select" ref={selectRef}>
       <div
-        className={`select-input ${isOpen ? "open" : ""} ${loading ? "loading" : ""}`}
+        className={`select-input ${isOpen ? "open" : ""} ${
+          loading ? "loading" : ""
+        }`}
         onClick={() => !loading && setIsOpen(!isOpen)}
         onKeyDown={handleKeyDown}
         tabIndex={0}
@@ -412,17 +446,21 @@ const SearchableSelect = ({
               </button>
             )}
           </div>
-          
+
           <div className="options-list">
             {filteredOptions.length === 0 ? (
               <div className="no-options">
-                {searchTerm ? `No results for "${searchTerm}"` : "No options available"}
+                {searchTerm
+                  ? `No results for "${searchTerm}"`
+                  : "No options available"}
               </div>
             ) : (
               filteredOptions.map((option, index) => (
                 <div
                   key={`${option.value}-${index}`}
-                  className={`option ${option.value === value ? "selected" : ""}`}
+                  className={`option ${
+                    option.value === value ? "selected" : ""
+                  }`}
                   onClick={() => {
                     onChange(option.value);
                     setIsOpen(false);
@@ -438,10 +476,11 @@ const SearchableSelect = ({
               ))
             )}
           </div>
-          
+
           {searchTerm && filteredOptions.length > 0 && (
             <div className="search-footer">
-              {filteredOptions.length} result{filteredOptions.length !== 1 ? 's' : ''} found
+              {filteredOptions.length} result
+              {filteredOptions.length !== 1 ? "s" : ""} found
             </div>
           )}
         </div>
@@ -670,30 +709,62 @@ const RetailSentimentSection = () => {
 const MarketSentimentsSection = () => {
   const { formData, handleInputChange, errors } = useContext(FormContext);
 
+  // Calculate COT percentages for the bars
+  const cotLong = parseFloat(formData.cotLongContracts) || 0;
+  const cotShort = parseFloat(formData.cotShortContracts) || 0;
+  const cotTotal = cotLong + cotShort;
+
   return (
     <section className="form-section">
       <div className="section-header">
         <BarChart3 size={20} style={{ color: "#2563eb" }} />
         <h2>Market Sentiments</h2>
       </div>
+      {/* COT Percentage Inputs */}
       <div className="form-grid grid-auto-fit">
         <FormInput
-          label="COT Long Contracts"
+          label="COT Long %"
           value={formData.cotLongContracts}
           onChange={(value) => handleInputChange("cotLongContracts", value)}
           error={errors.cotLongContracts}
+          placeholder="Enter long percentage"
+          isPercentage={true}
         />
         <FormInput
-          label="COT Short Contracts"
+          label="COT Short %"
           value={formData.cotShortContracts}
           onChange={(value) => handleInputChange("cotShortContracts", value)}
           error={errors.cotShortContracts}
+          placeholder="Enter short percentage"
+          isPercentage={true}
         />
       </div>
+
+      {/* COT Percentage Validation Display */}
+      {(formData.cotLongContracts || formData.cotShortContracts) && (
+        <div className="percentage-summary">
+          <div className="percentage-bar">
+            <div
+              className="percentage-fill long"
+              style={{ width: `${cotLong}%` }}
+            >
+              {cotLong > 15 && <span>{cotLong.toFixed(1)}%</span>}
+            </div>
+            <div
+              className="percentage-fill short"
+              style={{ width: `${cotShort}%` }}
+            >
+              {cotShort > 15 && <span>{cotShort.toFixed(1)}%</span>}
+            </div>
+          </div>
+          <div className="total-percentage success">
+            Total: {cotTotal.toFixed(2)}% ✓
+          </div>
+        </div>
+      )}
     </section>
   );
 };
-
 const LaborMarketSection = () => {
   const { formData, handleInputChange, errors, selectedCurrency } =
     useContext(FormContext);
@@ -913,14 +984,14 @@ const CombinedEconomicDataForm = () => {
     currencies,
     loading: currenciesLoading,
     error: currenciesError,
-    retry: retryCurrencies
+    retry: retryCurrencies,
   } = useCurrencies();
 
   const {
     assetPairs,
     loading: assetPairsLoading,
     error: assetPairsError,
-    retry: retryAssetPairs
+    retry: retryAssetPairs,
   } = useAssetPairs();
 
   const [selectedCurrency, setSelectedCurrency] = useState("USD");
@@ -1023,14 +1094,25 @@ const CombinedEconomicDataForm = () => {
 
   // Updated default currency and asset pair setting with better error handling
   useEffect(() => {
-    if (!currenciesLoading && !currenciesError && currencies.length > 0 && !selectedCurrency) {
-      const defaultCurrency = currencies.find((curr) => curr.value === "USD") || currencies[0];
+    if (
+      !currenciesLoading &&
+      !currenciesError &&
+      currencies.length > 0 &&
+      !selectedCurrency
+    ) {
+      const defaultCurrency =
+        currencies.find((curr) => curr.value === "USD") || currencies[0];
       setSelectedCurrency(defaultCurrency.value);
     }
   }, [currencies, selectedCurrency, currenciesLoading, currenciesError]);
 
   useEffect(() => {
-    if (!assetPairsLoading && !assetPairsError && assetPairs.length > 0 && !selectedAssetPair) {
+    if (
+      !assetPairsLoading &&
+      !assetPairsError &&
+      assetPairs.length > 0 &&
+      !selectedAssetPair
+    ) {
       setSelectedAssetPair(assetPairs[0].value);
     }
   }, [assetPairs, selectedAssetPair, assetPairsLoading, assetPairsError]);
@@ -1042,8 +1124,9 @@ const CombinedEconomicDataForm = () => {
 
         // Auto-calculate complementary percentage for retail sentiment
         if (field === "retailLong" && value && !isNaN(parseFloat(value))) {
-          const longValue = parseFloat(value);
+          const longValue = Math.min(parseFloat(value), 100); // Add 100% restriction
           if (longValue >= 0 && longValue <= 100) {
+            newData.retailLong = longValue; // Update with restricted value
             newData.retailShort = (100 - longValue)
               .toFixed(2)
               .replace(/\.?0+$/, "");
@@ -1053,11 +1136,53 @@ const CombinedEconomicDataForm = () => {
           value &&
           !isNaN(parseFloat(value))
         ) {
-          const shortValue = parseFloat(value);
+          const shortValue = Math.min(parseFloat(value), 100); // Add 100% restriction
           if (shortValue >= 0 && shortValue <= 100) {
+            newData.retailShort = shortValue; // Update with restricted value
             newData.retailLong = (100 - shortValue)
               .toFixed(2)
               .replace(/\.?0+$/, "");
+          }
+        }
+
+        // Auto-calculate complementary percentage for COT sentiment
+        if (
+          field === "cotLongContracts" &&
+          value &&
+          !isNaN(parseFloat(value))
+        ) {
+          const longValue = Math.min(parseFloat(value), 100); // Add 100% restriction
+          if (longValue >= 0 && longValue <= 100) {
+            newData.cotLongContracts = longValue; // Update with restricted value
+            newData.cotShortContracts = (100 - longValue)
+              .toFixed(2)
+              .replace(/\.?0+$/, "");
+          }
+        } else if (
+          field === "cotShortContracts" &&
+          value &&
+          !isNaN(parseFloat(value))
+        ) {
+          const shortValue = Math.min(parseFloat(value), 100); // Add 100% restriction
+          if (shortValue >= 0 && shortValue <= 100) {
+            newData.cotShortContracts = shortValue; // Update with restricted value
+            newData.cotLongContracts = (100 - shortValue)
+              .toFixed(2)
+              .replace(/\.?0+$/, "");
+          }
+        }
+
+        // Apply 100% restriction to other percentage fields
+        if (
+          [
+            "retailLong",
+            "retailShort",
+            "cotLongContracts",
+            "cotShortContracts",
+          ].includes(field)
+        ) {
+          if (value && !isNaN(parseFloat(value))) {
+            newData[field] = Math.min(parseFloat(value), 100);
           }
         }
 
@@ -1079,6 +1204,17 @@ const CombinedEconomicDataForm = () => {
           total: undefined,
         }));
       }
+
+      // Clear total error when user changes COT sentiment values
+      if (
+        errors.cotTotal &&
+        (field === "cotLongContracts" || field === "cotShortContracts")
+      ) {
+        setErrors((prev) => ({
+          ...prev,
+          cotTotal: undefined,
+        }));
+      }
     },
     [errors]
   );
@@ -1095,10 +1231,10 @@ const CombinedEconomicDataForm = () => {
     }
 
     // Check if other sections need currency but it's not selected
-    const needsCurrency = Object.entries(enabledSections).some(([key, enabled]) => 
-      enabled && key !== 'retailSentiment'
+    const needsCurrency = Object.entries(enabledSections).some(
+      ([key, enabled]) => enabled && key !== "retailSentiment"
     );
-    
+
     if (needsCurrency && !selectedCurrency) {
       setSubmitStatus({
         type: "error",
@@ -1125,7 +1261,10 @@ const CombinedEconomicDataForm = () => {
       let submissionCount = 0;
 
       // Helper function to check if field has valid data
-      const hasData = (value) => value && value.trim() !== "";
+      const hasData = (value) => {
+        const stringValue = String(value || "").trim();
+        return stringValue !== "";
+      };
 
       // Submit Retail Sentiment data if provided
       if (hasData(formData.retailLong) && hasData(formData.retailShort)) {
@@ -2326,12 +2465,12 @@ const CombinedEconomicDataForm = () => {
             </div>
           ) : currenciesError || assetPairsError ? (
             <div className="form-section">
-              <ErrorMessage 
-                message={currenciesError || assetPairsError} 
+              <ErrorMessage
+                message={currenciesError || assetPairsError}
                 onRetry={() => {
                   if (currenciesError) retryCurrencies();
                   if (assetPairsError) retryAssetPairs();
-                }} 
+                }}
               />
             </div>
           ) : (
