@@ -176,7 +176,7 @@ const ProfilePage = () => {
     console.log('🔍 Fetching profile for account_id:', sessionData.person_id);
 
 
-    const response = await fetch(`http://localhost:3000/api/profile/${sessionData.person_id}`, {
+    const response = await fetch(`http://localhost:3001/api/profile/${sessionData.person_id}`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',

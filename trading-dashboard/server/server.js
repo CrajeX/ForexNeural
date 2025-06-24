@@ -480,7 +480,7 @@ app.post("/api/auth/login", async (req, res) => {
 
     // STEP 10: Sync to SQL users table (if not already)
     const [userExists] = await pool.execute(
-      "SELECT id FROM users WHERE email = ?",
+      "SELECT id FROM profiles WHERE email = ?",
       [trimmedEmail]
     );
 
@@ -640,7 +640,7 @@ app.post("/api/login-mongo", async (req, res) => {
     const { email, password } = req.body;
 
     // Find user by email in SQL users table
-    const [users] = await pool.execute("SELECT * FROM users WHERE email = ?", [
+    const [users] = await pool.execute("SELECT * FROM profiles WHERE email = ?", [
       email,
     ]);
 
@@ -767,7 +767,7 @@ app.put("/api/user/profile", async (req, res) => {
 
       // Get updated user data
       const [users] = await pool.execute(
-        "SELECT * FROM users WHERE account_id = ?",
+        "SELECT * FROM profiles WHERE account_id = ?",
         [userId]
       );
 
@@ -813,7 +813,7 @@ app.post("/api/user/avatar", upload.single("avatar"), async (req, res) => {
     );
 
     // Get updated user
-    const [users] = await pool.execute("SELECT * FROM users WHERE id = ?", [
+    const [users] = await pool.execute("SELECT * FROM profiles WHERE id = ?", [
       userId,
     ]);
 
@@ -884,7 +884,7 @@ app.post("/api/register", async (req, res) => {
 
     // 2. Check for existing user
     const [existingUsers] = await pool.execute(
-      "SELECT account_id FROM users WHERE account_id = ?",
+      "SELECT account_id FROM profiles WHERE account_id = ?",
       [account_id]
     );
 
@@ -968,7 +968,7 @@ app.post("/api/register", async (req, res) => {
     );
 
     // 7. Respond with user (without password)
-    const [users] = await pool.execute("SELECT * FROM users WHERE id = ?", [
+    const [users] = await pool.execute("SELECT * FROM profiles WHERE id = ?", [
       userResult.insertId,
     ]);
     const user = users[0];
@@ -1036,7 +1036,7 @@ app.put("/api/updateprofile", async (req, res) => {
 
     // 2. Check for existing user
     const [existingUsers] = await pool.execute(
-      "SELECT account_id FROM users WHERE account_id = ?",
+      "SELECT account_id FROM profiles WHERE account_id = ?",
       [account_id]
     );
 
@@ -1060,7 +1060,7 @@ app.put("/api/updateprofile", async (req, res) => {
       // Update users table
       await pool.execute(
         `
-        UPDATE users 
+        UPDATE profiles 
         SET student_id = ?, email = ?, password = ?, name = ?, 
             roles = ?, address = ?, birth_place = ?, phone_no = ?, trading_level = ?, 
             gender = ?, birth_date = ?, authenticated = ?, login_time = ?, updated_at = ?
@@ -1123,7 +1123,7 @@ app.put("/api/updateprofile", async (req, res) => {
 
       // Get updated user data
       const [users] = await pool.execute(
-        "SELECT * FROM users WHERE account_id = ?",
+        "SELECT * FROM profiles WHERE account_id = ?",
         [account_id]
       );
       const user = users[0];
@@ -1208,7 +1208,7 @@ app.put("/api/updateprofile", async (req, res) => {
       );
 
       // Get new user data
-      const [users] = await pool.execute("SELECT * FROM users WHERE id = ?", [
+      const [users] = await pool.execute("SELECT * FROM profiles WHERE id = ?", [
         userResult.insertId,
       ]);
       const user = users[0];
@@ -1251,7 +1251,7 @@ app.get("/api/profile/:account_id", async (req, res) => {
 
       // First check if user exists in users table
       const [userRows] = await pool.execute(
-        "SELECT account_id, student_id, name, email, roles, address, birth_place, birth_date, phone_no, trading_level, gender FROM users WHERE account_id = ?",
+        "SELECT account_id, student_id, name, email, roles, address, birth_place, birth_date, phone_no, trading_level, gender FROM profiles WHERE account_id = ?",
         [parseInt(account_id)]
       );
 
