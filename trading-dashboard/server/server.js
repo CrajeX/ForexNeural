@@ -1978,881 +1978,2358 @@ app.post("/api/password-reset/confirm", async (req, res) => {
 // ASSETS API ROUTES
 // ====================
 
-// Get assets (currencies/commodities) endpoint
-app.get("/api/assets", async (req, res) => {
-  try {
-    const { type } = req.query;
+// // Get assets (currencies/commodities) endpoint
+// app.get("/api/assets", async (req, res) => {
+//   try {
+//     const { type } = req.query;
 
-    console.log("🪙 Fetching assets, type filter:", type);
+//     console.log("🪙 Fetching assets, type filter:", type);
 
-    let query = "SELECT code, name, type, description FROM assets";
-    let params = [];
+//     let query = "SELECT code, name, type, description FROM assets";
+//     let params = [];
 
-    // Filter by type if provided (Currency or Commodity)
-    if (type) {
-      query += " WHERE type = ?";
-      params.push(type);
-    }
+//     // Filter by type if provided (Currency or Commodity)
+//     if (type) {
+//       query += " WHERE type = ?";
+//       params.push(type);
+//     }
 
-    // Order by name for consistent results
-    query += " ORDER BY name ASC";
+//     // Order by name for consistent results
+//     query += " ORDER BY name ASC";
 
-    const [assets] = await pool.execute(query, params);
+//     const [assets] = await pool.execute(query, params);
 
-    console.log(`✅ Found ${assets.length} assets`);
-    console.log(
-      "📋 Assets:",
-      assets.map((a) => `${a.code} (${a.type})`)
-    );
+//     console.log(`✅ Found ${assets.length} assets`);
+//     console.log(
+//       "📋 Assets:",
+//       assets.map((a) => `${a.code} (${a.type})`)
+//     );
 
-    res.json(assets);
-  } catch (error) {
-    console.error("❌ Get assets error:", error);
-    res.status(500).json({
-      success: false,
-      error: "Server error fetching assets",
-    });
-  }
-});
+//     res.json(assets);
+//   } catch (error) {
+//     console.error("❌ Get assets error:", error);
+//     res.status(500).json({
+//       success: false,
+//       error: "Server error fetching assets",
+//     });
+//   }
+// });
 
-// Get single asset by code
-app.get("/api/assets/:code", async (req, res) => {
-  try {
-    const { code } = req.params;
+// // Get single asset by code
+// app.get("/api/assets/:code", async (req, res) => {
+//   try {
+//     const { code } = req.params;
 
-    console.log("🔍 Fetching asset by code:", code);
+//     console.log("🔍 Fetching asset by code:", code);
 
-    const [assets] = await pool.execute(
-      "SELECT code, name, type, description, created_at, updated_at FROM assets WHERE code = ?",
-      [code.toUpperCase()]
-    );
+//     const [assets] = await pool.execute(
+//       "SELECT code, name, type, description, created_at, updated_at FROM assets WHERE code = ?",
+//       [code.toUpperCase()]
+//     );
 
-    if (assets.length === 0) {
-      return res.status(404).json({
-        success: false,
-        error: "Asset not found",
-      });
-    }
+//     if (assets.length === 0) {
+//       return res.status(404).json({
+//         success: false,
+//         error: "Asset not found",
+//       });
+//     }
 
-    console.log("✅ Asset found:", assets[0]);
+//     console.log("✅ Asset found:", assets[0]);
 
-    res.json({
-      success: true,
-      asset: assets[0],
-    });
-  } catch (error) {
-    console.error("❌ Get asset by code error:", error);
-    res.status(500).json({
-      success: false,
-      error: "Server error fetching asset",
-    });
-  }
-});
+//     res.json({
+//       success: true,
+//       asset: assets[0],
+//     });
+//   } catch (error) {
+//     console.error("❌ Get asset by code error:", error);
+//     res.status(500).json({
+//       success: false,
+//       error: "Server error fetching asset",
+//     });
+//   }
+// });
 
-// Create new asset (admin endpoint)
-app.post("/api/assets", async (req, res) => {
-  try {
-    const { code, name, type, description } = req.body;
+// // Create new asset (admin endpoint)
+// app.post("/api/assets", async (req, res) => {
+//   try {
+//     const { code, name, type, description } = req.body;
 
-    // Validation
-    if (!code || !name || !type) {
-      return res.status(400).json({
-        success: false,
-        error: "Code, name, and type are required",
-      });
-    }
+//     // Validation
+//     if (!code || !name || !type) {
+//       return res.status(400).json({
+//         success: false,
+//         error: "Code, name, and type are required",
+//       });
+//     }
 
-    if (!["Currency", "Commodity"].includes(type)) {
-      return res.status(400).json({
-        success: false,
-        error: "Type must be either Currency or Commodity",
-      });
-    }
+//     if (!["Currency", "Commodity"].includes(type)) {
+//       return res.status(400).json({
+//         success: false,
+//         error: "Type must be either Currency or Commodity",
+//       });
+//     }
 
-    console.log("➕ Creating new asset:", { code, name, type });
+//     console.log("➕ Creating new asset:", { code, name, type });
 
-    // Check if asset already exists
-    const [existing] = await pool.execute(
-      "SELECT code FROM assets WHERE code = ?",
-      [code.toUpperCase()]
-    );
+//     // Check if asset already exists
+//     const [existing] = await pool.execute(
+//       "SELECT code FROM assets WHERE code = ?",
+//       [code.toUpperCase()]
+//     );
 
-    if (existing.length > 0) {
-      return res.status(409).json({
-        success: false,
-        error: "Asset with this code already exists",
-      });
-    }
+//     if (existing.length > 0) {
+//       return res.status(409).json({
+//         success: false,
+//         error: "Asset with this code already exists",
+//       });
+//     }
 
-    // Insert new asset
-    await pool.execute(
-      "INSERT INTO assets (code, name, type, description) VALUES (?, ?, ?, ?)",
-      [code.toUpperCase(), name, type, description || ""]
-    );
+//     // Insert new asset
+//     await pool.execute(
+//       "INSERT INTO assets (code, name, type, description) VALUES (?, ?, ?, ?)",
+//       [code.toUpperCase(), name, type, description || ""]
+//     );
 
-    // Get the created asset
-    const [newAsset] = await pool.execute(
-      "SELECT * FROM assets WHERE code = ?",
-      [code.toUpperCase()]
-    );
+//     // Get the created asset
+//     const [newAsset] = await pool.execute(
+//       "SELECT * FROM assets WHERE code = ?",
+//       [code.toUpperCase()]
+//     );
 
-    console.log("✅ Asset created successfully");
+//     console.log("✅ Asset created successfully");
 
-    res.status(201).json({
-      success: true,
-      asset: newAsset[0],
-      message: "Asset created successfully",
-    });
-  } catch (error) {
-    console.error("❌ Create asset error:", error);
-    res.status(500).json({
-      success: false,
-      error: "Server error creating asset",
-    });
-  }
-});
+//     res.status(201).json({
+//       success: true,
+//       asset: newAsset[0],
+//       message: "Asset created successfully",
+//     });
+//   } catch (error) {
+//     console.error("❌ Create asset error:", error);
+//     res.status(500).json({
+//       success: false,
+//       error: "Server error creating asset",
+//     });
+//   }
+// });
 
-// Update asset (admin endpoint)
-app.put("/api/assets/:code", async (req, res) => {
-  try {
-    const { code } = req.params;
-    const { name, type, description } = req.body;
+// // Update asset (admin endpoint)
+// app.put("/api/assets/:code", async (req, res) => {
+//   try {
+//     const { code } = req.params;
+//     const { name, type, description } = req.body;
 
-    console.log("🔄 Updating asset:", code);
+//     console.log("🔄 Updating asset:", code);
 
-    // Validation
-    if (type && !["Currency", "Commodity"].includes(type)) {
-      return res.status(400).json({
-        success: false,
-        error: "Type must be either Currency or Commodity",
-      });
-    }
+//     // Validation
+//     if (type && !["Currency", "Commodity"].includes(type)) {
+//       return res.status(400).json({
+//         success: false,
+//         error: "Type must be either Currency or Commodity",
+//       });
+//     }
 
-    // Check if asset exists
-    const [existing] = await pool.execute(
-      "SELECT code FROM assets WHERE code = ?",
-      [code.toUpperCase()]
-    );
+//     // Check if asset exists
+//     const [existing] = await pool.execute(
+//       "SELECT code FROM assets WHERE code = ?",
+//       [code.toUpperCase()]
+//     );
 
-    if (existing.length === 0) {
-      return res.status(404).json({
-        success: false,
-        error: "Asset not found",
-      });
-    }
+//     if (existing.length === 0) {
+//       return res.status(404).json({
+//         success: false,
+//         error: "Asset not found",
+//       });
+//     }
 
-    // Build dynamic update query
-    const updateFields = [];
-    const updateValues = [];
+//     // Build dynamic update query
+//     const updateFields = [];
+//     const updateValues = [];
 
-    if (name) {
-      updateFields.push("name = ?");
-      updateValues.push(name);
-    }
-    if (type) {
-      updateFields.push("type = ?");
-      updateValues.push(type);
-    }
-    if (description !== undefined) {
-      updateFields.push("description = ?");
-      updateValues.push(description);
-    }
+//     if (name) {
+//       updateFields.push("name = ?");
+//       updateValues.push(name);
+//     }
+//     if (type) {
+//       updateFields.push("type = ?");
+//       updateValues.push(type);
+//     }
+//     if (description !== undefined) {
+//       updateFields.push("description = ?");
+//       updateValues.push(description);
+//     }
 
-    if (updateFields.length === 0) {
-      return res.status(400).json({
-        success: false,
-        error: "No fields to update",
-      });
-    }
+//     if (updateFields.length === 0) {
+//       return res.status(400).json({
+//         success: false,
+//         error: "No fields to update",
+//       });
+//     }
 
-    updateValues.push(code.toUpperCase());
+//     updateValues.push(code.toUpperCase());
 
-    await pool.execute(
-      `UPDATE assets SET ${updateFields.join(
-        ", "
-      )}, updated_at = CURRENT_TIMESTAMP WHERE code = ?`,
-      updateValues
-    );
+//     await pool.execute(
+//       `UPDATE assets SET ${updateFields.join(
+//         ", "
+//       )}, updated_at = CURRENT_TIMESTAMP WHERE code = ?`,
+//       updateValues
+//     );
 
-    // Get updated asset
-    const [updatedAsset] = await pool.execute(
-      "SELECT * FROM assets WHERE code = ?",
-      [code.toUpperCase()]
-    );
+//     // Get updated asset
+//     const [updatedAsset] = await pool.execute(
+//       "SELECT * FROM assets WHERE code = ?",
+//       [code.toUpperCase()]
+//     );
 
-    console.log("✅ Asset updated successfully");
+//     console.log("✅ Asset updated successfully");
 
-    res.json({
-      success: true,
-      asset: updatedAsset[0],
-      message: "Asset updated successfully",
-    });
-  } catch (error) {
-    console.error("❌ Update asset error:", error);
-    res.status(500).json({
-      success: false,
-      error: "Server error updating asset",
-    });
-  }
-});
+//     res.json({
+//       success: true,
+//       asset: updatedAsset[0],
+//       message: "Asset updated successfully",
+//     });
+//   } catch (error) {
+//     console.error("❌ Update asset error:", error);
+//     res.status(500).json({
+//       success: false,
+//       error: "Server error updating asset",
+//     });
+//   }
+// });
 
-// Delete asset (admin endpoint)
-app.delete("/api/assets/:code", async (req, res) => {
-  try {
-    const { code } = req.params;
+// // Delete asset (admin endpoint)
+// app.delete("/api/assets/:code", async (req, res) => {
+//   try {
+//     const { code } = req.params;
 
-    console.log("🗑️ Deleting asset:", code);
+//     console.log("🗑️ Deleting asset:", code);
 
-    // Check if asset exists
-    const [existing] = await pool.execute(
-      "SELECT code FROM assets WHERE code = ?",
-      [code.toUpperCase()]
-    );
+//     // Check if asset exists
+//     const [existing] = await pool.execute(
+//       "SELECT code FROM assets WHERE code = ?",
+//       [code.toUpperCase()]
+//     );
 
-    if (existing.length === 0) {
-      return res.status(404).json({
-        success: false,
-        error: "Asset not found",
-      });
-    }
+//     if (existing.length === 0) {
+//       return res.status(404).json({
+//         success: false,
+//         error: "Asset not found",
+//       });
+//     }
 
-    // Check if asset is being used in other tables
-    const [assetPairs] = await pool.execute(
-      "SELECT COUNT(*) as count FROM asset_pairs WHERE base_asset = ? OR quote_asset = ?",
-      [code.toUpperCase(), code.toUpperCase()]
-    );
+//     // Check if asset is being used in other tables
+//     const [assetPairs] = await pool.execute(
+//       "SELECT COUNT(*) as count FROM asset_pairs WHERE base_asset = ? OR quote_asset = ?",
+//       [code.toUpperCase(), code.toUpperCase()]
+//     );
 
-    if (assetPairs[0].count > 0) {
-      return res.status(400).json({
-        success: false,
-        error: "Cannot delete asset: it is being used in asset pairs",
-      });
-    }
+//     if (assetPairs[0].count > 0) {
+//       return res.status(400).json({
+//         success: false,
+//         error: "Cannot delete asset: it is being used in asset pairs",
+//       });
+//     }
 
-    // Delete the asset
-    await pool.execute("DELETE FROM assets WHERE code = ?", [
-      code.toUpperCase(),
-    ]);
+//     // Delete the asset
+//     await pool.execute("DELETE FROM assets WHERE code = ?", [
+//       code.toUpperCase(),
+//     ]);
 
-    console.log("✅ Asset deleted successfully");
+//     console.log("✅ Asset deleted successfully");
 
-    res.json({
-      success: true,
-      message: "Asset deleted successfully",
-    });
-  } catch (error) {
-    console.error("❌ Delete asset error:", error);
-    res.status(500).json({
-      success: false,
-      error: "Server error deleting asset",
-    });
-  }
-});
+//     res.json({
+//       success: true,
+//       message: "Asset deleted successfully",
+//     });
+//   } catch (error) {
+//     console.error("❌ Delete asset error:", error);
+//     res.status(500).json({
+//       success: false,
+//       error: "Server error deleting asset",
+//     });
+//   }
+// });
 
-// Get asset statistics
-app.get("/api/assets/stats", async (req, res) => {
-  try {
-    console.log("📊 Fetching asset statistics");
+// // Get asset statistics
+// app.get("/api/assets/stats", async (req, res) => {
+//   try {
+//     console.log("📊 Fetching asset statistics");
 
-    // Get count by type
-    const [typeStats] = await pool.execute(`
-      SELECT type, COUNT(*) as count 
-      FROM assets 
-      GROUP BY type
-    `);
+//     // Get count by type
+//     const [typeStats] = await pool.execute(`
+//       SELECT type, COUNT(*) as count 
+//       FROM assets 
+//       GROUP BY type
+//     `);
 
-    // Get total count
-    const [totalCount] = await pool.execute(
-      "SELECT COUNT(*) as total FROM assets"
-    );
+//     // Get total count
+//     const [totalCount] = await pool.execute(
+//       "SELECT COUNT(*) as total FROM assets"
+//     );
 
-    // Get recent additions (last 30 days)
-    const [recentAssets] = await pool.execute(`
-      SELECT COUNT(*) as count 
-      FROM assets 
-      WHERE created_at >= DATE_SUB(NOW(), INTERVAL 30 DAY)
-    `);
+//     // Get recent additions (last 30 days)
+//     const [recentAssets] = await pool.execute(`
+//       SELECT COUNT(*) as count 
+//       FROM assets 
+//       WHERE created_at >= DATE_SUB(NOW(), INTERVAL 30 DAY)
+//     `);
 
-    const stats = {
-      total: totalCount[0].total,
-      byType: typeStats,
-      recentAdditions: recentAssets[0].count,
-    };
+//     const stats = {
+//       total: totalCount[0].total,
+//       byType: typeStats,
+//       recentAdditions: recentAssets[0].count,
+//     };
 
-    console.log("✅ Asset statistics:", stats);
+//     console.log("✅ Asset statistics:", stats);
 
-    res.json({
-      success: true,
-      stats: stats,
-    });
-  } catch (error) {
-    console.error("❌ Get asset stats error:", error);
-    res.status(500).json({
-      success: false,
-      error: "Server error fetching asset statistics",
-    });
-  }
-});
+//     res.json({
+//       success: true,
+//       stats: stats,
+//     });
+//   } catch (error) {
+//     console.error("❌ Get asset stats error:", error);
+//     res.status(500).json({
+//       success: false,
+//       error: "Server error fetching asset statistics",
+//     });
+//   }
+// });
 
-// Test endpoint to verify database connection and data
-app.get("/api/test/assets", async (req, res) => {
-  try {
-    console.log("🧪 Testing assets table...");
+// // Test endpoint to verify database connection and data
+// app.get("/api/test/assets", async (req, res) => {
+//   try {
+//     console.log("🧪 Testing assets table...");
 
-    // Test basic query
-    const [assets] = await pool.execute("SELECT * FROM assets LIMIT 5");
+//     // Test basic query
+//     const [assets] = await pool.execute("SELECT * FROM assets LIMIT 5");
 
-    // Test currency filter
-    const [currencies] = await pool.execute(
-      "SELECT * FROM assets WHERE type = ? LIMIT 3",
-      ["Currency"]
-    );
+//     // Test currency filter
+//     const [currencies] = await pool.execute(
+//       "SELECT * FROM assets WHERE type = ? LIMIT 3",
+//       ["Currency"]
+//     );
 
-    // Test commodities filter
-    const [commodities] = await pool.execute(
-      "SELECT * FROM assets WHERE type = ? LIMIT 3",
-      ["Commodity"]
-    );
+//     // Test commodities filter
+//     const [commodities] = await pool.execute(
+//       "SELECT * FROM assets WHERE type = ? LIMIT 3",
+//       ["Commodity"]
+//     );
 
-    res.json({
-      success: true,
-      message: "Assets table test successful",
-      sample: {
-        allAssets: assets,
-        currencies: currencies,
-        commodities: commodities,
-      },
-      counts: {
-        total: assets.length,
-        currencies: currencies.length,
-        commodities: commodities.length,
-      },
-    });
-  } catch (error) {
-    console.error("❌ Assets test error:", error);
-    res.status(500).json({
-      success: false,
-      error: "Assets table test failed",
-      details: error.message,
-    });
-  }
-});
+//     res.json({
+//       success: true,
+//       message: "Assets table test successful",
+//       sample: {
+//         allAssets: assets,
+//         currencies: currencies,
+//         commodities: commodities,
+//       },
+//       counts: {
+//         total: assets.length,
+//         currencies: currencies.length,
+//         commodities: commodities.length,
+//       },
+//     });
+//   } catch (error) {
+//     console.error("❌ Assets test error:", error);
+//     res.status(500).json({
+//       success: false,
+//       error: "Assets table test failed",
+//       details: error.message,
+//     });
+//   }
+// });
 
+// // ====================
+// // END ASSETS API ROUTES
+// // ====================// Add this endpoint to your existing api-server.js file
+// // Insert this code BEFORE the "Start server" section
+
+// // ====================
+// // ASSETS API ROUTES
+// // ====================
+
+// // Get assets (currencies/commodities) endpoint
+// app.get("/api/assets", async (req, res) => {
+//   try {
+//     const { type } = req.query;
+
+//     console.log("🪙 Fetching assets, type filter:", type);
+
+//     let query = "SELECT code, name, type, description FROM assets";
+//     let params = [];
+
+//     // Filter by type if provided (Currency or Commodity)
+//     if (type) {
+//       query += " WHERE type = ?";
+//       params.push(type);
+//     }
+
+//     // Order by name for consistent results
+//     query += " ORDER BY name ASC";
+
+//     const [assets] = await pool.execute(query, params);
+
+//     console.log(`✅ Found ${assets.length} assets`);
+//     console.log(
+//       "📋 Assets:",
+//       assets.map((a) => `${a.code} (${a.type})`)
+//     );
+
+//     res.json(assets);
+//   } catch (error) {
+//     console.error("❌ Get assets error:", error);
+//     res.status(500).json({
+//       success: false,
+//       error: "Server error fetching assets",
+//     });
+//   }
+// });
+
+// // Get single asset by code
+// app.get("/api/assets/:code", async (req, res) => {
+//   try {
+//     const { code } = req.params;
+
+//     console.log("🔍 Fetching asset by code:", code);
+
+//     const [assets] = await pool.execute(
+//       "SELECT code, name, type, description, created_at, updated_at FROM assets WHERE code = ?",
+//       [code.toUpperCase()]
+//     );
+
+//     if (assets.length === 0) {
+//       return res.status(404).json({
+//         success: false,
+//         error: "Asset not found",
+//       });
+//     }
+
+//     console.log("✅ Asset found:", assets[0]);
+
+//     res.json({
+//       success: true,
+//       asset: assets[0],
+//     });
+//   } catch (error) {
+//     console.error("❌ Get asset by code error:", error);
+//     res.status(500).json({
+//       success: false,
+//       error: "Server error fetching asset",
+//     });
+//   }
+// });
+
+// // Create new asset (admin endpoint)
+// app.post("/api/assets", async (req, res) => {
+//   try {
+//     const { code, name, type, description } = req.body;
+
+//     // Validation
+//     if (!code || !name || !type) {
+//       return res.status(400).json({
+//         success: false,
+//         error: "Code, name, and type are required",
+//       });
+//     }
+
+//     if (!["Currency", "Commodity"].includes(type)) {
+//       return res.status(400).json({
+//         success: false,
+//         error: "Type must be either Currency or Commodity",
+//       });
+//     }
+
+//     console.log("➕ Creating new asset:", { code, name, type });
+
+//     // Check if asset already exists
+//     const [existing] = await pool.execute(
+//       "SELECT code FROM assets WHERE code = ?",
+//       [code.toUpperCase()]
+//     );
+
+//     if (existing.length > 0) {
+//       return res.status(409).json({
+//         success: false,
+//         error: "Asset with this code already exists",
+//       });
+//     }
+
+//     // Insert new asset
+//     await pool.execute(
+//       "INSERT INTO assets (code, name, type, description) VALUES (?, ?, ?, ?)",
+//       [code.toUpperCase(), name, type, description || ""]
+//     );
+
+//     // Get the created asset
+//     const [newAsset] = await pool.execute(
+//       "SELECT * FROM assets WHERE code = ?",
+//       [code.toUpperCase()]
+//     );
+
+//     console.log("✅ Asset created successfully");
+
+//     res.status(201).json({
+//       success: true,
+//       asset: newAsset[0],
+//       message: "Asset created successfully",
+//     });
+//   } catch (error) {
+//     console.error("❌ Create asset error:", error);
+//     res.status(500).json({
+//       success: false,
+//       error: "Server error creating asset",
+//     });
+//   }
+// });
+
+// // Update asset (admin endpoint)
+// app.put("/api/assets/:code", async (req, res) => {
+//   try {
+//     const { code } = req.params;
+//     const { name, type, description } = req.body;
+
+//     console.log("🔄 Updating asset:", code);
+
+//     // Validation
+//     if (type && !["Currency", "Commodity"].includes(type)) {
+//       return res.status(400).json({
+//         success: false,
+//         error: "Type must be either Currency or Commodity",
+//       });
+//     }
+
+//     // Check if asset exists
+//     const [existing] = await pool.execute(
+//       "SELECT code FROM assets WHERE code = ?",
+//       [code.toUpperCase()]
+//     );
+
+//     if (existing.length === 0) {
+//       return res.status(404).json({
+//         success: false,
+//         error: "Asset not found",
+//       });
+//     }
+
+//     // Build dynamic update query
+//     const updateFields = [];
+//     const updateValues = [];
+
+//     if (name) {
+//       updateFields.push("name = ?");
+//       updateValues.push(name);
+//     }
+//     if (type) {
+//       updateFields.push("type = ?");
+//       updateValues.push(type);
+//     }
+//     if (description !== undefined) {
+//       updateFields.push("description = ?");
+//       updateValues.push(description);
+//     }
+
+//     if (updateFields.length === 0) {
+//       return res.status(400).json({
+//         success: false,
+//         error: "No fields to update",
+//       });
+//     }
+
+//     updateValues.push(code.toUpperCase());
+
+//     await pool.execute(
+//       `UPDATE assets SET ${updateFields.join(
+//         ", "
+//       )}, updated_at = CURRENT_TIMESTAMP WHERE code = ?`,
+//       updateValues
+//     );
+
+//     // Get updated asset
+//     const [updatedAsset] = await pool.execute(
+//       "SELECT * FROM assets WHERE code = ?",
+//       [code.toUpperCase()]
+//     );
+
+//     console.log("✅ Asset updated successfully");
+
+//     res.json({
+//       success: true,
+//       asset: updatedAsset[0],
+//       message: "Asset updated successfully",
+//     });
+//   } catch (error) {
+//     console.error("❌ Update asset error:", error);
+//     res.status(500).json({
+//       success: false,
+//       error: "Server error updating asset",
+//     });
+//   }
+// });
+
+// // Delete asset (admin endpoint)
+// app.delete("/api/assets/:code", async (req, res) => {
+//   try {
+//     const { code } = req.params;
+
+//     console.log("🗑️ Deleting asset:", code);
+
+//     // Check if asset exists
+//     const [existing] = await pool.execute(
+//       "SELECT code FROM assets WHERE code = ?",
+//       [code.toUpperCase()]
+//     );
+
+//     if (existing.length === 0) {
+//       return res.status(404).json({
+//         success: false,
+//         error: "Asset not found",
+//       });
+//     }
+
+//     // Check if asset is being used in other tables
+//     const [assetPairs] = await pool.execute(
+//       "SELECT COUNT(*) as count FROM asset_pairs WHERE base_asset = ? OR quote_asset = ?",
+//       [code.toUpperCase(), code.toUpperCase()]
+//     );
+
+//     if (assetPairs[0].count > 0) {
+//       return res.status(400).json({
+//         success: false,
+//         error: "Cannot delete asset: it is being used in asset pairs",
+//       });
+//     }
+
+//     // Delete the asset
+//     await pool.execute("DELETE FROM assets WHERE code = ?", [
+//       code.toUpperCase(),
+//     ]);
+
+//     console.log("✅ Asset deleted successfully");
+
+//     res.json({
+//       success: true,
+//       message: "Asset deleted successfully",
+//     });
+//   } catch (error) {
+//     console.error("❌ Delete asset error:", error);
+//     res.status(500).json({
+//       success: false,
+//       error: "Server error deleting asset",
+//     });
+//   }
+// });
+
+// // Get asset statistics
+// app.get("/api/assets/stats", async (req, res) => {
+//   try {
+//     console.log("📊 Fetching asset statistics");
+
+//     // Get count by type
+//     const [typeStats] = await pool.execute(`
+//       SELECT type, COUNT(*) as count 
+//       FROM assets 
+//       GROUP BY type
+//     `);
+
+//     // Get total count
+//     const [totalCount] = await pool.execute(
+//       "SELECT COUNT(*) as total FROM assets"
+//     );
+
+//     // Get recent additions (last 30 days)
+//     const [recentAssets] = await pool.execute(`
+//       SELECT COUNT(*) as count 
+//       FROM assets 
+//       WHERE created_at >= DATE_SUB(NOW(), INTERVAL 30 DAY)
+//     `);
+
+//     const stats = {
+//       total: totalCount[0].total,
+//       byType: typeStats,
+//       recentAdditions: recentAssets[0].count,
+//     };
+
+//     console.log("✅ Asset statistics:", stats);
+
+//     res.json({
+//       success: true,
+//       stats: stats,
+//     });
+//   } catch (error) {
+//     console.error("❌ Get asset stats error:", error);
+//     res.status(500).json({
+//       success: false,
+//       error: "Server error fetching asset statistics",
+//     });
+//   }
+// });
+
+// // Test endpoint to verify database connection and data
+// app.get("/api/test/assets", async (req, res) => {
+//   try {
+//     console.log("🧪 Testing assets table...");
+
+//     // Test basic query
+//     const [assets] = await pool.execute("SELECT * FROM assets LIMIT 5");
+
+//     // Test currency filter
+//     const [currencies] = await pool.execute(
+//       "SELECT * FROM assets WHERE type = ? LIMIT 3",
+//       ["Currency"]
+//     );
+
+//     // Test commodities filter
+//     const [commodities] = await pool.execute(
+//       "SELECT * FROM assets WHERE type = ? LIMIT 3",
+//       ["Commodity"]
+//     );
+
+//     res.json({
+//       success: true,
+//       message: "Assets table test successful",
+//       sample: {
+//         allAssets: assets,
+//         currencies: currencies,
+//         commodities: commodities,
+//       },
+//       counts: {
+//         total: assets.length,
+//         currencies: currencies.length,
+//         commodities: commodities.length,
+//       },
+//     });
+//   } catch (error) {
+//     console.error("❌ Assets test error:", error);
+//     res.status(500).json({
+//       success: false,
+//       error: "Assets table test failed",
+//       details: error.message,
+//     });
+//   }
+// });
+
+// // ====================
+// // COT DATA API ROUTES
+// // ====================
+
+// // Submit COT (Market Sentiments) data
+// app.post("/api/economic-data/cot", async (req, res) => {
+//   try {
+//     const { asset_code, cotLongContracts, cotShortContracts } = req.body;
+
+//     console.log("📊 Submitting COT data for asset:", asset_code);
+
+//     // Validation
+//     if (!asset_code || !cotLongContracts || !cotShortContracts) {
+//       return res.status(400).json({
+//         success: false,
+//         error: "Asset code, long contracts, and short contracts are required",
+//       });
+//     }
+
+//     // Convert to numbers
+//     const newLongContracts = parseFloat(cotLongContracts);
+//     const newShortContracts = parseFloat(cotShortContracts);
+
+//     if (isNaN(newLongContracts) || isNaN(newShortContracts)) {
+//       return res.status(400).json({
+//         success: false,
+//         error: "Long and short contracts must be valid numbers",
+//       });
+//     }
+
+//     // Get the most recent COT data for this asset to calculate changes
+//     const [previousData] = await pool.execute(
+//       `SELECT long_contracts, short_contracts, long_percent 
+//        FROM cot_data 
+//        WHERE asset_code = ? 
+//        ORDER BY created_at DESC 
+//        LIMIT 1`,
+//       [asset_code.toUpperCase()]
+//     );
+
+//     let changeInLong = 0;
+//     let changeInShort = 0;
+//     let netChangePercent = 0;
+//     let previousLongPercent = 0;
+
+//     // Calculate changes if previous data exists
+//     if (previousData.length > 0) {
+//       const prev = previousData[0];
+//       changeInLong = newLongContracts - prev.long_contracts;
+//       changeInShort = newShortContracts - prev.short_contracts;
+//       previousLongPercent = prev.long_percent || 0;
+//     }
+
+//     // Calculate percentages
+//     const totalContracts = newLongContracts + newShortContracts;
+//     const longPercent =
+//       totalContracts > 0 ? (newLongContracts / totalContracts) * 100 : 0;
+//     const shortPercent =
+//       totalContracts > 0 ? (newShortContracts / totalContracts) * 100 : 0;
+
+//     // Calculate net position and net change percent
+//     const netPosition = newLongContracts - newShortContracts;
+//     netChangePercent = longPercent - previousLongPercent;
+
+//     // Insert new COT data (matching your exact table structure)
+//     const [result] = await pool.execute(
+//       `INSERT INTO cot_data 
+//        (asset_code, long_contracts, short_contracts, change_in_long, change_in_short, 
+//         long_percent, short_percent, net_position, net_change_percent)
+//        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+//       [
+//         asset_code.toUpperCase(),
+//         newLongContracts,
+//         newShortContracts,
+//         changeInLong,
+//         changeInShort,
+//         parseFloat(longPercent.toFixed(2)),
+//         parseFloat(shortPercent.toFixed(2)),
+//         netPosition,
+//         parseFloat(netChangePercent.toFixed(2)),
+//       ]
+//     );
+
+//     // Get the inserted record to return
+//     const [insertedData] = await pool.execute(
+//       "SELECT * FROM cot_data WHERE id = ?",
+//       [result.insertId]
+//     );
+
+//     console.log("✅ COT data saved successfully");
+
+//     res.status(201).json({
+//       success: true,
+//       message: "COT data saved successfully",
+//       data: insertedData[0],
+//       calculations: {
+//         changeInLong: changeInLong,
+//         changeInShort: changeInShort,
+//         longPercent: parseFloat(longPercent.toFixed(2)),
+//         shortPercent: parseFloat(shortPercent.toFixed(2)),
+//         netPosition: netPosition,
+//         netChangePercent: parseFloat(netChangePercent.toFixed(2)),
+//       },
+//     });
+//   } catch (error) {
+//     console.error("❌ COT data submission error:", error);
+//     res.status(500).json({
+//       success: false,
+//       error: "Server error saving COT data",
+//     });
+//   }
+// });
+
+// // Get COT data for an asset
+// app.get("/api/economic-data/cot/:asset_code", async (req, res) => {
+//   try {
+//     const { asset_code } = req.params;
+//     const { limit = 10 } = req.query;
+
+//     const [cotData] = await pool.execute(
+//       `SELECT * FROM cot_data 
+//        WHERE asset_code = ? 
+//        ORDER BY created_at DESC 
+//        LIMIT ?`,
+//       [asset_code.toUpperCase(), parseInt(limit)]
+//     );
+
+//     res.json({
+//       success: true,
+//       asset_code: asset_code.toUpperCase(),
+//       data: cotData,
+//       count: cotData.length,
+//     });
+//   } catch (error) {
+//     console.error("❌ Get COT data error:", error);
+//     res.status(500).json({
+//       success: false,
+//       error: "Server error fetching COT data",
+//     });
+//   }
+// });
+
+// // Get latest COT data for all assets
+// app.get("/api/economic-data/cot", async (req, res) => {
+//   try {
+//     console.log("📊 Fetching latest COT data for all assets");
+
+//     const [cotData] = await pool.execute(
+//       `SELECT c1.* FROM cot_data c1
+//        INNER JOIN (
+//          SELECT asset_code, MAX(created_at) as max_created
+//          FROM cot_data 
+//          GROUP BY asset_code
+//        ) c2 ON c1.asset_code = c2.asset_code 
+//            AND c1.created_at = c2.max_created
+//        ORDER BY c1.asset_code`
+//     );
+
+//     res.json({
+//       success: true,
+//       data: cotData,
+//       count: cotData.length,
+//     });
+//   } catch (error) {
+//     console.error("❌ Get all COT data error:", error);
+//     res.status(500).json({
+//       success: false,
+//       error: "Server error fetching COT data",
+//     });
+//   }
+// });
+
+// // ====================
+// // END COT DATA API ROUTES
+// // ====================
+
+// // ====================
+// // LABOR MARKET DATA API ROUTES
+// // ====================
+
+// // Submit Unemployment Rate data (UPDATED with forecast and result)
+// app.post("/api/economic-data/unemployment", async (req, res) => {
+//   try {
+//     const { asset_code, unemployment, unemploymentForecast } = req.body;
+
+//     console.log("📊 Submitting Unemployment Rate data for asset:", asset_code);
+
+//     // Validation
+//     if (!asset_code || !unemployment || !unemploymentForecast) {
+//       return res.status(400).json({
+//         success: false,
+//         error: "Asset code, unemployment rate, and forecast are required",
+//       });
+//     }
+
+//     // Convert to numbers
+//     const newUnemploymentRate = parseFloat(unemployment);
+//     const forecast = parseFloat(unemploymentForecast);
+
+//     if (isNaN(newUnemploymentRate) || isNaN(forecast)) {
+//       return res.status(400).json({
+//         success: false,
+//         error: "Unemployment rate and forecast must be valid numbers",
+//       });
+//     }
+
+//     // Get the most recent unemployment data for this asset to calculate changes
+//     const [previousData] = await pool.execute(
+//       `SELECT unemployment_rate 
+//        FROM unemployment_rate 
+//        WHERE asset_code = ? 
+//        ORDER BY created_at DESC 
+//        LIMIT 1`,
+//       [asset_code.toUpperCase()]
+//     );
+
+//     let netChangePercent = 0;
+
+//     // Calculate net change percent if previous data exists
+//     if (previousData.length > 0) {
+//       const previousRate = previousData[0].unemployment_rate;
+//       if (previousRate && previousRate !== 0) {
+//         // Formula: [(New Rate - Previous Rate) / Previous Rate] * 100
+//         netChangePercent =
+//           ((newUnemploymentRate - previousRate) / previousRate) * 100;
+//       }
+//     }
+
+//     // Determine result based on comparison with forecast (same logic as GDP)
+//     let result;
+//     if (newUnemploymentRate > forecast) {
+//       result = "Missed"; // Higher unemployment is bad
+//     } else if (newUnemploymentRate < forecast) {
+//       result = "Beat"; // Lower unemployment is good
+//     } else {
+//       result = "As Expected";
+//     }
+
+//     // Insert new unemployment data with forecast and result
+//     const [insertResult] = await pool.execute(
+//       `INSERT INTO unemployment_rate 
+//        (asset_code, unemployment_rate, forecast, net_change_percent, result)
+//        VALUES (?, ?, ?, ?, ?)`,
+//       [
+//         asset_code.toUpperCase(),
+//         newUnemploymentRate,
+//         forecast,
+//         parseFloat(netChangePercent.toFixed(2)),
+//         result,
+//       ]
+//     );
+
+//     // Get the inserted record to return
+//     const [insertedData] = await pool.execute(
+//       "SELECT * FROM unemployment_rate WHERE id = ?",
+//       [insertResult.insertId]
+//     );
+
+//     console.log("✅ Unemployment Rate data saved successfully");
+
+//     res.status(201).json({
+//       success: true,
+//       message: "Unemployment Rate data saved successfully",
+//       data: insertedData[0],
+//       calculations: {
+//         netChangePercent: parseFloat(netChangePercent.toFixed(2)),
+//         result: result,
+//       },
+//     });
+//   } catch (error) {
+//     console.error("❌ Unemployment Rate submission error:", error);
+//     res.status(500).json({
+//       success: false,
+//       error: "Server error saving unemployment rate data",
+//     });
+//   }
+// });
+
+// // Submit Employment Change data (UPDATED with forecast and result)
+// app.post("/api/economic-data/employment", async (req, res) => {
+//   try {
+//     const { asset_code, employeeChange, employeeChangeForecast } = req.body;
+
+//     console.log("📊 Submitting Employment Change data for asset:", asset_code);
+
+//     // Validation
+//     if (!asset_code || !employeeChange || !employeeChangeForecast) {
+//       return res.status(400).json({
+//         success: false,
+//         error: "Asset code, employment change, and forecast are required",
+//       });
+//     }
+
+//     // Convert to numbers
+//     const newEmploymentChange = parseFloat(employeeChange);
+//     const forecast = parseFloat(employeeChangeForecast);
+
+//     if (isNaN(newEmploymentChange) || isNaN(forecast)) {
+//       return res.status(400).json({
+//         success: false,
+//         error: "Employment change and forecast must be valid numbers",
+//       });
+//     }
+
+//     // Get the most recent employment data for this asset to calculate changes
+//     const [previousData] = await pool.execute(
+//       `SELECT employment_change 
+//        FROM employment_change 
+//        WHERE asset_code = ? 
+//        ORDER BY created_at DESC 
+//        LIMIT 1`,
+//       [asset_code.toUpperCase()]
+//     );
+
+//     let netChangePercent = 0;
+
+//     // Calculate net change percent if previous data exists
+//     if (previousData.length > 0) {
+//       const previousChange = previousData[0].employment_change;
+//       if (previousChange && previousChange !== 0) {
+//         // Formula: [(New Change - Previous Change) / Previous Change] * 100
+//         netChangePercent =
+//           ((newEmploymentChange - previousChange) / previousChange) * 100;
+//       }
+//     }
+
+//     // Determine result based on comparison with forecast (same logic as GDP)
+//     let result;
+//     if (newEmploymentChange > forecast) {
+//       result = "Beat"; // Higher employment change is good
+//     } else if (newEmploymentChange < forecast) {
+//       result = "Missed"; // Lower employment change is bad
+//     } else {
+//       result = "As Expected";
+//     }
+
+//     // Insert new employment data with forecast and result
+//     const [insertResult] = await pool.execute(
+//       `INSERT INTO employment_change 
+//        (asset_code, employment_change, forecast, net_change_percent, result)
+//        VALUES (?, ?, ?, ?, ?)`,
+//       [
+//         asset_code.toUpperCase(),
+//         newEmploymentChange,
+//         forecast,
+//         parseFloat(netChangePercent.toFixed(2)),
+//         result,
+//       ]
+//     );
+
+//     // Get the inserted record to return
+//     const [insertedData] = await pool.execute(
+//       "SELECT * FROM employment_change WHERE id = ?",
+//       [insertResult.insertId]
+//     );
+
+//     console.log("✅ Employment Change data saved successfully");
+
+//     res.status(201).json({
+//       success: true,
+//       message: "Employment Change data saved successfully",
+//       data: insertedData[0],
+//       calculations: {
+//         netChangePercent: parseFloat(netChangePercent.toFixed(2)),
+//         result: result,
+//       },
+//     });
+//   } catch (error) {
+//     console.error("❌ Employment Change submission error:", error);
+//     res.status(500).json({
+//       success: false,
+//       error: "Server error saving employment change data",
+//     });
+//   }
+// });
+
+// // GET endpoints remain the same, but now return the new forecast and result fields
+// // Get unemployment rate data for an asset
+// app.get("/api/economic-data/unemployment/:asset_code", async (req, res) => {
+//   try {
+//     const { asset_code } = req.params;
+//     const { limit = 10 } = req.query;
+
+//     const [unemploymentData] = await pool.execute(
+//       `SELECT * FROM unemployment_rate 
+//        WHERE asset_code = ? 
+//        ORDER BY created_at DESC 
+//        LIMIT ?`,
+//       [asset_code.toUpperCase(), parseInt(limit)]
+//     );
+
+//     res.json({
+//       success: true,
+//       asset_code: asset_code.toUpperCase(),
+//       data: unemploymentData,
+//       count: unemploymentData.length,
+//     });
+//   } catch (error) {
+//     console.error("❌ Get unemployment data error:", error);
+//     res.status(500).json({
+//       success: false,
+//       error: "Server error fetching unemployment data",
+//     });
+//   }
+// });
+
+// // Get employment change data for an asset
+// app.get("/api/economic-data/employment/:asset_code", async (req, res) => {
+//   try {
+//     const { asset_code } = req.params;
+//     const { limit = 10 } = req.query;
+
+//     const [employmentData] = await pool.execute(
+//       `SELECT * FROM employment_change 
+//        WHERE asset_code = ? 
+//        ORDER BY created_at DESC 
+//        LIMIT ?`,
+//       [asset_code.toUpperCase(), parseInt(limit)]
+//     );
+
+//     res.json({
+//       success: true,
+//       asset_code: asset_code.toUpperCase(),
+//       data: employmentData,
+//       count: employmentData.length,
+//     });
+//   } catch (error) {
+//     console.error("❌ Get employment data error:", error);
+//     res.status(500).json({
+//       success: false,
+//       error: "Server error fetching employment data",
+//     });
+//   }
+// });
+
+// // ====================
+// // END LABOR MARKET DATA API ROUTES
+// // ====================
+// // ====================
+// // ECONOMIC GROWTH DATA API ROUTES
+// // ====================
+
+// // Submit GDP Growth data
+// app.post("/api/economic-data/gdp", async (req, res) => {
+//   try {
+//     const { asset_code, gdp, gdpForecast } = req.body;
+
+//     console.log("📊 Submitting GDP Growth data for asset:", asset_code);
+
+//     // Validation
+//     if (!asset_code || !gdp || !gdpForecast) {
+//       return res.status(400).json({
+//         success: false,
+//         error: "Asset code, GDP growth, and GDP forecast are required",
+//       });
+//     }
+
+//     // Convert to numbers
+//     const newGdpGrowth = parseFloat(gdp);
+//     const forecast = parseFloat(gdpForecast);
+
+//     if (isNaN(newGdpGrowth) || isNaN(forecast)) {
+//       return res.status(400).json({
+//         success: false,
+//         error: "GDP growth and forecast must be valid numbers",
+//       });
+//     }
+
+//     // Get the most recent GDP data for this asset to calculate changes
+//     const [previousData] = await pool.execute(
+//       `SELECT gdp_growth 
+//        FROM gdp_growth 
+//        WHERE asset_code = ? 
+//        ORDER BY created_at DESC 
+//        LIMIT 1`,
+//       [asset_code.toUpperCase()]
+//     );
+
+//     let changeInGdp = 0;
+
+//     // Calculate change in GDP if previous data exists
+//     if (previousData.length > 0) {
+//       const previousGdp = previousData[0].gdp_growth;
+//       changeInGdp = newGdpGrowth - previousGdp;
+//     }
+
+//     // Determine result based on comparison with forecast
+//     let result;
+//     if (newGdpGrowth > forecast) {
+//       result = "Beat";
+//     } else if (newGdpGrowth < forecast) {
+//       result = "Missed";
+//     } else {
+//       result = "As Expected";
+//     }
+
+//     // Insert new GDP data
+//     const [insertResult] = await pool.execute(
+//       `INSERT INTO gdp_growth 
+//        (asset_code, gdp_growth, forecast, change_in_gdp, result)
+//        VALUES (?, ?, ?, ?, ?)`,
+//       [
+//         asset_code.toUpperCase(),
+//         newGdpGrowth,
+//         forecast,
+//         parseFloat(changeInGdp.toFixed(2)),
+//         result,
+//       ]
+//     );
+
+//     // Get the inserted record to return
+//     const [insertedData] = await pool.execute(
+//       "SELECT * FROM gdp_growth WHERE id = ?",
+//       [insertResult.insertId]
+//     );
+
+//     console.log("✅ GDP Growth data saved successfully");
+
+//     res.status(201).json({
+//       success: true,
+//       message: "GDP Growth data saved successfully",
+//       data: insertedData[0],
+//       calculations: {
+//         changeInGdp: parseFloat(changeInGdp.toFixed(2)),
+//         result: result,
+//       },
+//     });
+//   } catch (error) {
+//     console.error("❌ GDP Growth submission error:", error);
+//     res.status(500).json({
+//       success: false,
+//       error: "Server error saving GDP growth data",
+//     });
+//   }
+// });
+
+// // Submit Manufacturing PMI data
+// app.post("/api/economic-data/mpmi", async (req, res) => {
+//   try {
+//     const { asset_code, mPMI, mPMIForecast } = req.body;
+
+//     console.log("📊 Submitting Manufacturing PMI data for asset:", asset_code);
+
+//     // Validation
+//     if (!asset_code || !mPMI || !mPMIForecast) {
+//       return res.status(400).json({
+//         success: false,
+//         error: "Asset code, Manufacturing PMI, and forecast are required",
+//       });
+//     }
+
+//     // Convert to numbers
+//     const newMPMI = parseFloat(mPMI);
+//     const forecast = parseFloat(mPMIForecast);
+
+//     if (isNaN(newMPMI) || isNaN(forecast)) {
+//       return res.status(400).json({
+//         success: false,
+//         error: "Manufacturing PMI and forecast must be valid numbers",
+//       });
+//     }
+
+//     // Determine result based on comparison with forecast
+//     let result;
+//     if (newMPMI > forecast) {
+//       result = "Beat";
+//     } else if (newMPMI < forecast) {
+//       result = "Miss";
+//     } else {
+//       result = "Met";
+//     }
+
+//     // Insert new Manufacturing PMI data
+//     const [insertResult] = await pool.execute(
+//       `INSERT INTO mpmi 
+//        (asset_code, service_pmi, forecast, result)
+//        VALUES (?, ?, ?, ?)`,
+//       [asset_code.toUpperCase(), newMPMI, forecast, result]
+//     );
+
+//     // Get the inserted record to return
+//     const [insertedData] = await pool.execute(
+//       "SELECT * FROM mpmi WHERE id = ?",
+//       [insertResult.insertId]
+//     );
+
+//     console.log("✅ Manufacturing PMI data saved successfully");
+
+//     res.status(201).json({
+//       success: true,
+//       message: "Manufacturing PMI data saved successfully",
+//       data: insertedData[0],
+//       calculations: {
+//         result: result,
+//       },
+//     });
+//   } catch (error) {
+//     console.error("❌ Manufacturing PMI submission error:", error);
+//     res.status(500).json({
+//       success: false,
+//       error: "Server error saving Manufacturing PMI data",
+//     });
+//   }
+// });
+
+// // Submit Services PMI data
+// app.post("/api/economic-data/spmi", async (req, res) => {
+//   try {
+//     const { asset_code, sPMI, sPMIForecast } = req.body;
+
+//     console.log("📊 Submitting Services PMI data for asset:", asset_code);
+
+//     // Validation
+//     if (!asset_code || !sPMI || !sPMIForecast) {
+//       return res.status(400).json({
+//         success: false,
+//         error: "Asset code, Services PMI, and forecast are required",
+//       });
+//     }
+
+//     // Convert to numbers
+//     const newSPMI = parseFloat(sPMI);
+//     const forecast = parseFloat(sPMIForecast);
+
+//     if (isNaN(newSPMI) || isNaN(forecast)) {
+//       return res.status(400).json({
+//         success: false,
+//         error: "Services PMI and forecast must be valid numbers",
+//       });
+//     }
+
+//     // Determine result based on comparison with forecast
+//     let result;
+//     if (newSPMI > forecast) {
+//       result = "Beat";
+//     } else if (newSPMI < forecast) {
+//       result = "Miss";
+//     } else {
+//       result = "Met";
+//     }
+
+//     // Insert new Services PMI data
+//     const [insertResult] = await pool.execute(
+//       `INSERT INTO spmi 
+//        (asset_code, service_pmi, forecast, result)
+//        VALUES (?, ?, ?, ?)`,
+//       [asset_code.toUpperCase(), newSPMI, forecast, result]
+//     );
+
+//     // Get the inserted record to return
+//     const [insertedData] = await pool.execute(
+//       "SELECT * FROM spmi WHERE id = ?",
+//       [insertResult.insertId]
+//     );
+
+//     console.log("✅ Services PMI data saved successfully");
+
+//     res.status(201).json({
+//       success: true,
+//       message: "Services PMI data saved successfully",
+//       data: insertedData[0],
+//       calculations: {
+//         result: result,
+//       },
+//     });
+//   } catch (error) {
+//     console.error("❌ Services PMI submission error:", error);
+//     res.status(500).json({
+//       success: false,
+//       error: "Server error saving Services PMI data",
+//     });
+//   }
+// });
+
+// // Submit Retail Sales data
+// app.post("/api/economic-data/retail", async (req, res) => {
+//   try {
+//     const { asset_code, retailSales, retailSalesForecast } = req.body;
+
+//     console.log("📊 Submitting Retail Sales data for asset:", asset_code);
+
+//     // Validation
+//     if (!asset_code || !retailSales || !retailSalesForecast) {
+//       return res.status(400).json({
+//         success: false,
+//         error: "Asset code, Retail Sales, and forecast are required",
+//       });
+//     }
+
+//     // Convert to numbers
+//     const newRetailSales = parseFloat(retailSales);
+//     const forecast = parseFloat(retailSalesForecast);
+
+//     if (isNaN(newRetailSales) || isNaN(forecast)) {
+//       return res.status(400).json({
+//         success: false,
+//         error: "Retail Sales and forecast must be valid numbers",
+//       });
+//     }
+
+//     // Get the most recent retail sales data for this asset to calculate net change percent
+//     const [previousData] = await pool.execute(
+//       `SELECT retail_sales 
+//        FROM retail_sales 
+//        WHERE asset_code = ? 
+//        ORDER BY created_at DESC 
+//        LIMIT 1`,
+//       [asset_code.toUpperCase()]
+//     );
+
+//     let netChangePercent = 0;
+
+//     // Calculate net change percent if previous data exists
+//     if (previousData.length > 0) {
+//       const previousSales = previousData[0].retail_sales;
+//       if (previousSales && previousSales !== 0) {
+//         // Formula: [(New Sales - Previous Sales) / Previous Sales] * 100
+//         netChangePercent =
+//           ((newRetailSales - previousSales) / previousSales) * 100;
+//       }
+//     }
+
+//     // Determine result based on comparison with forecast
+//     let result;
+//     if (newRetailSales > forecast) {
+//       result = "Beat";
+//     } else if (newRetailSales < forecast) {
+//       result = "Miss";
+//     } else {
+//       result = "Met";
+//     }
+
+//     // Insert new Retail Sales data
+//     const [insertResult] = await pool.execute(
+//       `INSERT INTO retail_sales 
+//        (asset_code, retail_sales, forecast, net_change_percent, result)
+//        VALUES (?, ?, ?, ?, ?)`,
+//       [
+//         asset_code.toUpperCase(),
+//         newRetailSales,
+//         forecast,
+//         parseFloat(netChangePercent.toFixed(2)),
+//         result,
+//       ]
+//     );
+
+//     // Get the inserted record to return
+//     const [insertedData] = await pool.execute(
+//       "SELECT * FROM retail_sales WHERE id = ?",
+//       [insertResult.insertId]
+//     );
+
+//     console.log("✅ Retail Sales data saved successfully");
+
+//     res.status(201).json({
+//       success: true,
+//       message: "Retail Sales data saved successfully",
+//       data: insertedData[0],
+//       calculations: {
+//         netChangePercent: parseFloat(netChangePercent.toFixed(2)),
+//         result: result,
+//       },
+//     });
+//   } catch (error) {
+//     console.error("❌ Retail Sales submission error:", error);
+//     res.status(500).json({
+//       success: false,
+//       error: "Server error saving Retail Sales data",
+//     });
+//   }
+// });
+
+// // GET endpoints for each economic indicator
+
+// // Get GDP Growth data for an asset
+// app.get("/api/economic-data/gdp/:asset_code", async (req, res) => {
+//   try {
+//     const { asset_code } = req.params;
+//     const { limit = 10 } = req.query;
+
+//     const [gdpData] = await pool.execute(
+//       `SELECT * FROM gdp_growth 
+//        WHERE asset_code = ? 
+//        ORDER BY created_at DESC 
+//        LIMIT ?`,
+//       [asset_code.toUpperCase(), parseInt(limit)]
+//     );
+
+//     res.json({
+//       success: true,
+//       asset_code: asset_code.toUpperCase(),
+//       data: gdpData,
+//       count: gdpData.length,
+//     });
+//   } catch (error) {
+//     console.error("❌ Get GDP data error:", error);
+//     res.status(500).json({
+//       success: false,
+//       error: "Server error fetching GDP data",
+//     });
+//   }
+// });
+
+// // Get Manufacturing PMI data for an asset
+// app.get("/api/economic-data/mpmi/:asset_code", async (req, res) => {
+//   try {
+//     const { asset_code } = req.params;
+//     const { limit = 10 } = req.query;
+
+//     const [mpmiData] = await pool.execute(
+//       `SELECT * FROM mpmi 
+//        WHERE asset_code = ? 
+//        ORDER BY created_at DESC 
+//        LIMIT ?`,
+//       [asset_code.toUpperCase(), parseInt(limit)]
+//     );
+
+//     res.json({
+//       success: true,
+//       asset_code: asset_code.toUpperCase(),
+//       data: mpmiData,
+//       count: mpmiData.length,
+//     });
+//   } catch (error) {
+//     console.error("❌ Get Manufacturing PMI data error:", error);
+//     res.status(500).json({
+//       success: false,
+//       error: "Server error fetching Manufacturing PMI data",
+//     });
+//   }
+// });
+
+// // Get Services PMI data for an asset
+// app.get("/api/economic-data/spmi/:asset_code", async (req, res) => {
+//   try {
+//     const { asset_code } = req.params;
+//     const { limit = 10 } = req.query;
+
+//     const [spmiData] = await pool.execute(
+//       `SELECT * FROM spmi 
+//        WHERE asset_code = ? 
+//        ORDER BY created_at DESC 
+//        LIMIT ?`,
+//       [asset_code.toUpperCase(), parseInt(limit)]
+//     );
+
+//     res.json({
+//       success: true,
+//       asset_code: asset_code.toUpperCase(),
+//       data: spmiData,
+//       count: spmiData.length,
+//     });
+//   } catch (error) {
+//     console.error("❌ Get Services PMI data error:", error);
+//     res.status(500).json({
+//       success: false,
+//       error: "Server error fetching Services PMI data",
+//     });
+//   }
+// });
+
+// // Get Retail Sales data for an asset
+// app.get("/api/economic-data/retail/:asset_code", async (req, res) => {
+//   try {
+//     const { asset_code } = req.params;
+//     const { limit = 10 } = req.query;
+
+//     const [retailData] = await pool.execute(
+//       `SELECT * FROM retail_sales 
+//        WHERE asset_code = ? 
+//        ORDER BY created_at DESC 
+//        LIMIT ?`,
+//       [asset_code.toUpperCase(), parseInt(limit)]
+//     );
+
+//     res.json({
+//       success: true,
+//       asset_code: asset_code.toUpperCase(),
+//       data: retailData,
+//       count: retailData.length,
+//     });
+//   } catch (error) {
+//     console.error("❌ Get Retail Sales data error:", error);
+//     res.status(500).json({
+//       success: false,
+//       error: "Server error fetching Retail Sales data",
+//     });
+//   }
+// });
+
+// // ====================
+// // END ECONOMIC GROWTH DATA API ROUTES
+// // ====================
+// // ====================
+// // INFLATION DATA API ROUTES
+// // ====================
+
+// // Submit Core Inflation data
+// app.post("/api/economic-data/inflation", async (req, res) => {
+//   try {
+//     const { asset_code, cpi, cpiForecast } = req.body;
+
+//     console.log("📊 Submitting Core Inflation data for asset:", asset_code);
+
+//     // Validation
+//     if (!asset_code || !cpi || !cpiForecast) {
+//       return res.status(400).json({
+//         success: false,
+//         error: "Asset code, core inflation, and forecast are required",
+//       });
+//     }
+
+//     // Convert to numbers
+//     const newCoreInflation = parseFloat(cpi);
+//     const forecast = parseFloat(cpiForecast);
+
+//     if (isNaN(newCoreInflation) || isNaN(forecast)) {
+//       return res.status(400).json({
+//         success: false,
+//         error: "Core inflation and forecast must be valid numbers",
+//       });
+//     }
+
+//     // Get the most recent inflation data for this asset to calculate net change percent
+//     const [previousData] = await pool.execute(
+//       `SELECT core_inflation 
+//        FROM core_inflation 
+//        WHERE asset_code = ? 
+//        ORDER BY created_at DESC 
+//        LIMIT 1`,
+//       [asset_code.toUpperCase()]
+//     );
+
+//     let netChangePercent = 0;
+
+//     // Calculate net change percent if previous data exists
+//     if (previousData.length > 0) {
+//       const previousInflation = previousData[0].core_inflation;
+//       if (previousInflation && previousInflation !== 0) {
+//         // Formula: [(New Core Inflation - Previous Core Inflation) / Previous Core Inflation] * 100
+//         netChangePercent =
+//           ((newCoreInflation - previousInflation) / previousInflation) * 100;
+//       }
+//     }
+
+//     // Determine result based on comparison with forecast
+//     let result;
+//     if (newCoreInflation > forecast) {
+//       result = "Lower than expected";
+//     } else if (newCoreInflation < forecast) {
+//       result = "Higher than expected";
+//     } else {
+//       result = "As Expected";
+//     }
+
+//     // Insert new inflation data
+//     const [insertResult] = await pool.execute(
+//       `INSERT INTO core_inflation 
+//        (asset_code, core_inflation, forecast, net_change_percent, result)
+//        VALUES (?, ?, ?, ?, ?)`,
+//       [
+//         asset_code.toUpperCase(),
+//         newCoreInflation,
+//         forecast,
+//         parseFloat(netChangePercent.toFixed(2)),
+//         result,
+//       ]
+//     );
+
+//     // Get the inserted record to return
+//     const [insertedData] = await pool.execute(
+//       "SELECT * FROM core_inflation WHERE id = ?",
+//       [insertResult.insertId]
+//     );
+
+//     console.log("✅ Core Inflation data saved successfully");
+
+//     res.status(201).json({
+//       success: true,
+//       message: "Core Inflation data saved successfully",
+//       data: insertedData[0],
+//       calculations: {
+//         netChangePercent: parseFloat(netChangePercent.toFixed(2)),
+//         result: result,
+//       },
+//     });
+//   } catch (error) {
+//     console.error("❌ Core Inflation submission error:", error);
+//     res.status(500).json({
+//       success: false,
+//       error: "Server error saving core inflation data",
+//     });
+//   }
+// });
+
+// // Get Core Inflation data for an asset
+// app.get("/api/economic-data/inflation/:asset_code", async (req, res) => {
+//   try {
+//     const { asset_code } = req.params;
+//     const { limit = 10 } = req.query;
+
+//     const [inflationData] = await pool.execute(
+//       `SELECT * FROM core_inflation 
+//        WHERE asset_code = ? 
+//        ORDER BY created_at DESC 
+//        LIMIT ?`,
+//       [asset_code.toUpperCase(), parseInt(limit)]
+//     );
+
+//     res.json({
+//       success: true,
+//       asset_code: asset_code.toUpperCase(),
+//       data: inflationData,
+//       count: inflationData.length,
+//     });
+//   } catch (error) {
+//     console.error("❌ Get inflation data error:", error);
+//     res.status(500).json({
+//       success: false,
+//       error: "Server error fetching inflation data",
+//     });
+//   }
+// });
+
+// // ====================
+// // END INFLATION DATA API ROUTES
+// // ====================
+
+// // ====================
+// // INTEREST RATE DATA API ROUTES
+// // ====================
+
+// // Submit Interest Rate data
+// app.post("/api/economic-data/interest", async (req, res) => {
+//   try {
+//     const { asset_code, interestRate } = req.body;
+
+//     console.log("📊 Submitting Interest Rate data for asset:", asset_code);
+
+//     // Validation
+//     if (!asset_code || !interestRate) {
+//       return res.status(400).json({
+//         success: false,
+//         error: "Asset code and interest rate are required",
+//       });
+//     }
+
+//     // Convert to number
+//     const newInterestRate = parseFloat(interestRate);
+
+//     if (isNaN(newInterestRate)) {
+//       return res.status(400).json({
+//         success: false,
+//         error: "Interest rate must be a valid number",
+//       });
+//     }
+
+//     // Get the most recent interest rate data for this asset to calculate change
+//     const [previousData] = await pool.execute(
+//       `SELECT interest_rate 
+//        FROM interest_rate 
+//        WHERE asset_code = ? 
+//        ORDER BY created_at DESC 
+//        LIMIT 1`,
+//       [asset_code.toUpperCase()]
+//     );
+
+//     let changeInInterest = 0;
+
+//     // Calculate change in interest if previous data exists
+//     if (previousData.length > 0) {
+//       const previousRate = previousData[0].interest_rate;
+//       if (previousRate !== null && previousRate !== undefined) {
+//         // Formula: new_interest_rate - previous_interest_rate
+//         changeInInterest = newInterestRate - previousRate;
+//       }
+//     }
+
+//     // Insert new interest rate data
+//     const [insertResult] = await pool.execute(
+//       `INSERT INTO interest_rate 
+//        (asset_code, interest_rate, change_in_interest)
+//        VALUES (?, ?, ?)`,
+//       [
+//         asset_code.toUpperCase(),
+//         newInterestRate,
+//         parseFloat(changeInInterest.toFixed(4)),
+//       ]
+//     );
+
+//     // Get the inserted record to return
+//     const [insertedData] = await pool.execute(
+//       "SELECT * FROM interest_rate WHERE id = ?",
+//       [insertResult.insertId]
+//     );
+
+//     console.log("✅ Interest Rate data saved successfully");
+
+//     res.status(201).json({
+//       success: true,
+//       message: "Interest Rate data saved successfully",
+//       data: insertedData[0],
+//       calculations: {
+//         changeInInterest: parseFloat(changeInInterest.toFixed(4)),
+//       },
+//     });
+//   } catch (error) {
+//     console.error("❌ Interest Rate submission error:", error);
+//     res.status(500).json({
+//       success: false,
+//       error: "Server error saving interest rate data",
+//     });
+//   }
+// });
+
+// // Get Interest Rate data for an asset
+// app.get("/api/economic-data/interest/:asset_code", async (req, res) => {
+//   try {
+//     const { asset_code } = req.params;
+//     const { limit = 10 } = req.query;
+
+//     const [interestData] = await pool.execute(
+//       `SELECT * FROM interest_rate 
+//        WHERE asset_code = ? 
+//        ORDER BY created_at DESC 
+//        LIMIT ?`,
+//       [asset_code.toUpperCase(), parseInt(limit)]
+//     );
+
+//     res.json({
+//       success: true,
+//       asset_code: asset_code.toUpperCase(),
+//       data: interestData,
+//       count: interestData.length,
+//     });
+//   } catch (error) {
+//     console.error("❌ Get interest rate data error:", error);
+//     res.status(500).json({
+//       success: false,
+//       error: "Server error fetching interest rate data",
+//     });
+//   }
+// });
+
+// // ====================
+// // END INTEREST RATE DATA API ROUTES
+// // ====================
+
+// // ====================
+// // NFP DATA API ROUTES (USD ONLY)
+// // ====================
+
+// // Submit NFP (Non-Farm Payrolls) data - USD ONLY
+// // ====================
+// // FIXED NFP DATA API ROUTES
+// // ====================
+
+// // Submit NFP (Non-Farm Payrolls) data - USD ONLY
+// app.post("/api/economic-data/nfp", async (req, res) => {
+//   try {
+//     const { asset_code, actualNfp, nfpForecast } = req.body;
+
+//     // console.log("📊 Submitting NFP data for asset:", asset_code);
+
+//     // Validation - Only allow USD
+//     if (!asset_code) {
+//       return res.status(400).json({
+//         success: false,
+//         error: "Asset code is required",
+//       });
+//     }
+
+//     if (asset_code.toUpperCase() !== "USD") {
+//       return res.status(400).json({
+//         success: false,
+//         error: "NFP data is only available for USD currency",
+//       });
+//     }
+
+//     if (!actualNfp || !nfpForecast) {
+//       return res.status(400).json({
+//         success: false,
+//         error: "Actual NFP and forecast are required",
+//       });
+//     }
+
+//     // Convert to numbers
+//     const newActualNfp = parseFloat(actualNfp);
+//     const forecast = parseFloat(nfpForecast);
+
+//     if (isNaN(newActualNfp) || isNaN(forecast)) {
+//       return res.status(400).json({
+//         success: false,
+//         error: "Actual NFP and forecast must be valid numbers",
+//       });
+//     }
+
+//     // Get the most recent NFP data for USD to calculate net change percent
+//     const [previousData] = await pool.execute(
+//       `SELECT actual_nfp 
+//        FROM nfp 
+//        WHERE asset_code = 'USD' 
+//        ORDER BY created_at DESC 
+//        LIMIT 1`
+//     );
+
+//     let netChangePercent = 0;
+
+//     // Calculate net change percent if previous data exists
+//     if (previousData.length > 0) {
+//       const previousNfp = previousData[0].actual_nfp;
+//       if (previousNfp && previousNfp !== 0) {
+//         // Formula: [(New NFP - Previous NFP) / Previous NFP] * 100
+//         netChangePercent = ((newActualNfp - previousNfp) / previousNfp) * 100;
+//       }
+//     }
+
+//     // Insert new NFP data
+//     const [insertResult] = await pool.execute(
+//       `INSERT INTO nfp 
+//        (asset_code, actual_nfp, forecast, net_change_percent)
+//        VALUES (?, ?, ?, ?)`,
+//       [
+//         "USD", // Always USD
+//         newActualNfp,
+//         forecast,
+//         parseFloat(netChangePercent.toFixed(2)),
+//       ]
+//     );
+
+//     // Get the inserted record to return
+//     const [insertedData] = await pool.execute(
+//       "SELECT * FROM nfp WHERE id = ?",
+//       [insertResult.insertId]
+//     );
+
+//     console.log("✅ NFP data saved successfully for USD");
+
+//     res.status(201).json({
+//       success: true,
+//       message: "NFP data saved successfully",
+//       data: insertedData[0],
+//       calculations: {
+//         netChangePercent: parseFloat(netChangePercent.toFixed(2)),
+//       },
+//     });
+//   } catch (error) {
+//     console.error("❌ NFP submission error:", error);
+//     res.status(500).json({
+//       success: false,
+//       error: "Server error saving NFP data",
+//     });
+//   }
+// });
+
+// // FIXED: Get NFP data (USD only) - Fixed spacing and added better error handling
+// app.get("/api/economic-data/nfp", async (req, res) => {
+//   try {
+//     // console.log("📊 Fetching NFP data for USD");
+
+//     const { limit = 1 } = req.query; // Allow client to specify limit, default to 10
+//     const parsedLimit = parseInt(limit);
+
+//     // Validate limit
+//     if (isNaN(parsedLimit) || parsedLimit < 1 || parsedLimit > 100) {
+//       return res.status(400).json({
+//         success: false,
+//         error: "Limit must be a number between 1 and 100",
+//       });
+//     }
+
+//     const [nfpData] = await pool.execute(
+//       `SELECT id, asset_code, actual_nfp, forecast, net_change_percent, created_at, updated_at 
+//        FROM nfp 
+//        WHERE asset_code = 'USD' 
+//        ORDER BY created_at DESC 
+//        LIMIT ?`,
+//       [parsedLimit]
+//     );
+
+//     // console.log(`✅ Found ${nfpData.length} NFP records for USD`);
+
+//     res.json({
+//       success: true,
+//       asset_code: "USD",
+//       data: nfpData,
+//       count: nfpData.length,
+//       limit: parsedLimit,
+//     });
+//   } catch (error) {
+//     console.error("❌ Get NFP data error:", error);
+//     res.status(500).json({
+//       success: false,
+//       error: "Server error fetching NFP data",
+//       details: error.message,
+//     });
+//   }
+// });
+
+// // ADDITIONAL: Get specific NFP record by ID
+// app.get("/api/economic-data/nfp/:id", async (req, res) => {
+//   try {
+//     const { id } = req.params;
+
+//     console.log("🔍 Fetching NFP record with ID:", id);
+
+//     const [nfpData] = await pool.execute(
+//       `SELECT * FROM nfp WHERE id = ? AND asset_code = 'USD'`,
+//       [parseInt(id)]
+//     );
+
+//     if (nfpData.length === 0) {
+//       return res.status(404).json({
+//         success: false,
+//         error: "NFP record not found",
+//       });
+//     }
+
+//     res.json({
+//       success: true,
+//       data: nfpData[0],
+//     });
+//   } catch (error) {
+//     console.error("❌ Get NFP record error:", error);
+//     res.status(500).json({
+//       success: false,
+//       error: "Server error fetching NFP record",
+//     });
+//   }
+// });
+
+// // ADDITIONAL: Get latest NFP data only
+// app.get("/api/economic-data/nfp/latest", async (req, res) => {
+//   try {
+//     console.log("📊 Fetching latest NFP data for USD");
+
+//     const [nfpData] = await pool.execute(
+//       `SELECT * FROM nfp 
+//        WHERE asset_code = 'USD' 
+//        ORDER BY created_at DESC 
+//        LIMIT 1`
+//     );
+
+//     if (nfpData.length === 0) {
+//       return res.status(404).json({
+//         success: false,
+//         error: "No NFP data found for USD",
+//       });
+//     }
+
+//     console.log("✅ Latest NFP data found for USD");
+
+//     res.json({
+//       success: true,
+//       asset_code: "USD",
+//       data: nfpData[0],
+//     });
+//   } catch (error) {
+//     console.error("❌ Get latest NFP data error:", error);
+//     res.status(500).json({
+//       success: false,
+//       error: "Server error fetching latest NFP data",
+//     });
+//   }
+// });
+
+// // ====================
+// // END FIXED NFP DATA API ROUTES
+// // ====================
+// // ====================
+// // END NFP DATA API ROUTES
+// // ====================
+
+// // ====================
+// // RETAIL SENTIMENT API ROUTES
+// // ====================
+
+// // Submit Retail Sentiment data
+// app.post("/api/retail-sentiment", async (req, res) => {
+//   try {
+//     const { asset_pair_code, retailLong, retailShort } = req.body;
+
+//     console.log(
+//       "📊 Submitting Retail Sentiment data for asset pair:",
+//       asset_pair_code
+//     );
+
+//     // Validation
+//     if (!asset_pair_code || !retailLong || !retailShort) {
+//       return res.status(400).json({
+//         success: false,
+//         error: "Asset pair code, retail long%, and retail short% are required",
+//       });
+//     }
+
+//     // Convert to numbers and validate percentages
+//     const newRetailLong = parseFloat(retailLong);
+//     const newRetailShort = parseFloat(retailShort);
+
+//     if (isNaN(newRetailLong) || isNaN(newRetailShort)) {
+//       return res.status(400).json({
+//         success: false,
+//         error: "Retail long% and retail short% must be valid numbers",
+//       });
+//     }
+
+//     // Validate percentages (should add up to 100% or be individual percentages)
+//     if (newRetailLong < 0 || newRetailShort < 0) {
+//       return res.status(400).json({
+//         success: false,
+//         error: "Percentages cannot be negative",
+//       });
+//     }
+
+//     if (newRetailLong > 100 || newRetailShort > 100) {
+//       return res.status(400).json({
+//         success: false,
+//         error: "Percentages cannot exceed 100%",
+//       });
+//     }
+
+//     // Optional: Check if percentages add up to 100% (you can remove this if not required)
+//     const totalPercentage = newRetailLong + newRetailShort;
+//     if (Math.abs(totalPercentage - 100) > 0.01) {
+//       // Allow small rounding differences
+//       return res.status(400).json({
+//         success: false,
+//         error: "Retail long% and retail short% should add up to 100%",
+//       });
+//     }
+
+//     // Check if asset pair exists
+//     const [assetPairExists] = await pool.execute(
+//       "SELECT asset_pair_code FROM asset_pairs WHERE asset_pair_code = ?",
+//       [asset_pair_code]
+//     );
+
+//     if (assetPairExists.length === 0) {
+//       return res.status(400).json({
+//         success: false,
+//         error: "Invalid asset pair code",
+//       });
+//     }
+
+//     // Insert new retail sentiment data
+//     const [insertResult] = await pool.execute(
+//       `INSERT INTO retail_sentiment 
+//        (asset_pair_code, retail_long, retail_short)
+//        VALUES (?, ?, ?)`,
+//       [asset_pair_code, newRetailLong, newRetailShort]
+//     );
+
+//     // Get the inserted record to return
+//     const [insertedData] = await pool.execute(
+//       "SELECT * FROM retail_sentiment WHERE id = ?",
+//       [insertResult.insertId]
+//     );
+
+//     console.log("✅ Retail Sentiment data saved successfully");
+
+//     res.status(201).json({
+//       success: true,
+//       message: "Retail sentiment data saved successfully",
+//       data: insertedData[0],
+//     });
+//   } catch (error) {
+//     console.error("❌ Retail Sentiment submission error:", error);
+//     res.status(500).json({
+//       success: false,
+//       error: "Server error saving retail sentiment data",
+//     });
+//   }
+// });
+
+// // Get Retail Sentiment data for an asset pair
+// app.get("/api/retail-sentiment/:asset_pair_code", async (req, res) => {
+//   try {
+//     const { asset_pair_code } = req.params;
+//     const { limit = 10 } = req.query;
+
+//     const [sentimentData] = await pool.execute(
+//       `SELECT * FROM retail_sentiment 
+//        WHERE asset_pair_code = ? 
+//        ORDER BY created_at DESC 
+//        LIMIT ?`,
+//       [asset_pair_code, parseInt(limit)]
+//     );
+
+//     res.json({
+//       success: true,
+//       asset_pair_code: asset_pair_code,
+//       data: sentimentData,
+//       count: sentimentData.length,
+//     });
+//   } catch (error) {
+//     console.error("❌ Get retail sentiment data error:", error);
+//     res.status(500).json({
+//       success: false,
+//       error: "Server error fetching retail sentiment data",
+//     });
+//   }
+// });
+
+// // Get latest Retail Sentiment data for all asset pairs
+// app.get("/api/retail-sentiment", async (req, res) => {
+//   try {
+//     console.log("📊 Fetching latest retail sentiment data for all asset pairs");
+
+//     const [sentimentData] = await pool.execute(
+//       `SELECT rs1.* FROM retail_sentiment rs1
+//        INNER JOIN (
+//          SELECT asset_pair_code, MAX(created_at) as max_created
+//          FROM retail_sentiment 
+//          GROUP BY asset_pair_code
+//        ) rs2 ON rs1.asset_pair_code = rs2.asset_pair_code 
+//            AND rs1.created_at = rs2.max_created
+//        ORDER BY rs1.asset_pair_code`
+//     );
+
+//     res.json({
+//       success: true,
+//       data: sentimentData,
+//       count: sentimentData.length,
+//     });
+//   } catch (error) {
+//     console.error("❌ Get all retail sentiment data error:", error);
+//     res.status(500).json({
+//       success: false,
+//       error: "Server error fetching retail sentiment data",
+//     });
+//   }
+// });
+
+// // Get Asset Pairs for dropdown
+// app.get("/api/asset-pairs", async (req, res) => {
+//   try {
+//     console.log("🔗 Fetching asset pairs for dropdown");
+
+//     const [assetPairs] = await pool.execute(
+//       `SELECT asset_pair_code, base_asset, quote_asset 
+//        FROM asset_pairs 
+//        ORDER BY asset_pair_code ASC`
+//     );
+
+//     // Format for dropdown
+//     const assetPairOptions = assetPairs.map((pair) => ({
+//       value: pair.asset_pair_code,
+//       label: `${pair.base_asset}/${pair.quote_asset} (${pair.asset_pair_code})`,
+//       baseAsset: pair.base_asset,
+//       quoteAsset: pair.quote_asset,
+//     }));
+
+//     res.json({
+//       success: true,
+//       data: assetPairOptions,
+//       count: assetPairOptions.length,
+//     });
+//   } catch (error) {
+//     console.error("❌ Get asset pairs error:", error);
+//     res.status(500).json({
+//       success: false,
+//       error: "Server error fetching asset pairs",
+//     });
+//   }
+// });
+
+// // ====================
+// // END RETAIL SENTIMENT API ROUTES
+// // ====================
+// // ====================
+// // ASSET PAIRS API ROUTE
+// // ====================
+
+// app.get("/api/asset-pairs", async (req, res) => {
+//   try {
+//     console.log("🔗 Fetching all asset pairs");
+
+//     const [assetPairs] = await pool.execute(
+//       `SELECT asset_pair_code, base_asset, quote_asset, description, created_at, updated_at
+//        FROM asset_pairs 
+//        ORDER BY asset_pair_code ASC`
+//     );
+
+//     // Format the response to match what your React component expects
+//     const assetPairOptions = assetPairs.map((pair) => ({
+//       value: pair.asset_pair_code,
+//       label: `${pair.base_asset}/${pair.quote_asset} (${pair.asset_pair_code})`,
+//       baseAsset: pair.base_asset,
+//       quoteAsset: pair.quote_asset,
+//       description: pair.description,
+//       created_at: pair.created_at,
+//       updated_at: pair.updated_at,
+//     }));
+
+//     console.log(`✅ Found ${assetPairs.length} asset pairs`);
+
+//     // Log the first few pairs to verify structure
+//     if (assetPairOptions.length > 0) {
+//       console.log("📋 Sample asset pairs:", assetPairOptions.slice(0, 3));
+//     }
+
+//     res.json({
+//       success: true,
+//       data: assetPairOptions,
+//       count: assetPairs.length,
+//     });
+//   } catch (error) {
+//     console.error("❌ Get asset pairs error:", error);
+//     res.status(500).json({
+//       success: false,
+//       error: "Server error fetching asset pairs",
+//       details: error.message,
+//     });
+//   }
+// });
 // ====================
-// END ASSETS API ROUTES
-// ====================// Add this endpoint to your existing api-server.js file
-// Insert this code BEFORE the "Start server" section
-
-// ====================
-// ASSETS API ROUTES
+// OPTIMIZED BULK API ROUTES (Add these to your existing api-server.js)
 // ====================
 
-// Get assets (currencies/commodities) endpoint
-app.get("/api/assets", async (req, res) => {
-  try {
-    const { type } = req.query;
-
-    console.log("🪙 Fetching assets, type filter:", type);
-
-    let query = "SELECT code, name, type, description FROM assets";
-    let params = [];
-
-    // Filter by type if provided (Currency or Commodity)
-    if (type) {
-      query += " WHERE type = ?";
-      params.push(type);
-    }
-
-    // Order by name for consistent results
-    query += " ORDER BY name ASC";
-
-    const [assets] = await pool.execute(query, params);
-
-    console.log(`✅ Found ${assets.length} assets`);
-    console.log(
-      "📋 Assets:",
-      assets.map((a) => `${a.code} (${a.type})`)
-    );
-
-    res.json(assets);
-  } catch (error) {
-    console.error("❌ Get assets error:", error);
-    res.status(500).json({
-      success: false,
-      error: "Server error fetching assets",
-    });
-  }
-});
-
-// Get single asset by code
-app.get("/api/assets/:code", async (req, res) => {
-  try {
-    const { code } = req.params;
-
-    console.log("🔍 Fetching asset by code:", code);
-
-    const [assets] = await pool.execute(
-      "SELECT code, name, type, description, created_at, updated_at FROM assets WHERE code = ?",
-      [code.toUpperCase()]
-    );
-
-    if (assets.length === 0) {
-      return res.status(404).json({
-        success: false,
-        error: "Asset not found",
-      });
-    }
-
-    console.log("✅ Asset found:", assets[0]);
-
-    res.json({
-      success: true,
-      asset: assets[0],
-    });
-  } catch (error) {
-    console.error("❌ Get asset by code error:", error);
-    res.status(500).json({
-      success: false,
-      error: "Server error fetching asset",
-    });
-  }
-});
-
-// Create new asset (admin endpoint)
-app.post("/api/assets", async (req, res) => {
-  try {
-    const { code, name, type, description } = req.body;
-
-    // Validation
-    if (!code || !name || !type) {
-      return res.status(400).json({
-        success: false,
-        error: "Code, name, and type are required",
-      });
-    }
-
-    if (!["Currency", "Commodity"].includes(type)) {
-      return res.status(400).json({
-        success: false,
-        error: "Type must be either Currency or Commodity",
-      });
-    }
-
-    console.log("➕ Creating new asset:", { code, name, type });
-
-    // Check if asset already exists
-    const [existing] = await pool.execute(
-      "SELECT code FROM assets WHERE code = ?",
-      [code.toUpperCase()]
-    );
-
-    if (existing.length > 0) {
-      return res.status(409).json({
-        success: false,
-        error: "Asset with this code already exists",
-      });
-    }
-
-    // Insert new asset
-    await pool.execute(
-      "INSERT INTO assets (code, name, type, description) VALUES (?, ?, ?, ?)",
-      [code.toUpperCase(), name, type, description || ""]
-    );
-
-    // Get the created asset
-    const [newAsset] = await pool.execute(
-      "SELECT * FROM assets WHERE code = ?",
-      [code.toUpperCase()]
-    );
-
-    console.log("✅ Asset created successfully");
-
-    res.status(201).json({
-      success: true,
-      asset: newAsset[0],
-      message: "Asset created successfully",
-    });
-  } catch (error) {
-    console.error("❌ Create asset error:", error);
-    res.status(500).json({
-      success: false,
-      error: "Server error creating asset",
-    });
-  }
-});
-
-// Update asset (admin endpoint)
-app.put("/api/assets/:code", async (req, res) => {
-  try {
-    const { code } = req.params;
-    const { name, type, description } = req.body;
-
-    console.log("🔄 Updating asset:", code);
-
-    // Validation
-    if (type && !["Currency", "Commodity"].includes(type)) {
-      return res.status(400).json({
-        success: false,
-        error: "Type must be either Currency or Commodity",
-      });
-    }
-
-    // Check if asset exists
-    const [existing] = await pool.execute(
-      "SELECT code FROM assets WHERE code = ?",
-      [code.toUpperCase()]
-    );
-
-    if (existing.length === 0) {
-      return res.status(404).json({
-        success: false,
-        error: "Asset not found",
-      });
-    }
-
-    // Build dynamic update query
-    const updateFields = [];
-    const updateValues = [];
-
-    if (name) {
-      updateFields.push("name = ?");
-      updateValues.push(name);
-    }
-    if (type) {
-      updateFields.push("type = ?");
-      updateValues.push(type);
-    }
-    if (description !== undefined) {
-      updateFields.push("description = ?");
-      updateValues.push(description);
-    }
-
-    if (updateFields.length === 0) {
-      return res.status(400).json({
-        success: false,
-        error: "No fields to update",
-      });
-    }
-
-    updateValues.push(code.toUpperCase());
-
-    await pool.execute(
-      `UPDATE assets SET ${updateFields.join(
-        ", "
-      )}, updated_at = CURRENT_TIMESTAMP WHERE code = ?`,
-      updateValues
-    );
-
-    // Get updated asset
-    const [updatedAsset] = await pool.execute(
-      "SELECT * FROM assets WHERE code = ?",
-      [code.toUpperCase()]
-    );
-
-    console.log("✅ Asset updated successfully");
-
-    res.json({
-      success: true,
-      asset: updatedAsset[0],
-      message: "Asset updated successfully",
-    });
-  } catch (error) {
-    console.error("❌ Update asset error:", error);
-    res.status(500).json({
-      success: false,
-      error: "Server error updating asset",
-    });
-  }
-});
-
-// Delete asset (admin endpoint)
-app.delete("/api/assets/:code", async (req, res) => {
-  try {
-    const { code } = req.params;
-
-    console.log("🗑️ Deleting asset:", code);
-
-    // Check if asset exists
-    const [existing] = await pool.execute(
-      "SELECT code FROM assets WHERE code = ?",
-      [code.toUpperCase()]
-    );
-
-    if (existing.length === 0) {
-      return res.status(404).json({
-        success: false,
-        error: "Asset not found",
-      });
-    }
-
-    // Check if asset is being used in other tables
-    const [assetPairs] = await pool.execute(
-      "SELECT COUNT(*) as count FROM asset_pairs WHERE base_asset = ? OR quote_asset = ?",
-      [code.toUpperCase(), code.toUpperCase()]
-    );
-
-    if (assetPairs[0].count > 0) {
-      return res.status(400).json({
-        success: false,
-        error: "Cannot delete asset: it is being used in asset pairs",
-      });
-    }
-
-    // Delete the asset
-    await pool.execute("DELETE FROM assets WHERE code = ?", [
-      code.toUpperCase(),
-    ]);
-
-    console.log("✅ Asset deleted successfully");
-
-    res.json({
-      success: true,
-      message: "Asset deleted successfully",
-    });
-  } catch (error) {
-    console.error("❌ Delete asset error:", error);
-    res.status(500).json({
-      success: false,
-      error: "Server error deleting asset",
-    });
-  }
-});
-
-// Get asset statistics
-app.get("/api/assets/stats", async (req, res) => {
-  try {
-    console.log("📊 Fetching asset statistics");
-
-    // Get count by type
-    const [typeStats] = await pool.execute(`
-      SELECT type, COUNT(*) as count 
-      FROM assets 
-      GROUP BY type
-    `);
-
-    // Get total count
-    const [totalCount] = await pool.execute(
-      "SELECT COUNT(*) as total FROM assets"
-    );
-
-    // Get recent additions (last 30 days)
-    const [recentAssets] = await pool.execute(`
-      SELECT COUNT(*) as count 
-      FROM assets 
-      WHERE created_at >= DATE_SUB(NOW(), INTERVAL 30 DAY)
-    `);
-
-    const stats = {
-      total: totalCount[0].total,
-      byType: typeStats,
-      recentAdditions: recentAssets[0].count,
-    };
-
-    console.log("✅ Asset statistics:", stats);
-
-    res.json({
-      success: true,
-      stats: stats,
-    });
-  } catch (error) {
-    console.error("❌ Get asset stats error:", error);
-    res.status(500).json({
-      success: false,
-      error: "Server error fetching asset statistics",
-    });
-  }
-});
-
-// Test endpoint to verify database connection and data
-app.get("/api/test/assets", async (req, res) => {
-  try {
-    console.log("🧪 Testing assets table...");
-
-    // Test basic query
-    const [assets] = await pool.execute("SELECT * FROM assets LIMIT 5");
-
-    // Test currency filter
-    const [currencies] = await pool.execute(
-      "SELECT * FROM assets WHERE type = ? LIMIT 3",
-      ["Currency"]
-    );
-
-    // Test commodities filter
-    const [commodities] = await pool.execute(
-      "SELECT * FROM assets WHERE type = ? LIMIT 3",
-      ["Commodity"]
-    );
-
-    res.json({
-      success: true,
-      message: "Assets table test successful",
-      sample: {
-        allAssets: assets,
-        currencies: currencies,
-        commodities: commodities,
-      },
-      counts: {
-        total: assets.length,
-        currencies: currencies.length,
-        commodities: commodities.length,
-      },
-    });
-  } catch (error) {
-    console.error("❌ Assets test error:", error);
-    res.status(500).json({
-      success: false,
-      error: "Assets table test failed",
-      details: error.message,
-    });
-  }
-});
-
-// ====================
-// COT DATA API ROUTES
-// ====================
-
-// Submit COT (Market Sentiments) data
-app.post("/api/economic-data/cot", async (req, res) => {
-  try {
-    const { asset_code, cotLongContracts, cotShortContracts } = req.body;
-
-    console.log("📊 Submitting COT data for asset:", asset_code);
-
-    // Validation
-    if (!asset_code || !cotLongContracts || !cotShortContracts) {
-      return res.status(400).json({
-        success: false,
-        error: "Asset code, long contracts, and short contracts are required",
-      });
-    }
-
-    // Convert to numbers
-    const newLongContracts = parseFloat(cotLongContracts);
-    const newShortContracts = parseFloat(cotShortContracts);
-
-    if (isNaN(newLongContracts) || isNaN(newShortContracts)) {
-      return res.status(400).json({
-        success: false,
-        error: "Long and short contracts must be valid numbers",
-      });
-    }
-
-    // Get the most recent COT data for this asset to calculate changes
-    const [previousData] = await pool.execute(
-      `SELECT long_contracts, short_contracts, long_percent 
-       FROM cot_data 
-       WHERE asset_code = ? 
-       ORDER BY created_at DESC 
-       LIMIT 1`,
-      [asset_code.toUpperCase()]
-    );
-
-    let changeInLong = 0;
-    let changeInShort = 0;
-    let netChangePercent = 0;
-    let previousLongPercent = 0;
-
-    // Calculate changes if previous data exists
-    if (previousData.length > 0) {
-      const prev = previousData[0];
-      changeInLong = newLongContracts - prev.long_contracts;
-      changeInShort = newShortContracts - prev.short_contracts;
-      previousLongPercent = prev.long_percent || 0;
-    }
-
-    // Calculate percentages
-    const totalContracts = newLongContracts + newShortContracts;
-    const longPercent =
-      totalContracts > 0 ? (newLongContracts / totalContracts) * 100 : 0;
-    const shortPercent =
-      totalContracts > 0 ? (newShortContracts / totalContracts) * 100 : 0;
-
-    // Calculate net position and net change percent
-    const netPosition = newLongContracts - newShortContracts;
-    netChangePercent = longPercent - previousLongPercent;
-
-    // Insert new COT data (matching your exact table structure)
-    const [result] = await pool.execute(
-      `INSERT INTO cot_data 
-       (asset_code, long_contracts, short_contracts, change_in_long, change_in_short, 
-        long_percent, short_percent, net_position, net_change_percent)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      [
-        asset_code.toUpperCase(),
-        newLongContracts,
-        newShortContracts,
-        changeInLong,
-        changeInShort,
-        parseFloat(longPercent.toFixed(2)),
-        parseFloat(shortPercent.toFixed(2)),
-        netPosition,
-        parseFloat(netChangePercent.toFixed(2)),
-      ]
-    );
-
-    // Get the inserted record to return
-    const [insertedData] = await pool.execute(
-      "SELECT * FROM cot_data WHERE id = ?",
-      [result.insertId]
-    );
-
-    console.log("✅ COT data saved successfully");
-
-    res.status(201).json({
-      success: true,
-      message: "COT data saved successfully",
-      data: insertedData[0],
-      calculations: {
-        changeInLong: changeInLong,
-        changeInShort: changeInShort,
-        longPercent: parseFloat(longPercent.toFixed(2)),
-        shortPercent: parseFloat(shortPercent.toFixed(2)),
-        netPosition: netPosition,
-        netChangePercent: parseFloat(netChangePercent.toFixed(2)),
-      },
-    });
-  } catch (error) {
-    console.error("❌ COT data submission error:", error);
-    res.status(500).json({
-      success: false,
-      error: "Server error saving COT data",
-    });
-  }
-});
-
-// Get COT data for an asset
-app.get("/api/economic-data/cot/:asset_code", async (req, res) => {
-  try {
-    const { asset_code } = req.params;
-    const { limit = 10 } = req.query;
-
-    const [cotData] = await pool.execute(
-      `SELECT * FROM cot_data 
-       WHERE asset_code = ? 
-       ORDER BY created_at DESC 
-       LIMIT ?`,
-      [asset_code.toUpperCase(), parseInt(limit)]
-    );
-
-    res.json({
-      success: true,
-      asset_code: asset_code.toUpperCase(),
-      data: cotData,
-      count: cotData.length,
-    });
-  } catch (error) {
-    console.error("❌ Get COT data error:", error);
-    res.status(500).json({
-      success: false,
-      error: "Server error fetching COT data",
-    });
-  }
-});
-
-// Get latest COT data for all assets
+// BULK: Get all latest COT data for all assets in one call
 app.get("/api/economic-data/cot", async (req, res) => {
   try {
-    console.log("📊 Fetching latest COT data for all assets");
+    console.log("📊 Fetching latest COT data for all assets (BULK)");
 
     const [cotData] = await pool.execute(
       `SELECT c1.* FROM cot_data c1
@@ -2865,1355 +4342,282 @@ app.get("/api/economic-data/cot", async (req, res) => {
        ORDER BY c1.asset_code`
     );
 
+    console.log(`✅ Retrieved ${cotData.length} COT records`);
+
     res.json({
       success: true,
       data: cotData,
       count: cotData.length,
     });
   } catch (error) {
-    console.error("❌ Get all COT data error:", error);
+    console.error("❌ Bulk COT data error:", error);
     res.status(500).json({
       success: false,
-      error: "Server error fetching COT data",
+      error: "Server error fetching bulk COT data",
     });
   }
 });
 
-// ====================
-// END COT DATA API ROUTES
-// ====================
-
-// ====================
-// LABOR MARKET DATA API ROUTES
-// ====================
-
-// Submit Unemployment Rate data (UPDATED with forecast and result)
-app.post("/api/economic-data/unemployment", async (req, res) => {
+// BULK: Get all latest GDP data for all assets in one call
+app.get("/api/economic-data/gdp", async (req, res) => {
   try {
-    const { asset_code, unemployment, unemploymentForecast } = req.body;
-
-    console.log("📊 Submitting Unemployment Rate data for asset:", asset_code);
-
-    // Validation
-    if (!asset_code || !unemployment || !unemploymentForecast) {
-      return res.status(400).json({
-        success: false,
-        error: "Asset code, unemployment rate, and forecast are required",
-      });
-    }
-
-    // Convert to numbers
-    const newUnemploymentRate = parseFloat(unemployment);
-    const forecast = parseFloat(unemploymentForecast);
-
-    if (isNaN(newUnemploymentRate) || isNaN(forecast)) {
-      return res.status(400).json({
-        success: false,
-        error: "Unemployment rate and forecast must be valid numbers",
-      });
-    }
-
-    // Get the most recent unemployment data for this asset to calculate changes
-    const [previousData] = await pool.execute(
-      `SELECT unemployment_rate 
-       FROM unemployment_rate 
-       WHERE asset_code = ? 
-       ORDER BY created_at DESC 
-       LIMIT 1`,
-      [asset_code.toUpperCase()]
-    );
-
-    let netChangePercent = 0;
-
-    // Calculate net change percent if previous data exists
-    if (previousData.length > 0) {
-      const previousRate = previousData[0].unemployment_rate;
-      if (previousRate && previousRate !== 0) {
-        // Formula: [(New Rate - Previous Rate) / Previous Rate] * 100
-        netChangePercent =
-          ((newUnemploymentRate - previousRate) / previousRate) * 100;
-      }
-    }
-
-    // Determine result based on comparison with forecast (same logic as GDP)
-    let result;
-    if (newUnemploymentRate > forecast) {
-      result = "Missed"; // Higher unemployment is bad
-    } else if (newUnemploymentRate < forecast) {
-      result = "Beat"; // Lower unemployment is good
-    } else {
-      result = "As Expected";
-    }
-
-    // Insert new unemployment data with forecast and result
-    const [insertResult] = await pool.execute(
-      `INSERT INTO unemployment_rate 
-       (asset_code, unemployment_rate, forecast, net_change_percent, result)
-       VALUES (?, ?, ?, ?, ?)`,
-      [
-        asset_code.toUpperCase(),
-        newUnemploymentRate,
-        forecast,
-        parseFloat(netChangePercent.toFixed(2)),
-        result,
-      ]
-    );
-
-    // Get the inserted record to return
-    const [insertedData] = await pool.execute(
-      "SELECT * FROM unemployment_rate WHERE id = ?",
-      [insertResult.insertId]
-    );
-
-    console.log("✅ Unemployment Rate data saved successfully");
-
-    res.status(201).json({
-      success: true,
-      message: "Unemployment Rate data saved successfully",
-      data: insertedData[0],
-      calculations: {
-        netChangePercent: parseFloat(netChangePercent.toFixed(2)),
-        result: result,
-      },
-    });
-  } catch (error) {
-    console.error("❌ Unemployment Rate submission error:", error);
-    res.status(500).json({
-      success: false,
-      error: "Server error saving unemployment rate data",
-    });
-  }
-});
-
-// Submit Employment Change data (UPDATED with forecast and result)
-app.post("/api/economic-data/employment", async (req, res) => {
-  try {
-    const { asset_code, employeeChange, employeeChangeForecast } = req.body;
-
-    console.log("📊 Submitting Employment Change data for asset:", asset_code);
-
-    // Validation
-    if (!asset_code || !employeeChange || !employeeChangeForecast) {
-      return res.status(400).json({
-        success: false,
-        error: "Asset code, employment change, and forecast are required",
-      });
-    }
-
-    // Convert to numbers
-    const newEmploymentChange = parseFloat(employeeChange);
-    const forecast = parseFloat(employeeChangeForecast);
-
-    if (isNaN(newEmploymentChange) || isNaN(forecast)) {
-      return res.status(400).json({
-        success: false,
-        error: "Employment change and forecast must be valid numbers",
-      });
-    }
-
-    // Get the most recent employment data for this asset to calculate changes
-    const [previousData] = await pool.execute(
-      `SELECT employment_change 
-       FROM employment_change 
-       WHERE asset_code = ? 
-       ORDER BY created_at DESC 
-       LIMIT 1`,
-      [asset_code.toUpperCase()]
-    );
-
-    let netChangePercent = 0;
-
-    // Calculate net change percent if previous data exists
-    if (previousData.length > 0) {
-      const previousChange = previousData[0].employment_change;
-      if (previousChange && previousChange !== 0) {
-        // Formula: [(New Change - Previous Change) / Previous Change] * 100
-        netChangePercent =
-          ((newEmploymentChange - previousChange) / previousChange) * 100;
-      }
-    }
-
-    // Determine result based on comparison with forecast (same logic as GDP)
-    let result;
-    if (newEmploymentChange > forecast) {
-      result = "Beat"; // Higher employment change is good
-    } else if (newEmploymentChange < forecast) {
-      result = "Missed"; // Lower employment change is bad
-    } else {
-      result = "As Expected";
-    }
-
-    // Insert new employment data with forecast and result
-    const [insertResult] = await pool.execute(
-      `INSERT INTO employment_change 
-       (asset_code, employment_change, forecast, net_change_percent, result)
-       VALUES (?, ?, ?, ?, ?)`,
-      [
-        asset_code.toUpperCase(),
-        newEmploymentChange,
-        forecast,
-        parseFloat(netChangePercent.toFixed(2)),
-        result,
-      ]
-    );
-
-    // Get the inserted record to return
-    const [insertedData] = await pool.execute(
-      "SELECT * FROM employment_change WHERE id = ?",
-      [insertResult.insertId]
-    );
-
-    console.log("✅ Employment Change data saved successfully");
-
-    res.status(201).json({
-      success: true,
-      message: "Employment Change data saved successfully",
-      data: insertedData[0],
-      calculations: {
-        netChangePercent: parseFloat(netChangePercent.toFixed(2)),
-        result: result,
-      },
-    });
-  } catch (error) {
-    console.error("❌ Employment Change submission error:", error);
-    res.status(500).json({
-      success: false,
-      error: "Server error saving employment change data",
-    });
-  }
-});
-
-// GET endpoints remain the same, but now return the new forecast and result fields
-// Get unemployment rate data for an asset
-app.get("/api/economic-data/unemployment/:asset_code", async (req, res) => {
-  try {
-    const { asset_code } = req.params;
-    const { limit = 10 } = req.query;
-
-    const [unemploymentData] = await pool.execute(
-      `SELECT * FROM unemployment_rate 
-       WHERE asset_code = ? 
-       ORDER BY created_at DESC 
-       LIMIT ?`,
-      [asset_code.toUpperCase(), parseInt(limit)]
-    );
-
-    res.json({
-      success: true,
-      asset_code: asset_code.toUpperCase(),
-      data: unemploymentData,
-      count: unemploymentData.length,
-    });
-  } catch (error) {
-    console.error("❌ Get unemployment data error:", error);
-    res.status(500).json({
-      success: false,
-      error: "Server error fetching unemployment data",
-    });
-  }
-});
-
-// Get employment change data for an asset
-app.get("/api/economic-data/employment/:asset_code", async (req, res) => {
-  try {
-    const { asset_code } = req.params;
-    const { limit = 10 } = req.query;
-
-    const [employmentData] = await pool.execute(
-      `SELECT * FROM employment_change 
-       WHERE asset_code = ? 
-       ORDER BY created_at DESC 
-       LIMIT ?`,
-      [asset_code.toUpperCase(), parseInt(limit)]
-    );
-
-    res.json({
-      success: true,
-      asset_code: asset_code.toUpperCase(),
-      data: employmentData,
-      count: employmentData.length,
-    });
-  } catch (error) {
-    console.error("❌ Get employment data error:", error);
-    res.status(500).json({
-      success: false,
-      error: "Server error fetching employment data",
-    });
-  }
-});
-
-// ====================
-// END LABOR MARKET DATA API ROUTES
-// ====================
-// ====================
-// ECONOMIC GROWTH DATA API ROUTES
-// ====================
-
-// Submit GDP Growth data
-app.post("/api/economic-data/gdp", async (req, res) => {
-  try {
-    const { asset_code, gdp, gdpForecast } = req.body;
-
-    console.log("📊 Submitting GDP Growth data for asset:", asset_code);
-
-    // Validation
-    if (!asset_code || !gdp || !gdpForecast) {
-      return res.status(400).json({
-        success: false,
-        error: "Asset code, GDP growth, and GDP forecast are required",
-      });
-    }
-
-    // Convert to numbers
-    const newGdpGrowth = parseFloat(gdp);
-    const forecast = parseFloat(gdpForecast);
-
-    if (isNaN(newGdpGrowth) || isNaN(forecast)) {
-      return res.status(400).json({
-        success: false,
-        error: "GDP growth and forecast must be valid numbers",
-      });
-    }
-
-    // Get the most recent GDP data for this asset to calculate changes
-    const [previousData] = await pool.execute(
-      `SELECT gdp_growth 
-       FROM gdp_growth 
-       WHERE asset_code = ? 
-       ORDER BY created_at DESC 
-       LIMIT 1`,
-      [asset_code.toUpperCase()]
-    );
-
-    let changeInGdp = 0;
-
-    // Calculate change in GDP if previous data exists
-    if (previousData.length > 0) {
-      const previousGdp = previousData[0].gdp_growth;
-      changeInGdp = newGdpGrowth - previousGdp;
-    }
-
-    // Determine result based on comparison with forecast
-    let result;
-    if (newGdpGrowth > forecast) {
-      result = "Beat";
-    } else if (newGdpGrowth < forecast) {
-      result = "Missed";
-    } else {
-      result = "As Expected";
-    }
-
-    // Insert new GDP data
-    const [insertResult] = await pool.execute(
-      `INSERT INTO gdp_growth 
-       (asset_code, gdp_growth, forecast, change_in_gdp, result)
-       VALUES (?, ?, ?, ?, ?)`,
-      [
-        asset_code.toUpperCase(),
-        newGdpGrowth,
-        forecast,
-        parseFloat(changeInGdp.toFixed(2)),
-        result,
-      ]
-    );
-
-    // Get the inserted record to return
-    const [insertedData] = await pool.execute(
-      "SELECT * FROM gdp_growth WHERE id = ?",
-      [insertResult.insertId]
-    );
-
-    console.log("✅ GDP Growth data saved successfully");
-
-    res.status(201).json({
-      success: true,
-      message: "GDP Growth data saved successfully",
-      data: insertedData[0],
-      calculations: {
-        changeInGdp: parseFloat(changeInGdp.toFixed(2)),
-        result: result,
-      },
-    });
-  } catch (error) {
-    console.error("❌ GDP Growth submission error:", error);
-    res.status(500).json({
-      success: false,
-      error: "Server error saving GDP growth data",
-    });
-  }
-});
-
-// Submit Manufacturing PMI data
-app.post("/api/economic-data/mpmi", async (req, res) => {
-  try {
-    const { asset_code, mPMI, mPMIForecast } = req.body;
-
-    console.log("📊 Submitting Manufacturing PMI data for asset:", asset_code);
-
-    // Validation
-    if (!asset_code || !mPMI || !mPMIForecast) {
-      return res.status(400).json({
-        success: false,
-        error: "Asset code, Manufacturing PMI, and forecast are required",
-      });
-    }
-
-    // Convert to numbers
-    const newMPMI = parseFloat(mPMI);
-    const forecast = parseFloat(mPMIForecast);
-
-    if (isNaN(newMPMI) || isNaN(forecast)) {
-      return res.status(400).json({
-        success: false,
-        error: "Manufacturing PMI and forecast must be valid numbers",
-      });
-    }
-
-    // Determine result based on comparison with forecast
-    let result;
-    if (newMPMI > forecast) {
-      result = "Beat";
-    } else if (newMPMI < forecast) {
-      result = "Miss";
-    } else {
-      result = "Met";
-    }
-
-    // Insert new Manufacturing PMI data
-    const [insertResult] = await pool.execute(
-      `INSERT INTO mpmi 
-       (asset_code, service_pmi, forecast, result)
-       VALUES (?, ?, ?, ?)`,
-      [asset_code.toUpperCase(), newMPMI, forecast, result]
-    );
-
-    // Get the inserted record to return
-    const [insertedData] = await pool.execute(
-      "SELECT * FROM mpmi WHERE id = ?",
-      [insertResult.insertId]
-    );
-
-    console.log("✅ Manufacturing PMI data saved successfully");
-
-    res.status(201).json({
-      success: true,
-      message: "Manufacturing PMI data saved successfully",
-      data: insertedData[0],
-      calculations: {
-        result: result,
-      },
-    });
-  } catch (error) {
-    console.error("❌ Manufacturing PMI submission error:", error);
-    res.status(500).json({
-      success: false,
-      error: "Server error saving Manufacturing PMI data",
-    });
-  }
-});
-
-// Submit Services PMI data
-app.post("/api/economic-data/spmi", async (req, res) => {
-  try {
-    const { asset_code, sPMI, sPMIForecast } = req.body;
-
-    console.log("📊 Submitting Services PMI data for asset:", asset_code);
-
-    // Validation
-    if (!asset_code || !sPMI || !sPMIForecast) {
-      return res.status(400).json({
-        success: false,
-        error: "Asset code, Services PMI, and forecast are required",
-      });
-    }
-
-    // Convert to numbers
-    const newSPMI = parseFloat(sPMI);
-    const forecast = parseFloat(sPMIForecast);
-
-    if (isNaN(newSPMI) || isNaN(forecast)) {
-      return res.status(400).json({
-        success: false,
-        error: "Services PMI and forecast must be valid numbers",
-      });
-    }
-
-    // Determine result based on comparison with forecast
-    let result;
-    if (newSPMI > forecast) {
-      result = "Beat";
-    } else if (newSPMI < forecast) {
-      result = "Miss";
-    } else {
-      result = "Met";
-    }
-
-    // Insert new Services PMI data
-    const [insertResult] = await pool.execute(
-      `INSERT INTO spmi 
-       (asset_code, service_pmi, forecast, result)
-       VALUES (?, ?, ?, ?)`,
-      [asset_code.toUpperCase(), newSPMI, forecast, result]
-    );
-
-    // Get the inserted record to return
-    const [insertedData] = await pool.execute(
-      "SELECT * FROM spmi WHERE id = ?",
-      [insertResult.insertId]
-    );
-
-    console.log("✅ Services PMI data saved successfully");
-
-    res.status(201).json({
-      success: true,
-      message: "Services PMI data saved successfully",
-      data: insertedData[0],
-      calculations: {
-        result: result,
-      },
-    });
-  } catch (error) {
-    console.error("❌ Services PMI submission error:", error);
-    res.status(500).json({
-      success: false,
-      error: "Server error saving Services PMI data",
-    });
-  }
-});
-
-// Submit Retail Sales data
-app.post("/api/economic-data/retail", async (req, res) => {
-  try {
-    const { asset_code, retailSales, retailSalesForecast } = req.body;
-
-    console.log("📊 Submitting Retail Sales data for asset:", asset_code);
-
-    // Validation
-    if (!asset_code || !retailSales || !retailSalesForecast) {
-      return res.status(400).json({
-        success: false,
-        error: "Asset code, Retail Sales, and forecast are required",
-      });
-    }
-
-    // Convert to numbers
-    const newRetailSales = parseFloat(retailSales);
-    const forecast = parseFloat(retailSalesForecast);
-
-    if (isNaN(newRetailSales) || isNaN(forecast)) {
-      return res.status(400).json({
-        success: false,
-        error: "Retail Sales and forecast must be valid numbers",
-      });
-    }
-
-    // Get the most recent retail sales data for this asset to calculate net change percent
-    const [previousData] = await pool.execute(
-      `SELECT retail_sales 
-       FROM retail_sales 
-       WHERE asset_code = ? 
-       ORDER BY created_at DESC 
-       LIMIT 1`,
-      [asset_code.toUpperCase()]
-    );
-
-    let netChangePercent = 0;
-
-    // Calculate net change percent if previous data exists
-    if (previousData.length > 0) {
-      const previousSales = previousData[0].retail_sales;
-      if (previousSales && previousSales !== 0) {
-        // Formula: [(New Sales - Previous Sales) / Previous Sales] * 100
-        netChangePercent =
-          ((newRetailSales - previousSales) / previousSales) * 100;
-      }
-    }
-
-    // Determine result based on comparison with forecast
-    let result;
-    if (newRetailSales > forecast) {
-      result = "Beat";
-    } else if (newRetailSales < forecast) {
-      result = "Miss";
-    } else {
-      result = "Met";
-    }
-
-    // Insert new Retail Sales data
-    const [insertResult] = await pool.execute(
-      `INSERT INTO retail_sales 
-       (asset_code, retail_sales, forecast, net_change_percent, result)
-       VALUES (?, ?, ?, ?, ?)`,
-      [
-        asset_code.toUpperCase(),
-        newRetailSales,
-        forecast,
-        parseFloat(netChangePercent.toFixed(2)),
-        result,
-      ]
-    );
-
-    // Get the inserted record to return
-    const [insertedData] = await pool.execute(
-      "SELECT * FROM retail_sales WHERE id = ?",
-      [insertResult.insertId]
-    );
-
-    console.log("✅ Retail Sales data saved successfully");
-
-    res.status(201).json({
-      success: true,
-      message: "Retail Sales data saved successfully",
-      data: insertedData[0],
-      calculations: {
-        netChangePercent: parseFloat(netChangePercent.toFixed(2)),
-        result: result,
-      },
-    });
-  } catch (error) {
-    console.error("❌ Retail Sales submission error:", error);
-    res.status(500).json({
-      success: false,
-      error: "Server error saving Retail Sales data",
-    });
-  }
-});
-
-// GET endpoints for each economic indicator
-
-// Get GDP Growth data for an asset
-app.get("/api/economic-data/gdp/:asset_code", async (req, res) => {
-  try {
-    const { asset_code } = req.params;
-    const { limit = 10 } = req.query;
+    console.log("📊 Fetching latest GDP data for all assets (BULK)");
 
     const [gdpData] = await pool.execute(
-      `SELECT * FROM gdp_growth 
-       WHERE asset_code = ? 
-       ORDER BY created_at DESC 
-       LIMIT ?`,
-      [asset_code.toUpperCase(), parseInt(limit)]
+      `SELECT g1.* FROM gdp_growth g1
+       INNER JOIN (
+         SELECT asset_code, MAX(created_at) as max_created
+         FROM gdp_growth 
+         GROUP BY asset_code
+       ) g2 ON g1.asset_code = g2.asset_code 
+           AND g1.created_at = g2.max_created
+       ORDER BY g1.asset_code`
     );
+
+    console.log(`✅ Retrieved ${gdpData.length} GDP records`);
 
     res.json({
       success: true,
-      asset_code: asset_code.toUpperCase(),
       data: gdpData,
       count: gdpData.length,
     });
   } catch (error) {
-    console.error("❌ Get GDP data error:", error);
+    console.error("❌ Bulk GDP data error:", error);
     res.status(500).json({
       success: false,
-      error: "Server error fetching GDP data",
+      error: "Server error fetching bulk GDP data",
     });
   }
 });
 
-// Get Manufacturing PMI data for an asset
-app.get("/api/economic-data/mpmi/:asset_code", async (req, res) => {
+// BULK: Get all latest Manufacturing PMI data for all assets in one call
+app.get("/api/economic-data/mpmi", async (req, res) => {
   try {
-    const { asset_code } = req.params;
-    const { limit = 10 } = req.query;
+    console.log("📊 Fetching latest Manufacturing PMI data for all assets (BULK)");
 
     const [mpmiData] = await pool.execute(
-      `SELECT * FROM mpmi 
-       WHERE asset_code = ? 
-       ORDER BY created_at DESC 
-       LIMIT ?`,
-      [asset_code.toUpperCase(), parseInt(limit)]
+      `SELECT m1.* FROM mpmi m1
+       INNER JOIN (
+         SELECT asset_code, MAX(created_at) as max_created
+         FROM mpmi 
+         GROUP BY asset_code
+       ) m2 ON m1.asset_code = m2.asset_code 
+           AND m1.created_at = m2.max_created
+       ORDER BY m1.asset_code`
     );
+
+    console.log(`✅ Retrieved ${mpmiData.length} Manufacturing PMI records`);
 
     res.json({
       success: true,
-      asset_code: asset_code.toUpperCase(),
       data: mpmiData,
       count: mpmiData.length,
     });
   } catch (error) {
-    console.error("❌ Get Manufacturing PMI data error:", error);
+    console.error("❌ Bulk Manufacturing PMI data error:", error);
     res.status(500).json({
       success: false,
-      error: "Server error fetching Manufacturing PMI data",
+      error: "Server error fetching bulk Manufacturing PMI data",
     });
   }
 });
 
-// Get Services PMI data for an asset
-app.get("/api/economic-data/spmi/:asset_code", async (req, res) => {
+// BULK: Get all latest Services PMI data for all assets in one call
+app.get("/api/economic-data/spmi", async (req, res) => {
   try {
-    const { asset_code } = req.params;
-    const { limit = 10 } = req.query;
+    console.log("📊 Fetching latest Services PMI data for all assets (BULK)");
 
     const [spmiData] = await pool.execute(
-      `SELECT * FROM spmi 
-       WHERE asset_code = ? 
-       ORDER BY created_at DESC 
-       LIMIT ?`,
-      [asset_code.toUpperCase(), parseInt(limit)]
+      `SELECT s1.* FROM spmi s1
+       INNER JOIN (
+         SELECT asset_code, MAX(created_at) as max_created
+         FROM spmi 
+         GROUP BY asset_code
+       ) s2 ON s1.asset_code = s2.asset_code 
+           AND s1.created_at = s2.max_created
+       ORDER BY s1.asset_code`
     );
+
+    console.log(`✅ Retrieved ${spmiData.length} Services PMI records`);
 
     res.json({
       success: true,
-      asset_code: asset_code.toUpperCase(),
       data: spmiData,
       count: spmiData.length,
     });
   } catch (error) {
-    console.error("❌ Get Services PMI data error:", error);
+    console.error("❌ Bulk Services PMI data error:", error);
     res.status(500).json({
       success: false,
-      error: "Server error fetching Services PMI data",
+      error: "Server error fetching bulk Services PMI data",
     });
   }
 });
 
-// Get Retail Sales data for an asset
-app.get("/api/economic-data/retail/:asset_code", async (req, res) => {
+// BULK: Get all latest Retail Sales data for all assets in one call
+app.get("/api/economic-data/retail", async (req, res) => {
   try {
-    const { asset_code } = req.params;
-    const { limit = 10 } = req.query;
+    console.log("📊 Fetching latest Retail Sales data for all assets (BULK)");
 
     const [retailData] = await pool.execute(
-      `SELECT * FROM retail_sales 
-       WHERE asset_code = ? 
-       ORDER BY created_at DESC 
-       LIMIT ?`,
-      [asset_code.toUpperCase(), parseInt(limit)]
+      `SELECT r1.* FROM retail_sales r1
+       INNER JOIN (
+         SELECT asset_code, MAX(created_at) as max_created
+         FROM retail_sales 
+         GROUP BY asset_code
+       ) r2 ON r1.asset_code = r2.asset_code 
+           AND r1.created_at = r2.max_created
+       ORDER BY r1.asset_code`
     );
+
+    console.log(`✅ Retrieved ${retailData.length} Retail Sales records`);
 
     res.json({
       success: true,
-      asset_code: asset_code.toUpperCase(),
       data: retailData,
       count: retailData.length,
     });
   } catch (error) {
-    console.error("❌ Get Retail Sales data error:", error);
+    console.error("❌ Bulk Retail Sales data error:", error);
     res.status(500).json({
       success: false,
-      error: "Server error fetching Retail Sales data",
+      error: "Server error fetching bulk Retail Sales data",
     });
   }
 });
 
-// ====================
-// END ECONOMIC GROWTH DATA API ROUTES
-// ====================
-// ====================
-// INFLATION DATA API ROUTES
-// ====================
-
-// Submit Core Inflation data
-app.post("/api/economic-data/inflation", async (req, res) => {
+// BULK: Get all latest Unemployment data for all assets in one call
+app.get("/api/economic-data/unemployment", async (req, res) => {
   try {
-    const { asset_code, cpi, cpiForecast } = req.body;
+    console.log("📊 Fetching latest Unemployment data for all assets (BULK)");
 
-    console.log("📊 Submitting Core Inflation data for asset:", asset_code);
-
-    // Validation
-    if (!asset_code || !cpi || !cpiForecast) {
-      return res.status(400).json({
-        success: false,
-        error: "Asset code, core inflation, and forecast are required",
-      });
-    }
-
-    // Convert to numbers
-    const newCoreInflation = parseFloat(cpi);
-    const forecast = parseFloat(cpiForecast);
-
-    if (isNaN(newCoreInflation) || isNaN(forecast)) {
-      return res.status(400).json({
-        success: false,
-        error: "Core inflation and forecast must be valid numbers",
-      });
-    }
-
-    // Get the most recent inflation data for this asset to calculate net change percent
-    const [previousData] = await pool.execute(
-      `SELECT core_inflation 
-       FROM core_inflation 
-       WHERE asset_code = ? 
-       ORDER BY created_at DESC 
-       LIMIT 1`,
-      [asset_code.toUpperCase()]
+    const [unemploymentData] = await pool.execute(
+      `SELECT u1.* FROM unemployment_rate u1
+       INNER JOIN (
+         SELECT asset_code, MAX(created_at) as max_created
+         FROM unemployment_rate 
+         GROUP BY asset_code
+       ) u2 ON u1.asset_code = u2.asset_code 
+           AND u1.created_at = u2.max_created
+       ORDER BY u1.asset_code`
     );
 
-    let netChangePercent = 0;
-
-    // Calculate net change percent if previous data exists
-    if (previousData.length > 0) {
-      const previousInflation = previousData[0].core_inflation;
-      if (previousInflation && previousInflation !== 0) {
-        // Formula: [(New Core Inflation - Previous Core Inflation) / Previous Core Inflation] * 100
-        netChangePercent =
-          ((newCoreInflation - previousInflation) / previousInflation) * 100;
-      }
-    }
-
-    // Determine result based on comparison with forecast
-    let result;
-    if (newCoreInflation > forecast) {
-      result = "Lower than expected";
-    } else if (newCoreInflation < forecast) {
-      result = "Higher than expected";
-    } else {
-      result = "As Expected";
-    }
-
-    // Insert new inflation data
-    const [insertResult] = await pool.execute(
-      `INSERT INTO core_inflation 
-       (asset_code, core_inflation, forecast, net_change_percent, result)
-       VALUES (?, ?, ?, ?, ?)`,
-      [
-        asset_code.toUpperCase(),
-        newCoreInflation,
-        forecast,
-        parseFloat(netChangePercent.toFixed(2)),
-        result,
-      ]
-    );
-
-    // Get the inserted record to return
-    const [insertedData] = await pool.execute(
-      "SELECT * FROM core_inflation WHERE id = ?",
-      [insertResult.insertId]
-    );
-
-    console.log("✅ Core Inflation data saved successfully");
-
-    res.status(201).json({
-      success: true,
-      message: "Core Inflation data saved successfully",
-      data: insertedData[0],
-      calculations: {
-        netChangePercent: parseFloat(netChangePercent.toFixed(2)),
-        result: result,
-      },
-    });
-  } catch (error) {
-    console.error("❌ Core Inflation submission error:", error);
-    res.status(500).json({
-      success: false,
-      error: "Server error saving core inflation data",
-    });
-  }
-});
-
-// Get Core Inflation data for an asset
-app.get("/api/economic-data/inflation/:asset_code", async (req, res) => {
-  try {
-    const { asset_code } = req.params;
-    const { limit = 10 } = req.query;
-
-    const [inflationData] = await pool.execute(
-      `SELECT * FROM core_inflation 
-       WHERE asset_code = ? 
-       ORDER BY created_at DESC 
-       LIMIT ?`,
-      [asset_code.toUpperCase(), parseInt(limit)]
-    );
+    console.log(`✅ Retrieved ${unemploymentData.length} Unemployment records`);
 
     res.json({
       success: true,
-      asset_code: asset_code.toUpperCase(),
+      data: unemploymentData,
+      count: unemploymentData.length,
+    });
+  } catch (error) {
+    console.error("❌ Bulk Unemployment data error:", error);
+    res.status(500).json({
+      success: false,
+      error: "Server error fetching bulk Unemployment data",
+    });
+  }
+});
+
+// BULK: Get all latest Employment Change data for all assets in one call
+app.get("/api/economic-data/employment", async (req, res) => {
+  try {
+    console.log("📊 Fetching latest Employment Change data for all assets (BULK)");
+
+    const [employmentData] = await pool.execute(
+      `SELECT e1.* FROM employment_change e1
+       INNER JOIN (
+         SELECT asset_code, MAX(created_at) as max_created
+         FROM employment_change 
+         GROUP BY asset_code
+       ) e2 ON e1.asset_code = e2.asset_code 
+           AND e1.created_at = e2.max_created
+       ORDER BY e1.asset_code`
+    );
+
+    console.log(`✅ Retrieved ${employmentData.length} Employment Change records`);
+
+    res.json({
+      success: true,
+      data: employmentData,
+      count: employmentData.length,
+    });
+  } catch (error) {
+    console.error("❌ Bulk Employment Change data error:", error);
+    res.status(500).json({
+      success: false,
+      error: "Server error fetching bulk Employment Change data",
+    });
+  }
+});
+
+// BULK: Get all latest Core Inflation data for all assets in one call
+app.get("/api/economic-data/inflation", async (req, res) => {
+  try {
+    console.log("📊 Fetching latest Core Inflation data for all assets (BULK)");
+
+    const [inflationData] = await pool.execute(
+      `SELECT i1.* FROM core_inflation i1
+       INNER JOIN (
+         SELECT asset_code, MAX(created_at) as max_created
+         FROM core_inflation 
+         GROUP BY asset_code
+       ) i2 ON i1.asset_code = i2.asset_code 
+           AND i1.created_at = i2.max_created
+       ORDER BY i1.asset_code`
+    );
+
+    console.log(`✅ Retrieved ${inflationData.length} Core Inflation records`);
+
+    res.json({
+      success: true,
       data: inflationData,
       count: inflationData.length,
     });
   } catch (error) {
-    console.error("❌ Get inflation data error:", error);
+    console.error("❌ Bulk Core Inflation data error:", error);
     res.status(500).json({
       success: false,
-      error: "Server error fetching inflation data",
+      error: "Server error fetching bulk Core Inflation data",
     });
   }
 });
 
-// ====================
-// END INFLATION DATA API ROUTES
-// ====================
-
-// ====================
-// INTEREST RATE DATA API ROUTES
-// ====================
-
-// Submit Interest Rate data
-app.post("/api/economic-data/interest", async (req, res) => {
+// BULK: Get all latest Interest Rate data for all assets in one call
+app.get("/api/economic-data/interest", async (req, res) => {
   try {
-    const { asset_code, interestRate } = req.body;
-
-    console.log("📊 Submitting Interest Rate data for asset:", asset_code);
-
-    // Validation
-    if (!asset_code || !interestRate) {
-      return res.status(400).json({
-        success: false,
-        error: "Asset code and interest rate are required",
-      });
-    }
-
-    // Convert to number
-    const newInterestRate = parseFloat(interestRate);
-
-    if (isNaN(newInterestRate)) {
-      return res.status(400).json({
-        success: false,
-        error: "Interest rate must be a valid number",
-      });
-    }
-
-    // Get the most recent interest rate data for this asset to calculate change
-    const [previousData] = await pool.execute(
-      `SELECT interest_rate 
-       FROM interest_rate 
-       WHERE asset_code = ? 
-       ORDER BY created_at DESC 
-       LIMIT 1`,
-      [asset_code.toUpperCase()]
-    );
-
-    let changeInInterest = 0;
-
-    // Calculate change in interest if previous data exists
-    if (previousData.length > 0) {
-      const previousRate = previousData[0].interest_rate;
-      if (previousRate !== null && previousRate !== undefined) {
-        // Formula: new_interest_rate - previous_interest_rate
-        changeInInterest = newInterestRate - previousRate;
-      }
-    }
-
-    // Insert new interest rate data
-    const [insertResult] = await pool.execute(
-      `INSERT INTO interest_rate 
-       (asset_code, interest_rate, change_in_interest)
-       VALUES (?, ?, ?)`,
-      [
-        asset_code.toUpperCase(),
-        newInterestRate,
-        parseFloat(changeInInterest.toFixed(4)),
-      ]
-    );
-
-    // Get the inserted record to return
-    const [insertedData] = await pool.execute(
-      "SELECT * FROM interest_rate WHERE id = ?",
-      [insertResult.insertId]
-    );
-
-    console.log("✅ Interest Rate data saved successfully");
-
-    res.status(201).json({
-      success: true,
-      message: "Interest Rate data saved successfully",
-      data: insertedData[0],
-      calculations: {
-        changeInInterest: parseFloat(changeInInterest.toFixed(4)),
-      },
-    });
-  } catch (error) {
-    console.error("❌ Interest Rate submission error:", error);
-    res.status(500).json({
-      success: false,
-      error: "Server error saving interest rate data",
-    });
-  }
-});
-
-// Get Interest Rate data for an asset
-app.get("/api/economic-data/interest/:asset_code", async (req, res) => {
-  try {
-    const { asset_code } = req.params;
-    const { limit = 10 } = req.query;
+    console.log("📊 Fetching latest Interest Rate data for all assets (BULK)");
 
     const [interestData] = await pool.execute(
-      `SELECT * FROM interest_rate 
-       WHERE asset_code = ? 
-       ORDER BY created_at DESC 
-       LIMIT ?`,
-      [asset_code.toUpperCase(), parseInt(limit)]
+      `SELECT i1.* FROM interest_rate i1
+       INNER JOIN (
+         SELECT asset_code, MAX(created_at) as max_created
+         FROM interest_rate 
+         GROUP BY asset_code
+       ) i2 ON i1.asset_code = i2.asset_code 
+           AND i1.created_at = i2.max_created
+       ORDER BY i1.asset_code`
     );
+
+    console.log(`✅ Retrieved ${interestData.length} Interest Rate records`);
 
     res.json({
       success: true,
-      asset_code: asset_code.toUpperCase(),
       data: interestData,
       count: interestData.length,
     });
   } catch (error) {
-    console.error("❌ Get interest rate data error:", error);
+    console.error("❌ Bulk Interest Rate data error:", error);
     res.status(500).json({
       success: false,
-      error: "Server error fetching interest rate data",
+      error: "Server error fetching bulk Interest Rate data",
     });
   }
 });
 
-// ====================
-// END INTEREST RATE DATA API ROUTES
-// ====================
-
-// ====================
-// NFP DATA API ROUTES (USD ONLY)
-// ====================
-
-// Submit NFP (Non-Farm Payrolls) data - USD ONLY
-// ====================
-// FIXED NFP DATA API ROUTES
-// ====================
-
-// Submit NFP (Non-Farm Payrolls) data - USD ONLY
-app.post("/api/economic-data/nfp", async (req, res) => {
-  try {
-    const { asset_code, actualNfp, nfpForecast } = req.body;
-
-    // console.log("📊 Submitting NFP data for asset:", asset_code);
-
-    // Validation - Only allow USD
-    if (!asset_code) {
-      return res.status(400).json({
-        success: false,
-        error: "Asset code is required",
-      });
-    }
-
-    if (asset_code.toUpperCase() !== "USD") {
-      return res.status(400).json({
-        success: false,
-        error: "NFP data is only available for USD currency",
-      });
-    }
-
-    if (!actualNfp || !nfpForecast) {
-      return res.status(400).json({
-        success: false,
-        error: "Actual NFP and forecast are required",
-      });
-    }
-
-    // Convert to numbers
-    const newActualNfp = parseFloat(actualNfp);
-    const forecast = parseFloat(nfpForecast);
-
-    if (isNaN(newActualNfp) || isNaN(forecast)) {
-      return res.status(400).json({
-        success: false,
-        error: "Actual NFP and forecast must be valid numbers",
-      });
-    }
-
-    // Get the most recent NFP data for USD to calculate net change percent
-    const [previousData] = await pool.execute(
-      `SELECT actual_nfp 
-       FROM nfp 
-       WHERE asset_code = 'USD' 
-       ORDER BY created_at DESC 
-       LIMIT 1`
-    );
-
-    let netChangePercent = 0;
-
-    // Calculate net change percent if previous data exists
-    if (previousData.length > 0) {
-      const previousNfp = previousData[0].actual_nfp;
-      if (previousNfp && previousNfp !== 0) {
-        // Formula: [(New NFP - Previous NFP) / Previous NFP] * 100
-        netChangePercent = ((newActualNfp - previousNfp) / previousNfp) * 100;
-      }
-    }
-
-    // Insert new NFP data
-    const [insertResult] = await pool.execute(
-      `INSERT INTO nfp 
-       (asset_code, actual_nfp, forecast, net_change_percent)
-       VALUES (?, ?, ?, ?)`,
-      [
-        "USD", // Always USD
-        newActualNfp,
-        forecast,
-        parseFloat(netChangePercent.toFixed(2)),
-      ]
-    );
-
-    // Get the inserted record to return
-    const [insertedData] = await pool.execute(
-      "SELECT * FROM nfp WHERE id = ?",
-      [insertResult.insertId]
-    );
-
-    console.log("✅ NFP data saved successfully for USD");
-
-    res.status(201).json({
-      success: true,
-      message: "NFP data saved successfully",
-      data: insertedData[0],
-      calculations: {
-        netChangePercent: parseFloat(netChangePercent.toFixed(2)),
-      },
-    });
-  } catch (error) {
-    console.error("❌ NFP submission error:", error);
-    res.status(500).json({
-      success: false,
-      error: "Server error saving NFP data",
-    });
-  }
-});
-
-// FIXED: Get NFP data (USD only) - Fixed spacing and added better error handling
-app.get("/api/economic-data/nfp", async (req, res) => {
-  try {
-    // console.log("📊 Fetching NFP data for USD");
-
-    const { limit = 1 } = req.query; // Allow client to specify limit, default to 10
-    const parsedLimit = parseInt(limit);
-
-    // Validate limit
-    if (isNaN(parsedLimit) || parsedLimit < 1 || parsedLimit > 100) {
-      return res.status(400).json({
-        success: false,
-        error: "Limit must be a number between 1 and 100",
-      });
-    }
-
-    const [nfpData] = await pool.execute(
-      `SELECT id, asset_code, actual_nfp, forecast, net_change_percent, created_at, updated_at 
-       FROM nfp 
-       WHERE asset_code = 'USD' 
-       ORDER BY created_at DESC 
-       LIMIT ?`,
-      [parsedLimit]
-    );
-
-    // console.log(`✅ Found ${nfpData.length} NFP records for USD`);
-
-    res.json({
-      success: true,
-      asset_code: "USD",
-      data: nfpData,
-      count: nfpData.length,
-      limit: parsedLimit,
-    });
-  } catch (error) {
-    console.error("❌ Get NFP data error:", error);
-    res.status(500).json({
-      success: false,
-      error: "Server error fetching NFP data",
-      details: error.message,
-    });
-  }
-});
-
-// ADDITIONAL: Get specific NFP record by ID
-app.get("/api/economic-data/nfp/:id", async (req, res) => {
-  try {
-    const { id } = req.params;
-
-    console.log("🔍 Fetching NFP record with ID:", id);
-
-    const [nfpData] = await pool.execute(
-      `SELECT * FROM nfp WHERE id = ? AND asset_code = 'USD'`,
-      [parseInt(id)]
-    );
-
-    if (nfpData.length === 0) {
-      return res.status(404).json({
-        success: false,
-        error: "NFP record not found",
-      });
-    }
-
-    res.json({
-      success: true,
-      data: nfpData[0],
-    });
-  } catch (error) {
-    console.error("❌ Get NFP record error:", error);
-    res.status(500).json({
-      success: false,
-      error: "Server error fetching NFP record",
-    });
-  }
-});
-
-// ADDITIONAL: Get latest NFP data only
-app.get("/api/economic-data/nfp/latest", async (req, res) => {
-  try {
-    console.log("📊 Fetching latest NFP data for USD");
-
-    const [nfpData] = await pool.execute(
-      `SELECT * FROM nfp 
-       WHERE asset_code = 'USD' 
-       ORDER BY created_at DESC 
-       LIMIT 1`
-    );
-
-    if (nfpData.length === 0) {
-      return res.status(404).json({
-        success: false,
-        error: "No NFP data found for USD",
-      });
-    }
-
-    console.log("✅ Latest NFP data found for USD");
-
-    res.json({
-      success: true,
-      asset_code: "USD",
-      data: nfpData[0],
-    });
-  } catch (error) {
-    console.error("❌ Get latest NFP data error:", error);
-    res.status(500).json({
-      success: false,
-      error: "Server error fetching latest NFP data",
-    });
-  }
-});
-
-// ====================
-// END FIXED NFP DATA API ROUTES
-// ====================
-// ====================
-// END NFP DATA API ROUTES
-// ====================
-
-// ====================
-// RETAIL SENTIMENT API ROUTES
-// ====================
-
-// Submit Retail Sentiment data
-app.post("/api/retail-sentiment", async (req, res) => {
-  try {
-    const { asset_pair_code, retailLong, retailShort } = req.body;
-
-    console.log(
-      "📊 Submitting Retail Sentiment data for asset pair:",
-      asset_pair_code
-    );
-
-    // Validation
-    if (!asset_pair_code || !retailLong || !retailShort) {
-      return res.status(400).json({
-        success: false,
-        error: "Asset pair code, retail long%, and retail short% are required",
-      });
-    }
-
-    // Convert to numbers and validate percentages
-    const newRetailLong = parseFloat(retailLong);
-    const newRetailShort = parseFloat(retailShort);
-
-    if (isNaN(newRetailLong) || isNaN(newRetailShort)) {
-      return res.status(400).json({
-        success: false,
-        error: "Retail long% and retail short% must be valid numbers",
-      });
-    }
-
-    // Validate percentages (should add up to 100% or be individual percentages)
-    if (newRetailLong < 0 || newRetailShort < 0) {
-      return res.status(400).json({
-        success: false,
-        error: "Percentages cannot be negative",
-      });
-    }
-
-    if (newRetailLong > 100 || newRetailShort > 100) {
-      return res.status(400).json({
-        success: false,
-        error: "Percentages cannot exceed 100%",
-      });
-    }
-
-    // Optional: Check if percentages add up to 100% (you can remove this if not required)
-    const totalPercentage = newRetailLong + newRetailShort;
-    if (Math.abs(totalPercentage - 100) > 0.01) {
-      // Allow small rounding differences
-      return res.status(400).json({
-        success: false,
-        error: "Retail long% and retail short% should add up to 100%",
-      });
-    }
-
-    // Check if asset pair exists
-    const [assetPairExists] = await pool.execute(
-      "SELECT asset_pair_code FROM asset_pairs WHERE asset_pair_code = ?",
-      [asset_pair_code]
-    );
-
-    if (assetPairExists.length === 0) {
-      return res.status(400).json({
-        success: false,
-        error: "Invalid asset pair code",
-      });
-    }
-
-    // Insert new retail sentiment data
-    const [insertResult] = await pool.execute(
-      `INSERT INTO retail_sentiment 
-       (asset_pair_code, retail_long, retail_short)
-       VALUES (?, ?, ?)`,
-      [asset_pair_code, newRetailLong, newRetailShort]
-    );
-
-    // Get the inserted record to return
-    const [insertedData] = await pool.execute(
-      "SELECT * FROM retail_sentiment WHERE id = ?",
-      [insertResult.insertId]
-    );
-
-    console.log("✅ Retail Sentiment data saved successfully");
-
-    res.status(201).json({
-      success: true,
-      message: "Retail sentiment data saved successfully",
-      data: insertedData[0],
-    });
-  } catch (error) {
-    console.error("❌ Retail Sentiment submission error:", error);
-    res.status(500).json({
-      success: false,
-      error: "Server error saving retail sentiment data",
-    });
-  }
-});
-
-// Get Retail Sentiment data for an asset pair
-app.get("/api/retail-sentiment/:asset_pair_code", async (req, res) => {
-  try {
-    const { asset_pair_code } = req.params;
-    const { limit = 10 } = req.query;
-
-    const [sentimentData] = await pool.execute(
-      `SELECT * FROM retail_sentiment 
-       WHERE asset_pair_code = ? 
-       ORDER BY created_at DESC 
-       LIMIT ?`,
-      [asset_pair_code, parseInt(limit)]
-    );
-
-    res.json({
-      success: true,
-      asset_pair_code: asset_pair_code,
-      data: sentimentData,
-      count: sentimentData.length,
-    });
-  } catch (error) {
-    console.error("❌ Get retail sentiment data error:", error);
-    res.status(500).json({
-      success: false,
-      error: "Server error fetching retail sentiment data",
-    });
-  }
-});
-
-// Get latest Retail Sentiment data for all asset pairs
+// ENHANCED: Retail Sentiment bulk endpoint (already exists but enhanced for consistency)
 app.get("/api/retail-sentiment", async (req, res) => {
   try {
-    console.log("📊 Fetching latest retail sentiment data for all asset pairs");
+    console.log("📊 Fetching latest retail sentiment data for all asset pairs (BULK)");
 
     const [sentimentData] = await pool.execute(
       `SELECT rs1.* FROM retail_sentiment rs1
@@ -4226,69 +4630,226 @@ app.get("/api/retail-sentiment", async (req, res) => {
        ORDER BY rs1.asset_pair_code`
     );
 
+    console.log(`✅ Retrieved ${sentimentData.length} Retail Sentiment records`);
+
     res.json({
       success: true,
       data: sentimentData,
       count: sentimentData.length,
     });
   } catch (error) {
-    console.error("❌ Get all retail sentiment data error:", error);
+    console.error("❌ Bulk retail sentiment data error:", error);
     res.status(500).json({
       success: false,
-      error: "Server error fetching retail sentiment data",
+      error: "Server error fetching bulk retail sentiment data",
     });
   }
 });
 
-// Get Asset Pairs for dropdown
-app.get("/api/asset-pairs", async (req, res) => {
+// ====================
+// ULTIMATE OPTIMIZATION: Single endpoint for ALL economic data
+// ====================
+
+// MEGA BULK: Get ALL economic data in a single call (ULTIMATE PERFORMANCE)
+app.get("/api/economic-data/all", async (req, res) => {
   try {
-    console.log("🔗 Fetching asset pairs for dropdown");
+    console.log("🚀 Fetching ALL economic data in one mega call (ULTIMATE BULK)");
+    
+    const startTime = Date.now();
 
-    const [assetPairs] = await pool.execute(
-      `SELECT asset_pair_code, base_asset, quote_asset 
-       FROM asset_pairs 
-       ORDER BY asset_pair_code ASC`
-    );
+    // Execute all queries in parallel for maximum speed
+    const [
+      cotResults,
+      gdpResults,
+      mpmiResults,
+      spmiResults,
+      retailResults,
+      unemploymentResults,
+      employmentResults,
+      inflationResults,
+      interestResults,
+      retailSentimentResults
+    ] = await Promise.all([
+      // Latest COT data for all assets
+      pool.execute(`
+        SELECT c1.* FROM cot_data c1
+        INNER JOIN (
+          SELECT asset_code, MAX(created_at) as max_created
+          FROM cot_data 
+          GROUP BY asset_code
+        ) c2 ON c1.asset_code = c2.asset_code AND c1.created_at = c2.max_created
+      `),
+      
+      // Latest GDP data for all assets  
+      pool.execute(`
+        SELECT g1.* FROM gdp_growth g1
+        INNER JOIN (
+          SELECT asset_code, MAX(created_at) as max_created
+          FROM gdp_growth 
+          GROUP BY asset_code
+        ) g2 ON g1.asset_code = g2.asset_code AND g1.created_at = g2.max_created
+      `),
+      
+      // Latest Manufacturing PMI data for all assets
+      pool.execute(`
+        SELECT m1.* FROM mpmi m1
+        INNER JOIN (
+          SELECT asset_code, MAX(created_at) as max_created
+          FROM mpmi 
+          GROUP BY asset_code
+        ) m2 ON m1.asset_code = m2.asset_code AND m1.created_at = m2.max_created
+      `),
+      
+      // Latest Services PMI data for all assets
+      pool.execute(`
+        SELECT s1.* FROM spmi s1
+        INNER JOIN (
+          SELECT asset_code, MAX(created_at) as max_created
+          FROM spmi 
+          GROUP BY asset_code
+        ) s2 ON s1.asset_code = s2.asset_code AND s1.created_at = s2.max_created
+      `),
+      
+      // Latest Retail Sales data for all assets
+      pool.execute(`
+        SELECT r1.* FROM retail_sales r1
+        INNER JOIN (
+          SELECT asset_code, MAX(created_at) as max_created
+          FROM retail_sales 
+          GROUP BY asset_code
+        ) r2 ON r1.asset_code = r2.asset_code AND r1.created_at = r2.max_created
+      `),
+      
+      // Latest Unemployment data for all assets
+      pool.execute(`
+        SELECT u1.* FROM unemployment_rate u1
+        INNER JOIN (
+          SELECT asset_code, MAX(created_at) as max_created
+          FROM unemployment_rate 
+          GROUP BY asset_code
+        ) u2 ON u1.asset_code = u2.asset_code AND u1.created_at = u2.max_created
+      `),
+      
+      // Latest Employment Change data for all assets
+      pool.execute(`
+        SELECT e1.* FROM employment_change e1
+        INNER JOIN (
+          SELECT asset_code, MAX(created_at) as max_created
+          FROM employment_change 
+          GROUP BY asset_code
+        ) e2 ON e1.asset_code = e2.asset_code AND e1.created_at = e2.max_created
+      `),
+      
+      // Latest Core Inflation data for all assets
+      pool.execute(`
+        SELECT i1.* FROM core_inflation i1
+        INNER JOIN (
+          SELECT asset_code, MAX(created_at) as max_created
+          FROM core_inflation 
+          GROUP BY asset_code
+        ) i2 ON i1.asset_code = i2.asset_code AND i1.created_at = i2.max_created
+      `),
+      
+      // Latest Interest Rate data for all assets
+      pool.execute(`
+        SELECT i1.* FROM interest_rate i1
+        INNER JOIN (
+          SELECT asset_code, MAX(created_at) as max_created
+          FROM interest_rate 
+          GROUP BY asset_code
+        ) i2 ON i1.asset_code = i2.asset_code AND i1.created_at = i2.max_created
+      `),
+      
+      // Latest Retail Sentiment data for all asset pairs
+      pool.execute(`
+        SELECT rs1.* FROM retail_sentiment rs1
+        INNER JOIN (
+          SELECT asset_pair_code, MAX(created_at) as max_created
+          FROM retail_sentiment 
+          GROUP BY asset_pair_code
+        ) rs2 ON rs1.asset_pair_code = rs2.asset_pair_code AND rs1.created_at = rs2.max_created
+      `)
+    ]);
 
-    // Format for dropdown
-    const assetPairOptions = assetPairs.map((pair) => ({
-      value: pair.asset_pair_code,
-      label: `${pair.base_asset}/${pair.quote_asset} (${pair.asset_pair_code})`,
-      baseAsset: pair.base_asset,
-      quoteAsset: pair.quote_asset,
-    }));
+    const executionTime = Date.now() - startTime;
+
+    // Structure the mega response
+    const megaData = {
+      cot: cotResults[0] || [],
+      gdp: gdpResults[0] || [],
+      mpmi: mpmiResults[0] || [],
+      spmi: spmiResults[0] || [],
+      retail: retailResults[0] || [],
+      unemployment: unemploymentResults[0] || [],
+      employment: employmentResults[0] || [],
+      inflation: inflationResults[0] || [],
+      interest: interestResults[0] || [],
+      retailSentiment: retailSentimentResults[0] || []
+    };
+
+    const totalRecords = Object.values(megaData).reduce((sum, records) => sum + records.length, 0);
+
+    console.log(`🚀 MEGA BULK SUCCESS: ${totalRecords} total records in ${executionTime}ms`);
+    console.log(`📊 Records by type:`, {
+      cot: megaData.cot.length,
+      gdp: megaData.gdp.length,
+      mpmi: megaData.mpmi.length,
+      spmi: megaData.spmi.length,
+      retail: megaData.retail.length,
+      unemployment: megaData.unemployment.length,
+      employment: megaData.employment.length,
+      inflation: megaData.inflation.length,
+      interest: megaData.interest.length,
+      retailSentiment: megaData.retailSentiment.length
+    });
 
     res.json({
       success: true,
-      data: assetPairOptions,
-      count: assetPairOptions.length,
+      data: megaData,
+      totalRecords,
+      executionTimeMs: executionTime,
+      recordsByType: {
+        cot: megaData.cot.length,
+        gdp: megaData.gdp.length,
+        mpmi: megaData.mpmi.length,
+        spmi: megaData.spmi.length,
+        retail: megaData.retail.length,
+        unemployment: megaData.unemployment.length,
+        employment: megaData.employment.length,
+        inflation: megaData.inflation.length,
+        interest: megaData.interest.length,
+        retailSentiment: megaData.retailSentiment.length
+      }
     });
+
   } catch (error) {
-    console.error("❌ Get asset pairs error:", error);
+    console.error("❌ MEGA BULK economic data error:", error);
     res.status(500).json({
       success: false,
-      error: "Server error fetching asset pairs",
+      error: "Server error fetching mega bulk economic data",
+      details: error.message
     });
   }
 });
 
 // ====================
-// END RETAIL SENTIMENT API ROUTES
-// ====================
-// ====================
-// ASSET PAIRS API ROUTE
+// OPTIMIZED ASSET PAIRS ENDPOINT
 // ====================
 
+// Enhanced asset pairs endpoint with better performance
 app.get("/api/asset-pairs", async (req, res) => {
   try {
-    console.log("🔗 Fetching all asset pairs");
+    console.log("🔗 Fetching all asset pairs (OPTIMIZED)");
+
+    const startTime = Date.now();
 
     const [assetPairs] = await pool.execute(
       `SELECT asset_pair_code, base_asset, quote_asset, description, created_at, updated_at
        FROM asset_pairs 
        ORDER BY asset_pair_code ASC`
     );
+
+    const executionTime = Date.now() - startTime;
 
     // Format the response to match what your React component expects
     const assetPairOptions = assetPairs.map((pair) => ({
@@ -4301,20 +4862,16 @@ app.get("/api/asset-pairs", async (req, res) => {
       updated_at: pair.updated_at,
     }));
 
-    console.log(`✅ Found ${assetPairs.length} asset pairs`);
-
-    // Log the first few pairs to verify structure
-    if (assetPairOptions.length > 0) {
-      console.log("📋 Sample asset pairs:", assetPairOptions.slice(0, 3));
-    }
+    console.log(`✅ Retrieved ${assetPairs.length} asset pairs in ${executionTime}ms`);
 
     res.json({
       success: true,
       data: assetPairOptions,
       count: assetPairs.length,
+      executionTimeMs: executionTime
     });
   } catch (error) {
-    console.error("❌ Get asset pairs error:", error);
+    console.error("❌ Optimized asset pairs error:", error);
     res.status(500).json({
       success: false,
       error: "Server error fetching asset pairs",
@@ -4323,6 +4880,100 @@ app.get("/api/asset-pairs", async (req, res) => {
   }
 });
 
+// ====================
+// DATABASE OPTIMIZATION SUGGESTIONS
+// ====================
+
+/*
+RECOMMENDED DATABASE INDEXES for maximum performance:
+
+-- COT Data
+CREATE INDEX idx_cot_asset_created ON cot_data(asset_code, created_at DESC);
+
+-- GDP Growth  
+CREATE INDEX idx_gdp_asset_created ON gdp_growth(asset_code, created_at DESC);
+
+-- Manufacturing PMI
+CREATE INDEX idx_mpmi_asset_created ON mpmi(asset_code, created_at DESC);
+
+-- Services PMI
+CREATE INDEX idx_spmi_asset_created ON spmi(asset_code, created_at DESC);
+
+-- Retail Sales
+CREATE INDEX idx_retail_asset_created ON retail_sales(asset_code, created_at DESC);
+
+-- Unemployment Rate
+CREATE INDEX idx_unemployment_asset_created ON unemployment_rate(asset_code, created_at DESC);
+
+-- Employment Change
+CREATE INDEX idx_employment_asset_created ON employment_change(asset_code, created_at DESC);
+
+-- Core Inflation
+CREATE INDEX idx_inflation_asset_created ON core_inflation(asset_code, created_at DESC);
+
+-- Interest Rate
+CREATE INDEX idx_interest_asset_created ON interest_rate(asset_code, created_at DESC);
+
+-- Retail Sentiment
+CREATE INDEX idx_sentiment_pair_created ON retail_sentiment(asset_pair_code, created_at DESC);
+
+-- Asset Pairs
+CREATE INDEX idx_asset_pairs_code ON asset_pairs(asset_pair_code);
+
+Run these CREATE INDEX statements in your MySQL database to dramatically improve query performance!
+*/
+
+// ====================
+// PERFORMANCE MONITORING ENDPOINT
+// ====================
+
+app.get("/api/performance/test", async (req, res) => {
+  try {
+    console.log("🔬 Running performance test...");
+    
+    const startTime = Date.now();
+    
+    // Test the mega bulk endpoint
+    const megaResponse = await fetch("http://localhost:3000/api/economic-data/all");
+    const megaData = await megaResponse.json();
+    
+    const megaTime = Date.now() - startTime;
+    
+    // Test asset pairs
+    const pairsStartTime = Date.now();
+    const pairsResponse = await fetch("http://localhost:3000/api/asset-pairs");
+    const pairsData = await pairsResponse.json();
+    const pairsTime = Date.now() - pairsStartTime;
+    
+    const totalTime = Date.now() - startTime;
+    
+    res.json({
+      success: true,
+      performanceResults: {
+        totalExecutionTime: totalTime,
+        megaBulkTime: megaTime,
+        assetPairsTime: pairsTime,
+        totalRecords: megaData.totalRecords || 0,
+        assetPairsCount: pairsData.count || 0,
+        recommendation: totalTime < 1000 ? "🚀 EXCELLENT PERFORMANCE" : 
+                      totalTime < 2000 ? "✅ Good Performance" : 
+                      "⚠️ Consider adding database indexes"
+      }
+    });
+    
+  } catch (error) {
+    console.error("❌ Performance test error:", error);
+    res.status(500).json({
+      success: false,
+      error: "Performance test failed",
+      details: error.message
+    });
+  }
+});
+
+// ====================
+// END OPTIMIZED BULK API ROUTES
+// ====================
 // ====================
 // CURRENCY PROFILE API ROUTE - COMPLETE VERSION
 // ====================
@@ -4941,6 +5592,7 @@ async function startServer() {
 }
 
 // Start the application
+
 startServer().catch((error) => {
   console.error("❌ Failed to start server:", error);
   process.exit(1);

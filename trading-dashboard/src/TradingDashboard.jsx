@@ -1162,7 +1162,7 @@ const TradingDashboard = () => {
     },
     navButtonInactive: {
       backgroundColor: "transparent",
-      color: colors.textSecondary,
+      color:styles.textTopsetup,
     },
     mainContent: {
       flex: 1,
@@ -1336,7 +1336,7 @@ const TradingDashboard = () => {
                     !mobile
                   ) {
                     e.target.style.backgroundColor = colors.border;
-                    e.target.style.color = colors.text;
+                    e.target.style.color = colors.textTopsetup;
                   }
                 }}
                 onMouseLeave={(e) => {
@@ -1346,7 +1346,7 @@ const TradingDashboard = () => {
                     !mobile
                   ) {
                     e.target.style.backgroundColor = "transparent";
-                    e.target.style.color = colors.textSecondary;
+                    e.target.style.color = colors.textTopsetup;
                   }
                 }}
               >

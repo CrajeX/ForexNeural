@@ -19,20 +19,22 @@ export const DEFAULT_THEMES = {
     danger: '#ef4444',
     border: '#374151',
     chart:'dark',
+    textTopsetup: 'white',
   },
   light: {
     background: '#e4eed3',
     cardBackground: '#e4eed3',
     sidebar: '#e4eed3',
     text: '#111827',
-    textSecondary: '#6b7280',
+    textSecondary: 'black',
     accent: '#3b82f6',
     accentSecondary: '#8b5cf6',
     success: '#10b981',
     warning: '#f59e0b',
     danger: '#ef4444',
     border: '#e5e7eb',
-     chart:'light'
+     chart:'light',
+      textTopsetup: 'black',
   }
 };
 
