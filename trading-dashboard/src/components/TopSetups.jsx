@@ -3781,7 +3781,6 @@ const TopSetups = ({ onAssetPairClick }) => {
               box-shadow: ${theme.mode === 'dark'
                 ? '0 0 16px 6px rgba(0, 0, 0, 0.3)' // black glow in dark mode
                 : '0 0 16px 6px rgba(255, 255, 255, 0.5)'} !important; // white glow in light mode
-
             }
             .asset-pair-row-even {
               background-color: ${theme.accent} !important;
