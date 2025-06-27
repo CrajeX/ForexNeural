@@ -69,7 +69,7 @@ export const DEFAULT_SETTINGS = {
 
 // Get current theme colors based on settings
 export const getThemeColors = (settings) => {
-  switch (settings.theme) {
+  switch (settings.theme) {  
     case THEME_MODES.LIGHT:
       return DEFAULT_THEMES.light;
     case THEME_MODES.CUSTOM:

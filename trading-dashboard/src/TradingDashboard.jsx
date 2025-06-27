@@ -45,6 +45,7 @@ import ProfilePage from "./components/Profile";
 import TopSetups from "./components/TopSetups";
 import CurrencyProfile from "./components/CurrencyProfile";
 import TopSetupsCardView from "./components/TopSetupsCardView";
+import TradingEconomicsHistory from "./components/TradingEconomics";
 // Settings Window Component with responsive design
 import {
   THEME_MODES,
@@ -945,6 +946,7 @@ const TradingDashboard = () => {
     { id: "setups", label: "Top Setups", icon: TrendingUp },
     { id: "economic", label: "Economic Calendar", icon: Calendar },
     { id: "profile", label: "Profile Dashboard", icon: User },
+     { id: "history", label: "Economic History", icon: User },
   ];
   useEffect(() => {
     if (assetPairCode != null) {
@@ -2142,6 +2144,8 @@ const TradingDashboard = () => {
         return <ProfilePage />;
       case "setups":
         return <TopSetups />;
+      case "history":
+        return <TradingEconomicsHistory />;
       case "currencyprofile":
         return (
           <div style={styles.container}>

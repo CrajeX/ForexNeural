@@ -18,6 +18,7 @@ import TopSetups from './components/TopSetups';
 import CurrencyProfile from './components/CurrencyProfile';
 import TopSetupsCardView from './components/TopSetupsCardView';
 import CombinedEconomicDataForm from './components/EconomicDataEntry';
+import TradingEconomicsHistory from './components/TradingEconomics';
 // Settings Window Component with responsive design
 import { 
   THEME_MODES, 
@@ -744,6 +745,7 @@ const TradingDashboard = () => {
     { id: 'setups', label: 'Top Setups', icon: TrendingUp },
     { id: 'economic', label: 'Economic Calendar', icon: Calendar },
     { id: 'dataentry', label: 'Data Entry', icon: User },
+     { id: "history", label: "Economic History", icon: User },
   ];
    useEffect(() => {
     if (assetPairCode != null) {
@@ -1685,6 +1687,8 @@ const TopSetupsSection = () => {
         return (
           <CombinedEconomicDataForm/>
         );
+      case "history":
+        return <TradingEconomicsHistory />;
       case 'currencyprofile':
         return (
            <div style={styles.container}>
