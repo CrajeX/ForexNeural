@@ -154,10 +154,10 @@ const ProfilePage = () => {
   const navigate = useNavigate();
   // Navigation function
   const navigateToDashboard = () => {
-    
+ 
     navigate('/dashboard');
   };
-
+   const BASE_URL = import.meta.env.VITE_API_BASE_URL;
   // Get user data from session storage and fetch from MongoDB
   const getUserFromSession = async () => {
   try {
@@ -176,7 +176,7 @@ const ProfilePage = () => {
     console.log('🔍 Fetching profile for account_id:', sessionData.person_id);
 
 
-    const response = await fetch(`http://localhost:3001/api/profile/${sessionData.person_id}`, {
+    const response = await fetch(`http://${BASE_URL}:3001/api/profile/${sessionData.person_id}`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
@@ -371,7 +371,7 @@ const handleSaveProfile = async () => {
     }
     
     // Update profile endpoint - matches backend route
-    const response = await fetch(`http://localhost:3001/api/profile/${account_id}`, {
+    const response = await fetch(`http://${BASE_URL}:3001/api/profile/${account_id}`, {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
@@ -579,7 +579,7 @@ const showToast = (type, message) => {
       }
       
       // FIXED: Avatar upload endpoint (matches backend route)
-      const response = await fetch(`http://localhost:3000/api/profile/${account_id}/avatar`, {
+      const response = await fetch(`http://${BASE_URL}:3000/api/profile/${account_id}/avatar`, {
         method: 'POST',
         credentials: 'include',
         body: formData

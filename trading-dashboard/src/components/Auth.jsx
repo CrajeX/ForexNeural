@@ -66,7 +66,8 @@ const LoginSignupPage = () => {
     email: '',
     password: ''
   });
-
+  
+  const BASE_URL = import.meta.env.VITE_API_BASE_URL;
   // Check for existing authentication on component mount
   useEffect(() => {
     checkExistingAuth();
@@ -74,7 +75,7 @@ const LoginSignupPage = () => {
 
   const checkExistingAuth = async () => {
     try {
-      const response = await fetch('http://localhost:3000/api/check-auth', {
+      const response = await fetch(`http://${BASE_URL}:3000/api/check-auth`, {
         method: 'GET',
         credentials: 'include'
       });
@@ -109,7 +110,7 @@ const LoginSignupPage = () => {
 
  const getToken = async (email, password) => {
   try {
-    const response = await fetch('http://localhost:3001/api/auth', {
+    const response = await fetch(`http://${BASE_URL}:3001/api/auth`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
@@ -172,7 +173,7 @@ const handleSubmit = async (e) => {
     console.log('Token received:', token);
 
     // 🔐 Step 2: Log in
-    const loginRes = await fetch('http://localhost:3001/api/auth/login', {
+    const loginRes = await fetch(`http://${BASE_URL}:3001/api/auth/login`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ token })
@@ -228,7 +229,7 @@ const handleSubmit = async (e) => {
 
     // 🔍 Step 3: Get existing profile from database
     console.log('🔍 Fetching existing profile...');
-    const profileRes = await fetch(`http://localhost:3000/api/profile/${sessionData.person_id}`);
+    const profileRes = await fetch(`http://${BASE_URL}:3000/api/profile/${sessionData.person_id}`);
     const profileData = await profileRes.json();
 
     // 📝 Step 4: Prepare user data payload
@@ -264,7 +265,7 @@ const handleSubmit = async (e) => {
     if (!profileData.success || !profileData.profile) {
       // 📝 Profile doesn't exist - create new user
       console.log('📝 Creating new user profile...');
-      const registerRes = await fetch('http://localhost:3000/api/register', {
+      const registerRes = await fetch(`http://${BASE_URL}:3000/api/register`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
@@ -307,7 +308,7 @@ const handleSubmit = async (e) => {
         if (existingProfile.trading_level !== userPayload.trading_level) 
           console.log(`  Trading Level: "${existingProfile.trading_level}" → "${userPayload.trading_level}"`);
 
-        const updateRes = await fetch('http://localhost:3000/api/updateprofile', {
+        const updateRes = await fetch(`http://${BASE_URL}:3000/api/updateprofile`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
           credentials: 'include',
@@ -330,7 +331,7 @@ const handleSubmit = async (e) => {
           last_login: new Date().toISOString()
         };
 
-        const updateRes = await fetch('http://localhost:3000/api/updateprofile', {
+        const updateRes = await fetch(`http://${BASE_URL}:3000/api/updateprofile`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
           credentials: 'include',
@@ -371,7 +372,7 @@ const handleSubmit = async (e) => {
 
   const handleLogout = async () => {
     try {
-      const response = await fetch('http://localhost:3000/api/logout', {
+      const response = await fetch(`http://${BASE_URL}:3000/api/logout`, {
         method: 'POST',
         credentials: 'include'
       });

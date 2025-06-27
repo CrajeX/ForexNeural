@@ -87,25 +87,25 @@
 //         employmentBase, employmentQuote, inflationBase, inflationQuote,
 //         interestBase, interestQuote, retailSentiment,
 //       ] = await Promise.all([
-//         fetchWithFallback(`http://localhost:3000/api/economic-data/cot/${baseAsset}?limit=1`),
-//         fetchWithFallback(`http://localhost:3000/api/economic-data/cot/${quoteAsset}?limit=1`),
-//         fetchWithFallback(`http://localhost:3000/api/economic-data/gdp/${baseAsset}?limit=1`),
-//         fetchWithFallback(`http://localhost:3000/api/economic-data/gdp/${quoteAsset}?limit=1`),
-//         fetchWithFallback(`http://localhost:3000/api/economic-data/mpmi/${baseAsset}?limit=1`),
-//         fetchWithFallback(`http://localhost:3000/api/economic-data/mpmi/${quoteAsset}?limit=1`),
-//         fetchWithFallback(`http://localhost:3000/api/economic-data/spmi/${baseAsset}?limit=1`),
-//         fetchWithFallback(`http://localhost:3000/api/economic-data/spmi/${quoteAsset}?limit=1`),
-//         fetchWithFallback(`http://localhost:3000/api/economic-data/retail/${baseAsset}?limit=1`),
-//         fetchWithFallback(`http://localhost:3000/api/economic-data/retail/${quoteAsset}?limit=1`),
-//         fetchWithFallback(`http://localhost:3000/api/economic-data/unemployment/${baseAsset}?limit=1`),
-//         fetchWithFallback(`http://localhost:3000/api/economic-data/unemployment/${quoteAsset}?limit=1`),
-//         fetchWithFallback(`http://localhost:3000/api/economic-data/employment/${baseAsset}?limit=1`),
-//         fetchWithFallback(`http://localhost:3000/api/economic-data/employment/${quoteAsset}?limit=1`),
-//         fetchWithFallback(`http://localhost:3000/api/economic-data/inflation/${baseAsset}?limit=1`),
-//         fetchWithFallback(`http://localhost:3000/api/economic-data/inflation/${quoteAsset}?limit=1`),
-//         fetchWithFallback(`http://localhost:3000/api/economic-data/interest/${baseAsset}?limit=1`),
-//         fetchWithFallback(`http://localhost:3000/api/economic-data/interest/${quoteAsset}?limit=1`),
-//         fetchWithFallback(`http://localhost:3000/api/retail-sentiment/${assetPairCode}?limit=1`),
+//         fetchWithFallback(`http://${BASE_URL}:3000/api/economic-data/cot/${baseAsset}?limit=1`),
+//         fetchWithFallback(`http://${BASE_URL}:3000/api/economic-data/cot/${quoteAsset}?limit=1`),
+//         fetchWithFallback(`http://${BASE_URL}:3000/api/economic-data/gdp/${baseAsset}?limit=1`),
+//         fetchWithFallback(`http://${BASE_URL}:3000/api/economic-data/gdp/${quoteAsset}?limit=1`),
+//         fetchWithFallback(`http://${BASE_URL}:3000/api/economic-data/mpmi/${baseAsset}?limit=1`),
+//         fetchWithFallback(`http://${BASE_URL}:3000/api/economic-data/mpmi/${quoteAsset}?limit=1`),
+//         fetchWithFallback(`http://${BASE_URL}:3000/api/economic-data/spmi/${baseAsset}?limit=1`),
+//         fetchWithFallback(`http://${BASE_URL}:3000/api/economic-data/spmi/${quoteAsset}?limit=1`),
+//         fetchWithFallback(`http://${BASE_URL}:3000/api/economic-data/retail/${baseAsset}?limit=1`),
+//         fetchWithFallback(`http://${BASE_URL}:3000/api/economic-data/retail/${quoteAsset}?limit=1`),
+//         fetchWithFallback(`http://${BASE_URL}:3000/api/economic-data/unemployment/${baseAsset}?limit=1`),
+//         fetchWithFallback(`http://${BASE_URL}:3000/api/economic-data/unemployment/${quoteAsset}?limit=1`),
+//         fetchWithFallback(`http://${BASE_URL}:3000/api/economic-data/employment/${baseAsset}?limit=1`),
+//         fetchWithFallback(`http://${BASE_URL}:3000/api/economic-data/employment/${quoteAsset}?limit=1`),
+//         fetchWithFallback(`http://${BASE_URL}:3000/api/economic-data/inflation/${baseAsset}?limit=1`),
+//         fetchWithFallback(`http://${BASE_URL}:3000/api/economic-data/inflation/${quoteAsset}?limit=1`),
+//         fetchWithFallback(`http://${BASE_URL}:3000/api/economic-data/interest/${baseAsset}?limit=1`),
+//         fetchWithFallback(`http://${BASE_URL}:3000/api/economic-data/interest/${quoteAsset}?limit=1`),
+//         fetchWithFallback(`http://${BASE_URL}:3000/api/retail-sentiment/${assetPairCode}?limit=1`),
         
 //       ]);
 
@@ -244,7 +244,7 @@
 //       setLoading(true);
 //       setError(null);
 
-//       const response = await fetch("http://localhost:3000/api/asset-pairs");
+//       const response = await fetch("http://${BASE_URL}:3000/api/asset-pairs");
 //       if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
 
 //       const result = await response.json();
@@ -528,7 +528,7 @@ const TopSetupsCardView = ({ limit = 5, onAssetPairClick }) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [lastUpdated, setLastUpdated] = useState(null);
-
+  const BASE_URL = import.meta.env.VITE_API_BASE_URL;
   // Cache for economic data to avoid repeated fetches
   const [economicDataCache, setEconomicDataCache] = useState(null);
   const [cacheTimestamp, setCacheTimestamp] = useState(null);
@@ -608,7 +608,7 @@ const TopSetupsCardView = ({ limit = 5, onAssetPairClick }) => {
       const startTime = Date.now();
       
       // Single API call for ALL economic data
-      const response = await fetch("http://localhost:3000/api/economic-data/all");
+      const response = await fetch(`http://${BASE_URL}:3000/api/economic-data/all`);
       
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
@@ -868,7 +868,7 @@ const TopSetupsCardView = ({ limit = 5, onAssetPairClick }) => {
 
       // Fetch asset pairs and ALL economic data in parallel (2 calls total)
       const [assetPairsResponse, economicData] = await Promise.all([
-        fetch("http://localhost:3000/api/asset-pairs"),
+        fetch(`http://${BASE_URL}:3000/api/asset-pairs`),
         fetchAllEconomicDataMega()
       ]);
 

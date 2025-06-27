@@ -28,7 +28,7 @@ const TradingEconomicsHistory = () => {
   const [assetsLoading, setAssetsLoading] = useState(true);
   const [assetsError, setAssetsError] = useState(null);
   const [lastUpdated, setLastUpdated] = useState(null);
-  
+  const BASE_URL = import.meta.env.VITE_API_BASE_URL;
   // New state for hover indicators
   const [activeHoverData, setActiveHoverData] = useState(null);
   const [hoverLineX, setHoverLineX] = useState(null);
@@ -69,7 +69,7 @@ const TradingEconomicsHistory = () => {
 
       console.log('🔄 Fetching assets...');
       const response = await fetch(
-        "http://localhost:3000/api/assets?type=Currency",
+       `http://${BASE_URL}:3000/api/assets?type=Currency`,
         { signal }
       );
 
@@ -229,7 +229,7 @@ const TradingEconomicsHistory = () => {
           throw new Error(`Unknown data type: ${selectedDataType}`);
       }
 
-      const url = `http://localhost:3000/api/economic-data/${endpoint}?${assetParam}&start_date=${formatDate(startDate)}&end_date=${formatDate(endDate)}&limit=200`;
+      const url = `http://${BASE_URL}:3000/api/economic-data/${endpoint}?${assetParam}&start_date=${formatDate(startDate)}&end_date=${formatDate(endDate)}&limit=200`;
       
       console.log('📡 API Request URL:', url);
       

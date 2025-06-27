@@ -30,14 +30,14 @@ const useCurrencies = () => {
   const [currencies, setCurrencies] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-
+   const BASE_URL = import.meta.env.VITE_API_BASE_URL;
   const fetchCurrencies = useCallback(async (signal) => {
     try {
       setLoading(true);
       setError(null);
 
       const response = await fetch(
-        "http://localhost:3000/api/assets?type=Currency",
+        `http://${BASE_URL}:3000/api/assets?type=Currency`,
         { signal }
       );
 
@@ -124,13 +124,13 @@ const useAssetPairs = () => {
   const [assetPairs, setAssetPairs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-
+   const BASE_URL = import.meta.env.VITE_API_BASE_URL;
   const fetchAssetPairs = useCallback(async (signal) => {
     try {
       setLoading(true);
       setError(null);
 
-      const response = await fetch("http://localhost:3000/api/asset-pairs", {
+      const response = await fetch(`http://${BASE_URL}:3000/api/asset-pairs`, {
         signal,
       });
 
@@ -584,7 +584,7 @@ const SectionChecklistComponent = ({
       color: "#ea580c",
     },
   ];
-
+   const BASE_URL = import.meta.env.VITE_API_BASE_URL;
   return (
     <div className="form-section">
       <div className="section-header">
@@ -642,7 +642,7 @@ const SectionChecklistComponent = ({
 const RetailSentimentSection = () => {
   const { formData, handleInputChange, errors, selectedAssetPair } =
     useContext(FormContext);
-
+   const BASE_URL = import.meta.env.VITE_API_BASE_URL;
   const retailLong = parseFloat(formData.retailLong) || 0;
   const retailShort = parseFloat(formData.retailShort) || 0;
   const total = retailLong + retailShort;
@@ -709,7 +709,7 @@ const RetailSentimentSection = () => {
 
 const MarketSentimentsSection = () => {
   const { formData, handleInputChange, errors } = useContext(FormContext);
-
+   const BASE_URL = import.meta.env.VITE_API_BASE_URL;
   // Calculate COT percentages for the bars
   const cotLong = parseFloat(formData.cotLongContracts) || 0;
   const cotShort = parseFloat(formData.cotShortContracts) || 0;
@@ -769,7 +769,7 @@ const MarketSentimentsSection = () => {
 const LaborMarketSection = () => {
   const { formData, handleInputChange, errors, selectedCurrency } =
     useContext(FormContext);
-
+   const BASE_URL = import.meta.env.VITE_API_BASE_URL;
   return (
     <section className="form-section">
       <div className="section-header">
@@ -853,7 +853,7 @@ const LaborMarketSection = () => {
 
 const EconomicGrowthSection = () => {
   const { formData, handleInputChange, errors } = useContext(FormContext);
-
+   const BASE_URL = import.meta.env.VITE_API_BASE_URL;
   return (
     <section className="form-section">
       <div className="section-header">
@@ -930,7 +930,7 @@ const EconomicGrowthSection = () => {
 
 const InflationSection = () => {
   const { formData, handleInputChange, errors } = useContext(FormContext);
-
+   const BASE_URL = import.meta.env.VITE_API_BASE_URL;
   return (
     <section className="form-section">
       <div className="section-header">
@@ -957,7 +957,7 @@ const InflationSection = () => {
 
 const InterestSection = () => {
   const { formData, handleInputChange, errors } = useContext(FormContext);
-
+   const BASE_URL = import.meta.env.VITE_API_BASE_URL;
   return (
     <section className="form-section">
       <div className="section-header">
@@ -979,7 +979,7 @@ const InterestSection = () => {
 // Main Component
 const CombinedEconomicDataForm = () => {
   const [isHidden, setIsHidden] = useState(true);
-
+   const BASE_URL = import.meta.env.VITE_API_BASE_URL;
   // Updated hook calls with retry functionality
   const {
     currencies,
@@ -1279,7 +1279,7 @@ const CombinedEconomicDataForm = () => {
 
   //       console.log("📊 Submitting Retail Sentiment data...");
   //       const retailSentimentPromise = fetch(
-  //         "http://localhost:3000/api/retail-sentiment",
+  //         "http://${BASE_URL}:3000/api/retail-sentiment",
   //         {
   //           method: "POST",
   //           headers: { "Content-Type": "application/json" },
@@ -1302,7 +1302,7 @@ const CombinedEconomicDataForm = () => {
   //     ) {
   //       console.log("📊 Submitting COT data...");
   //       const cotPromise = fetch(
-  //         "http://localhost:3000/api/economic-data/cot",
+  //         "http://${BASE_URL}:3000/api/economic-data/cot",
   //         {
   //           method: "POST",
   //           headers: { "Content-Type": "application/json" },
@@ -1325,7 +1325,7 @@ const CombinedEconomicDataForm = () => {
   //     ) {
   //       console.log("📊 Submitting Employment Change data...");
   //       const employmentPromise = fetch(
-  //         "http://localhost:3000/api/economic-data/employment",
+  //         "http://${BASE_URL}:3000/api/economic-data/employment",
   //         {
   //           method: "POST",
   //           headers: { "Content-Type": "application/json" },
@@ -1348,7 +1348,7 @@ const CombinedEconomicDataForm = () => {
   //     ) {
   //       console.log("📊 Submitting Unemployment Rate data...");
   //       const unemploymentPromise = fetch(
-  //         "http://localhost:3000/api/economic-data/unemployment",
+  //         "http://${BASE_URL}:3000/api/economic-data/unemployment",
   //         {
   //           method: "POST",
   //           headers: { "Content-Type": "application/json" },
@@ -1376,7 +1376,7 @@ const CombinedEconomicDataForm = () => {
 
   //       console.log("📊 Submitting NFP data...");
   //       const nfpPromise = fetch(
-  //         "http://localhost:3000/api/economic-data/nfp",
+  //         "http://${BASE_URL}:3000/api/economic-data/nfp",
   //         {
   //           method: "POST",
   //           headers: { "Content-Type": "application/json" },
@@ -1396,7 +1396,7 @@ const CombinedEconomicDataForm = () => {
   //     if (hasData(formData.gdp) && hasData(formData.gdpForecast)) {
   //       console.log("📊 Submitting GDP Growth data...");
   //       const gdpPromise = fetch(
-  //         "http://localhost:3000/api/economic-data/gdp",
+  //         "http://${BASE_URL}:3000/api/economic-data/gdp",
   //         {
   //           method: "POST",
   //           headers: { "Content-Type": "application/json" },
@@ -1416,7 +1416,7 @@ const CombinedEconomicDataForm = () => {
   //     if (hasData(formData.mPMI) && hasData(formData.mPMIForecast)) {
   //       console.log("📊 Submitting Manufacturing PMI data...");
   //       const mpmiPromise = fetch(
-  //         "http://localhost:3000/api/economic-data/mpmi",
+  //         "http://${BASE_URL}:3000/api/economic-data/mpmi",
   //         {
   //           method: "POST",
   //           headers: { "Content-Type": "application/json" },
@@ -1436,7 +1436,7 @@ const CombinedEconomicDataForm = () => {
   //     if (hasData(formData.sPMI) && hasData(formData.sPMIForecast)) {
   //       console.log("📊 Submitting Services PMI data...");
   //       const spmiPromise = fetch(
-  //         "http://localhost:3000/api/economic-data/spmi",
+  //         "http://${BASE_URL}:3000/api/economic-data/spmi",
   //         {
   //           method: "POST",
   //           headers: { "Content-Type": "application/json" },
@@ -1459,7 +1459,7 @@ const CombinedEconomicDataForm = () => {
   //     ) {
   //       console.log("📊 Submitting Retail Sales data...");
   //       const retailPromise = fetch(
-  //         "http://localhost:3000/api/economic-data/retail",
+  //         "http://${BASE_URL}:3000/api/economic-data/retail",
   //         {
   //           method: "POST",
   //           headers: { "Content-Type": "application/json" },
@@ -1479,7 +1479,7 @@ const CombinedEconomicDataForm = () => {
   //     if (hasData(formData.cpi) && hasData(formData.cpiForecast)) {
   //       console.log("📊 Submitting Core Inflation data...");
   //       const inflationPromise = fetch(
-  //         "http://localhost:3000/api/economic-data/inflation",
+  //         "http://${BASE_URL}:3000/api/economic-data/inflation",
   //         {
   //           method: "POST",
   //           headers: { "Content-Type": "application/json" },
@@ -1499,7 +1499,7 @@ const CombinedEconomicDataForm = () => {
   //     if (hasData(formData.interestRate)) {
   //       console.log("📊 Submitting Interest Rate data...");
   //       const interestPromise = fetch(
-  //         "http://localhost:3000/api/economic-data/interest",
+  //         "http://${BASE_URL}:3000/api/economic-data/interest",
   //         {
   //           method: "POST",
   //           headers: { "Content-Type": "application/json" },
@@ -1638,7 +1638,7 @@ const CombinedEconomicDataForm = () => {
 
         console.log("📊 Submitting Retail Sentiment data...");
         const retailSentimentPromise = fetch(
-          "http://localhost:3000/api/retail-sentiment",
+          `http://${BASE_URL}:3000/api/retail-sentiment`,
           {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -1654,7 +1654,7 @@ const CombinedEconomicDataForm = () => {
 
         // Also save to history
         const retailSentimentHistoryPromise = fetch(
-          "http://localhost:3000/api/history/retail-sentiment",
+          `http://${BASE_URL}:3000/api/history/retail-sentiment`,
           {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -1676,7 +1676,7 @@ const CombinedEconomicDataForm = () => {
       ) {
         console.log("📊 Submitting COT data...");
         const cotPromise = fetch(
-          "http://localhost:3000/api/economic-data/cot",
+          `http://${BASE_URL}:3000/api/economic-data/cot`,
           {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -1692,7 +1692,7 @@ const CombinedEconomicDataForm = () => {
 
         // Also save to history
         const cotHistoryPromise = fetch(
-          "http://localhost:3000/api/history/cot",
+          `http://${BASE_URL}:3000/api/history/cot`,
           {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -1714,7 +1714,7 @@ const CombinedEconomicDataForm = () => {
       ) {
         console.log("📊 Submitting Employment Change data...");
         const employmentPromise = fetch(
-          "http://localhost:3000/api/economic-data/employment",
+          `http://${BASE_URL}:3000/api/economic-data/employment`,
           {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -1730,7 +1730,7 @@ const CombinedEconomicDataForm = () => {
 
         // Also save to history
         const employmentHistoryPromise = fetch(
-          "http://localhost:3000/api/history/employment",
+          `http://${BASE_URL}:3000/api/history/employment`,
           {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -1752,7 +1752,7 @@ const CombinedEconomicDataForm = () => {
       ) {
         console.log("📊 Submitting Unemployment Rate data...");
         const unemploymentPromise = fetch(
-          "http://localhost:3000/api/economic-data/unemployment",
+          `http://${BASE_URL}:3000/api/economic-data/unemployment`,
           {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -1768,7 +1768,7 @@ const CombinedEconomicDataForm = () => {
 
         // Also save to history
         const unemploymentHistoryPromise = fetch(
-          "http://localhost:3000/api/history/unemployment",
+          `http://${BASE_URL}:3000/api/history/unemployment`,
           {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -1795,7 +1795,7 @@ const CombinedEconomicDataForm = () => {
 
         console.log("📊 Submitting NFP data...");
         const nfpPromise = fetch(
-          "http://localhost:3000/api/economic-data/nfp",
+          `http://${BASE_URL}:3000/api/economic-data/nfp`,
           {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -1811,7 +1811,7 @@ const CombinedEconomicDataForm = () => {
 
         // Also save to history
         const nfpHistoryPromise = fetch(
-          "http://localhost:3000/api/history/nfp",
+          `http://${BASE_URL}:3000/api/history/nfp`,
           {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -1830,7 +1830,7 @@ const CombinedEconomicDataForm = () => {
       if (hasData(formData.gdp) && hasData(formData.gdpForecast)) {
         console.log("📊 Submitting GDP Growth data...");
         const gdpPromise = fetch(
-          "http://localhost:3000/api/economic-data/gdp",
+          `http://${BASE_URL}:3000/api/economic-data/gdp`,
           {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -1846,7 +1846,7 @@ const CombinedEconomicDataForm = () => {
 
         // Also save to history
         const gdpHistoryPromise = fetch(
-          "http://localhost:3000/api/history/gdp",
+          `http://${BASE_URL}:3000/api/history/gdp`,
           {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -1865,7 +1865,7 @@ const CombinedEconomicDataForm = () => {
       if (hasData(formData.mPMI) && hasData(formData.mPMIForecast)) {
         console.log("📊 Submitting Manufacturing PMI data...");
         const mpmiPromise = fetch(
-          "http://localhost:3000/api/economic-data/mpmi",
+          `http://${BASE_URL}:3000/api/economic-data/mpmi`,
           {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -1881,7 +1881,7 @@ const CombinedEconomicDataForm = () => {
 
         // Also save to history
         const mpmiHistoryPromise = fetch(
-          "http://localhost:3000/api/history/mpmi",
+          `http://${BASE_URL}:3000/api/history/mpmi`,
           {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -1900,7 +1900,7 @@ const CombinedEconomicDataForm = () => {
       if (hasData(formData.sPMI) && hasData(formData.sPMIForecast)) {
         console.log("📊 Submitting Services PMI data...");
         const spmiPromise = fetch(
-          "http://localhost:3000/api/economic-data/spmi",
+          `http://${BASE_URL}:3000/api/economic-data/spmi`,
           {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -1916,7 +1916,7 @@ const CombinedEconomicDataForm = () => {
 
         // Also save to history
         const spmiHistoryPromise = fetch(
-          "http://localhost:3000/api/history/spmi",
+          `http://${BASE_URL}:3000/api/history/spmi`,
           {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -1938,7 +1938,7 @@ const CombinedEconomicDataForm = () => {
       ) {
         console.log("📊 Submitting Retail Sales data...");
         const retailPromise = fetch(
-          "http://localhost:3000/api/economic-data/retail",
+          `http://${BASE_URL}:3000/api/economic-data/retail`,
           {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -1954,7 +1954,7 @@ const CombinedEconomicDataForm = () => {
 
         // Also save to history
         const retailHistoryPromise = fetch(
-          "http://localhost:3000/api/history/retail",
+          `http://${BASE_URL}:3000/api/history/retail`,
           {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -1973,7 +1973,7 @@ const CombinedEconomicDataForm = () => {
       if (hasData(formData.cpi) && hasData(formData.cpiForecast)) {
         console.log("📊 Submitting Core Inflation data...");
         const inflationPromise = fetch(
-          "http://localhost:3000/api/economic-data/inflation",
+          `http://${BASE_URL}:3000/api/economic-data/inflation`,
           {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -1989,7 +1989,7 @@ const CombinedEconomicDataForm = () => {
 
         // Also save to history
         const inflationHistoryPromise = fetch(
-          "http://localhost:3000/api/history/inflation",
+          `http://${BASE_URL}:3000/api/history/inflation`,
           {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -2011,7 +2011,7 @@ const CombinedEconomicDataForm = () => {
   
   // Just do the interest rate submission
   const interestPromise = fetch(
-    "http://localhost:3000/api/economic-data/interest",
+    `http://${BASE_URL}:3000/api/economic-data/interest`,
     {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -2030,7 +2030,7 @@ const CombinedEconomicDataForm = () => {
     try {
       console.log("🔄 Saving latest interest rate to history...");
       const historyResponse = await fetch(
-        "http://localhost:3000/api/history/interest",
+        `http://${BASE_URL}:3000/api/history/interest`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },

@@ -2878,17 +2878,16 @@ dotenv.config();
 const app = express();
 const PORT = 3001;
 const JWT_SECRET = process.env.JWT_SECRET || crypto.randomBytes(64).toString('hex');
-
+const BASE_URL = process.env.VITE_API_BASE_URL;
 // ============================================================================
 // MIDDLEWARE CONFIGURATION
 // ============================================================================
 app.use(cors({
-    origin: ['http://localhost:5175','https://atecon.netlify.app','http://localhost:5174','https://8con.netlify.app'],
+    origin: ['http://localhost:5175','https://atecon.netlify.app','http://localhost:5174','https://8con.netlify.app','http://192.168.55.103:5174',"http://192.168.55.103:5174"],
     credentials: true,
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    methods: ['GET', 'POST','PUT', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization']
 }));
-
 // Security middleware
 app.use(helmet({
   contentSecurityPolicy: {

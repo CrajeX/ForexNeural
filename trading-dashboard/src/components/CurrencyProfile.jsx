@@ -37,7 +37,7 @@ const CurrencyProfile = ({ assetPairCode: propAssetPairCode }) => {
   const [aiInsight, setAiInsight] = useState(null);
   const [aiLoading, setAiLoading] = useState(false);
   const [aiError, setAiError] = useState(null);
-
+  const BASE_URL = import.meta.env.VITE_API_BASE_URL;
   // Use URL parameter if available, otherwise use prop
   const assetPairCode = urlAssetPairCode || propAssetPairCode;
 
@@ -72,7 +72,7 @@ const CurrencyProfile = ({ assetPairCode: propAssetPairCode }) => {
       setLoading(true);
       setError(null);
 
-      const url = `http://localhost:3000/api/currency-profile/${assetPairCode}`;
+      const url = `http://${BASE_URL}:3000/api/currency-profile/${assetPairCode}`;
       console.log("📡 Fetching URL:", url);
 
       const response = await fetch(url);
@@ -108,7 +108,7 @@ const CurrencyProfile = ({ assetPairCode: propAssetPairCode }) => {
 
     try {
       const response = await fetch(
-        `http://localhost:5000/api/ai-insight/${assetPairCode}`
+        `http://${BASE_URL}:5000/api/ai-insight/${assetPairCode}`
       );
       const result = await response.json();
 
@@ -314,7 +314,7 @@ const CurrencyProfile = ({ assetPairCode: propAssetPairCode }) => {
 
     try {
       const response = await fetch(
-        `http://localhost:3000/api/economic-data/nfp`
+        `http://${BASE_URL}:3000/api/economic-data/nfp`
       );
       const result = await response.json();
 

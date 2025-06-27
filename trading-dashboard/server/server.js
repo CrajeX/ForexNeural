@@ -11,21 +11,20 @@ import { fileURLToPath } from "url";
 // ES6 module __dirname equivalent
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-
+const BASE_URL = process.env.VITE_API_BASE_URL;
 dotenv.config();
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = 3000;
 
 // Middleware
 app.use(express.json());
 app.use(
   cors({
     origin: [
-      "http://localhost:5175",
-      "https://atecon.netlify.app",
-      "http://localhost:3000",
+     "http://192.168.55.103:5174",
       "http://localhost:5174",
+      'http://192.168.55.103:5174',
       "https://8con.netlify.app",
     ],
     credentials: true,

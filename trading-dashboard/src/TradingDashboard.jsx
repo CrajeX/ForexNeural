@@ -90,6 +90,7 @@ const useResponsive = () => {
 };
 
 const SettingsWindow = ({
+
   isOpen,
   onClose,
   onApplySettings,
@@ -99,7 +100,7 @@ const SettingsWindow = ({
   const [settings, setSettings] = useState(currentSettings);
   const [loading, setLoading] = useState(false);
   const { mobile, tablet } = useResponsive();
-
+   const BASE_URL = import.meta.env.VITE_API_BASE_URL;
   useEffect(() => {
     setSettings(currentSettings);
   }, [currentSettings]);
@@ -141,7 +142,7 @@ const SettingsWindow = ({
     setLoading(true);
 
     try {
-      const response = await fetch("http://localhost:3000/api/logout", {
+      const response = await fetch(`http://${BASE_URL}:3000/api/logout`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
@@ -872,6 +873,7 @@ const TradingDashboard = () => {
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
   const { mobile, tablet, desktop, windowSize } = useResponsive();
   const navigate = useNavigate();
+  const BASE_URL = import.meta.env.VITE_API_BASE_URL;
   const styles = {
     container: {
       padding: "24px",
@@ -1614,7 +1616,7 @@ const TradingDashboard = () => {
         setLoading(true);
 
         // Fetch asset pairs
-        const response = await fetch("http://localhost:3000/api/asset-pairs");
+        const response = await fetch(`http://${BASE_URL}:3000/api/asset-pairs`);
         if (!response.ok)
           throw new Error(`HTTP error! status: ${response.status}`);
 
@@ -1758,61 +1760,61 @@ const TradingDashboard = () => {
           retailSentiment,
         ] = await Promise.all([
           fetchWithFallback(
-            `http://localhost:3000/api/economic-data/cot/${baseAsset}?limit=1`
+            `http://${BASE_URL}:3000/api/economic-data/cot/${baseAsset}?limit=1`
           ),
           fetchWithFallback(
-            `http://localhost:3000/api/economic-data/cot/${quoteAsset}?limit=1`
+            `http://${BASE_URL}:3000/api/economic-data/cot/${quoteAsset}?limit=1`
           ),
           fetchWithFallback(
-            `http://localhost:3000/api/economic-data/gdp/${baseAsset}?limit=1`
+            `http://${BASE_URL}:3000/api/economic-data/gdp/${baseAsset}?limit=1`
           ),
           fetchWithFallback(
-            `http://localhost:3000/api/economic-data/gdp/${quoteAsset}?limit=1`
+            `http://${BASE_URL}:3000/api/economic-data/gdp/${quoteAsset}?limit=1`
           ),
           fetchWithFallback(
-            `http://localhost:3000/api/economic-data/mpmi/${baseAsset}?limit=1`
+            `http://${BASE_URL}:3000/api/economic-data/mpmi/${baseAsset}?limit=1`
           ),
           fetchWithFallback(
-            `http://localhost:3000/api/economic-data/mpmi/${quoteAsset}?limit=1`
+            `http://${BASE_URL}:3000/api/economic-data/mpmi/${quoteAsset}?limit=1`
           ),
           fetchWithFallback(
-            `http://localhost:3000/api/economic-data/spmi/${baseAsset}?limit=1`
+            `http://${BASE_URL}:3000/api/economic-data/spmi/${baseAsset}?limit=1`
           ),
           fetchWithFallback(
-            `http://localhost:3000/api/economic-data/spmi/${quoteAsset}?limit=1`
+            `http://${BASE_URL}:3000/api/economic-data/spmi/${quoteAsset}?limit=1`
           ),
           fetchWithFallback(
-            `http://localhost:3000/api/economic-data/retail/${baseAsset}?limit=1`
+            `http://${BASE_URL}:3000/api/economic-data/retail/${baseAsset}?limit=1`
           ),
           fetchWithFallback(
-            `http://localhost:3000/api/economic-data/retail/${quoteAsset}?limit=1`
+            `http://${BASE_URL}:3000/api/economic-data/retail/${quoteAsset}?limit=1`
           ),
           fetchWithFallback(
-            `http://localhost:3000/api/economic-data/unemployment/${baseAsset}?limit=1`
+            `http://${BASE_URL}:3000/api/economic-data/unemployment/${baseAsset}?limit=1`
           ),
           fetchWithFallback(
-            `http://localhost:3000/api/economic-data/unemployment/${quoteAsset}?limit=1`
+            `http://${BASE_URL}:3000/api/economic-data/unemployment/${quoteAsset}?limit=1`
           ),
           fetchWithFallback(
-            `http://localhost:3000/api/economic-data/employment/${baseAsset}?limit=1`
+            `http://${BASE_URL}:3000/api/economic-data/employment/${baseAsset}?limit=1`
           ),
           fetchWithFallback(
-            `http://localhost:3000/api/economic-data/employment/${quoteAsset}?limit=1`
+            `http://${BASE_URL}:3000/api/economic-data/employment/${quoteAsset}?limit=1`
           ),
           fetchWithFallback(
-            `http://localhost:3000/api/economic-data/inflation/${baseAsset}?limit=1`
+            `http://${BASE_URL}:3000/api/economic-data/inflation/${baseAsset}?limit=1`
           ),
           fetchWithFallback(
-            `http://localhost:3000/api/economic-data/inflation/${quoteAsset}?limit=1`
+            `http://${BASE_URL}:3000/api/economic-data/inflation/${quoteAsset}?limit=1`
           ),
           fetchWithFallback(
-            `http://localhost:3000/api/economic-data/interest/${baseAsset}?limit=1`
+            `http://${BASE_URL}:3000/api/economic-data/interest/${baseAsset}?limit=1`
           ),
           fetchWithFallback(
-            `http://localhost:3000/api/economic-data/interest/${quoteAsset}?limit=1`
+            `http://${BASE_URL}:3000/api/economic-data/interest/${quoteAsset}?limit=1`
           ),
           fetchWithFallback(
-            `http://localhost:3000/api/retail-sentiment/${assetPairCode}?limit=1`
+            `http://${BASE_URL}:3000/api/retail-sentiment/${assetPairCode}?limit=1`
           ),
         ]);
 
