@@ -102,13 +102,18 @@ const CurrencyProfile = ({ assetPairCode: propAssetPairCode }) => {
   // AI Integration - Fetch AI insights
   // AI Integration - Fetch AI insights with profile data
 const fetchAiInsight = async () => {
-  if (!assetPairCode || !profileData) return;
+  if (!assetPairCode || !profileData) {
+    console.log("[AI] Missing assetPairCode or profileData, skipping AI fetch");
+    return;
+  }
 
   setAiLoading(true);
   setAiError(null);
 
   try {
-    console.log("[AI] Sending profile data to AI service");
+    console.log("[AI] Sending profile data to enhanced AI service");
+    console.log("[AI] Profile data keys:", Object.keys(profileData));
+    console.log("[AI] Breakdown indicators:", profileData.breakdown?.length || 0);
     
     // Send profileData directly to AI service via POST
     const response = await fetch(
@@ -122,20 +127,23 @@ const fetchAiInsight = async () => {
           profileData: profileData
         })
       }
-     
     );
-     console.log("PROFILE DATA",profileData);
+    
     const result = await response.json();
 
     if (result.success) {
       setAiInsight(result.data);
-      console.log("[AI] Successfully received AI insights");
+      console.log("[AI] Enhanced AI analysis received");
+      console.log("[AI] Conviction:", result.data.conviction);
+      console.log("[AI] Weighted Score:", result.data.weighted_score);
+      console.log("[AI] Insights count:", result.data.insights?.length || 0);
     } else {
-      setAiError(result.error || "Failed to fetch AI insights");
+      setAiError(result.error || "Failed to fetch enhanced AI insights");
+      console.error("[AI] AI service error:", result.error);
     }
   } catch (error) {
-    console.error("AI Insight fetch error:", error);
-    setAiError("Unable to connect to AI service");
+    console.error("[AI] AI Insight fetch error:", error);
+    setAiError("Unable to connect to enhanced AI service");
   } finally {
     setAiLoading(false);
   }
@@ -726,7 +734,7 @@ const fetchAiInsight = async () => {
                     marginBottom: "4px",
                   }}
                 >
-                  📋 Executive Summary
+                   Executive Summary
                 </div>
                 <div
                   style={{
@@ -757,7 +765,7 @@ const fetchAiInsight = async () => {
                   marginBottom: "4px",
                 }}
               >
-                🤖 AI Recommendation
+                 AI Recommendation
               </div>
               <div style={{ color: "#0369a1" }}>{aiInsight.recommendation}</div>
               <div
@@ -782,7 +790,7 @@ const fetchAiInsight = async () => {
                   color: "#1e293b",
                 }}
               >
-                💪 Currency Strength
+                Currency Strength
               </div>
               <div
                 style={{
@@ -855,7 +863,7 @@ const fetchAiInsight = async () => {
                       marginBottom: "4px",
                     }}
                   >
-                    🎯 Key Drivers
+                    Bullish Factors
                   </div>
                   {aiInsight.summary.key_drivers
                     .slice(0, 3)
@@ -884,7 +892,7 @@ const fetchAiInsight = async () => {
                     color: "#1e293b",
                   }}
                 >
-                  🧠 Market Insights
+                 Market Insights
                 </div>
                 {aiInsight.insights.slice(0, 3).map((insight, index) => (
                   <div
@@ -920,7 +928,7 @@ const fetchAiInsight = async () => {
                       marginBottom: "4px",
                     }}
                   >
-                    ⚠️ Bearish Factors
+                    Bearish Factors
                   </div>
                   {aiInsight.summary.risk_factors.map((risk, index) => (
                     <div
@@ -955,7 +963,7 @@ const fetchAiInsight = async () => {
                     marginBottom: "4px",
                   }}
                 >
-                  📊 Score Breakdown
+                  Score Breakdown
                 </div>
                 <div
                   style={{

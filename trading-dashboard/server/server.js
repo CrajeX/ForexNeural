@@ -6063,7 +6063,82 @@ app.get("/api/economic-data/retail-sentiment-history", async (req, res) => {
     });
   }
 });
+// Save Core Inflation to History
+app.post("/api/history/inflation", async (req, res) => {
+  try {
+    const { asset_code, cpi, cpiForecast } = req.body;
 
+    console.log("📊 Saving Core Inflation to history for:", asset_code);
+
+    // Validation
+    if (!asset_code || !cpi || !cpiForecast) {
+      return res.status(400).json({
+        success: false,
+        error: "Asset code, core inflation, and forecast are required",
+      });
+    }
+
+    // Convert to numbers
+    const newCoreInflation = parseFloat(cpi);
+    const forecast = parseFloat(cpiForecast);
+
+    if (isNaN(newCoreInflation) || isNaN(forecast)) {
+      return res.status(400).json({
+        success: false,
+        error: "Core inflation and forecast must be valid numbers",
+      });
+    }
+
+    // Calculate net change percent (set to 0 for history, can be calculated later if needed)
+    const netChangePercent = 0;
+
+    // Determine result based on comparison with forecast
+    let result;
+    if (newCoreInflation > forecast) {
+      result = "Higher than expected";
+    } else if (newCoreInflation < forecast) {
+      result = "Lower than expected";
+    } else {
+      result = "As Expected";
+    }
+
+    // Insert new core inflation data into history table
+    const [insertResult] = await pool.execute(
+      `INSERT INTO core_inflation_history 
+       (asset_code, core_inflation, forecast, net_change_percent, result)
+       VALUES (?, ?, ?, ?, ?)`,
+      [
+        asset_code.toUpperCase(),
+        newCoreInflation,
+        forecast,
+        parseFloat(netChangePercent.toFixed(2)),
+        result,
+      ]
+    );
+
+    console.log("✅ Core Inflation saved to history successfully");
+
+    res.status(201).json({
+      success: true,
+      message: "Core Inflation saved to history successfully",
+      historyId: insertResult.insertId,
+      savedData: {
+        asset_code: asset_code.toUpperCase(),
+        core_inflation: newCoreInflation,
+        forecast: forecast,
+        net_change_percent: parseFloat(netChangePercent.toFixed(2)),
+        result: result,
+      },
+    });
+  } catch (error) {
+    console.error("❌ Core Inflation history save error:", error);
+    res.status(500).json({
+      success: false,
+      error: "Server error saving core inflation to history",
+      details: error.message,
+    });
+  }
+});
 // ====================
 // END HISTORICAL DATA GET API ROUTES
 // ====================
