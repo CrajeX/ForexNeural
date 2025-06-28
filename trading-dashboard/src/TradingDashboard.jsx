@@ -949,10 +949,11 @@ const TradingDashboard = () => {
     { id: "economic", label: "Economic Calendar", icon: Calendar },
     { id: "profile", label: "Profile Dashboard", icon: User },
      { id: "history", label: "Economic History", icon: User },
+      { id: "currency profile", label: "Currency Profile", icon: User },
   ];
   useEffect(() => {
     if (assetPairCode != null) {
-      setActiveSection("currencyprofile");
+      setActiveSection("currency profile");
     }
   }, [assetPairCode]);
   const STATIC_MARKET_DATA = {
@@ -2148,7 +2149,7 @@ const TradingDashboard = () => {
         return <TopSetups />;
       case "history":
         return <TradingEconomicsHistory />;
-      case "currencyprofile":
+      case "currency profile":
         return (
           <div style={styles.container}>
             <div style={styles.maxWidth}>

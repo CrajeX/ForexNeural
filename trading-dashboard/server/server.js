@@ -1060,7 +1060,7 @@ app.put("/api/updateprofile", async (req, res) => {
       await pool.execute(
         `
         UPDATE profiles 
-        SET student_id = ?, email = ?, password = ?, name = ?, 
+        SET student_id = ?, email = ?, name = ?, 
             roles = ?, address = ?, birth_place = ?, phone_no = ?, trading_level = ?, 
             gender = ?, birth_date = ?, authenticated = ?, login_time = ?, updated_at = ?
         WHERE account_id = ?

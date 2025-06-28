@@ -100,30 +100,46 @@ const CurrencyProfile = ({ assetPairCode: propAssetPairCode }) => {
   };
 
   // AI Integration - Fetch AI insights
-  const fetchAiInsight = async () => {
-    if (!assetPairCode) return;
+  // AI Integration - Fetch AI insights with profile data
+const fetchAiInsight = async () => {
+  if (!assetPairCode || !profileData) return;
 
-    setAiLoading(true);
-    setAiError(null);
+  setAiLoading(true);
+  setAiError(null);
 
-    try {
-      const response = await fetch(
-        `http://${BASE_URL}:5000/api/ai-insight/${assetPairCode}`
-      );
-      const result = await response.json();
-
-      if (result.success) {
-        setAiInsight(result.data);
-      } else {
-        setAiError(result.error || "Failed to fetch AI insights");
+  try {
+    console.log("[AI] Sending profile data to AI service");
+    
+    // Send profileData directly to AI service via POST
+    const response = await fetch(
+      `http://${BASE_URL}:5000/api/ai-insight/${assetPairCode}`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          profileData: profileData
+        })
       }
-    } catch (error) {
-      console.error("AI Insight fetch error:", error);
-      setAiError("Unable to connect to AI service");
-    } finally {
-      setAiLoading(false);
+     
+    );
+     console.log("PROFILE DATA",profileData);
+    const result = await response.json();
+
+    if (result.success) {
+      setAiInsight(result.data);
+      console.log("[AI] Successfully received AI insights");
+    } else {
+      setAiError(result.error || "Failed to fetch AI insights");
     }
-  };
+  } catch (error) {
+    console.error("AI Insight fetch error:", error);
+    setAiError("Unable to connect to AI service");
+  } finally {
+    setAiLoading(false);
+  }
+};
 
   const getScoreColor = (score) => {
     if (score >= 2) return "#1E8449"; // Very Bullish
