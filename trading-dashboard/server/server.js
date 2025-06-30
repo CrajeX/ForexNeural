@@ -22,9 +22,10 @@ app.use(express.json());
 app.use(
   cors({
     origin: [
-     "http://192.168.55.103:5174",
+      "http://192.168.55.103:5174",
+      "http://192.168.55.151:5174",
       "http://localhost:5174",
-      'http://192.168.55.103:5174',
+      BASE_URL,
       "https://8con.netlify.app",
     ],
     credentials: true,
@@ -639,9 +640,10 @@ app.post("/api/login-mongo", async (req, res) => {
     const { email, password } = req.body;
 
     // Find user by email in SQL users table
-    const [users] = await pool.execute("SELECT * FROM profiles WHERE email = ?", [
-      email,
-    ]);
+    const [users] = await pool.execute(
+      "SELECT * FROM profiles WHERE email = ?",
+      [email]
+    );
 
     if (users.length === 0) {
       return res
@@ -1207,9 +1209,10 @@ app.put("/api/updateprofile", async (req, res) => {
       );
 
       // Get new user data
-      const [users] = await pool.execute("SELECT * FROM profiles WHERE id = ?", [
-        userResult.insertId,
-      ]);
+      const [users] = await pool.execute(
+        "SELECT * FROM profiles WHERE id = ?",
+        [userResult.insertId]
+      );
       const user = users[0];
       delete user.password;
 
@@ -4392,7 +4395,9 @@ app.get("/api/economic-data/gdp", async (req, res) => {
 // BULK: Get all latest Manufacturing PMI data for all assets in one call
 app.get("/api/economic-data/mpmi", async (req, res) => {
   try {
-    console.log("📊 Fetching latest Manufacturing PMI data for all assets (BULK)");
+    console.log(
+      "📊 Fetching latest Manufacturing PMI data for all assets (BULK)"
+    );
 
     const [mpmiData] = await pool.execute(
       `SELECT m1.* FROM mpmi m1
@@ -4520,7 +4525,9 @@ app.get("/api/economic-data/unemployment", async (req, res) => {
 // BULK: Get all latest Employment Change data for all assets in one call
 app.get("/api/economic-data/employment", async (req, res) => {
   try {
-    console.log("📊 Fetching latest Employment Change data for all assets (BULK)");
+    console.log(
+      "📊 Fetching latest Employment Change data for all assets (BULK)"
+    );
 
     const [employmentData] = await pool.execute(
       `SELECT e1.* FROM employment_change e1
@@ -4533,7 +4540,9 @@ app.get("/api/economic-data/employment", async (req, res) => {
        ORDER BY e1.asset_code`
     );
 
-    console.log(`✅ Retrieved ${employmentData.length} Employment Change records`);
+    console.log(
+      `✅ Retrieved ${employmentData.length} Employment Change records`
+    );
 
     res.json({
       success: true,
@@ -4616,7 +4625,9 @@ app.get("/api/economic-data/interest", async (req, res) => {
 // ENHANCED: Retail Sentiment bulk endpoint (already exists but enhanced for consistency)
 app.get("/api/retail-sentiment", async (req, res) => {
   try {
-    console.log("📊 Fetching latest retail sentiment data for all asset pairs (BULK)");
+    console.log(
+      "📊 Fetching latest retail sentiment data for all asset pairs (BULK)"
+    );
 
     const [sentimentData] = await pool.execute(
       `SELECT rs1.* FROM retail_sentiment rs1
@@ -4629,7 +4640,9 @@ app.get("/api/retail-sentiment", async (req, res) => {
        ORDER BY rs1.asset_pair_code`
     );
 
-    console.log(`✅ Retrieved ${sentimentData.length} Retail Sentiment records`);
+    console.log(
+      `✅ Retrieved ${sentimentData.length} Retail Sentiment records`
+    );
 
     res.json({
       success: true,
@@ -4652,8 +4665,10 @@ app.get("/api/retail-sentiment", async (req, res) => {
 // MEGA BULK: Get ALL economic data in a single call (ULTIMATE PERFORMANCE)
 app.get("/api/economic-data/all", async (req, res) => {
   try {
-    console.log("🚀 Fetching ALL economic data in one mega call (ULTIMATE BULK)");
-    
+    console.log(
+      "🚀 Fetching ALL economic data in one mega call (ULTIMATE BULK)"
+    );
+
     const startTime = Date.now();
 
     // Execute all queries in parallel for maximum speed
@@ -4667,7 +4682,7 @@ app.get("/api/economic-data/all", async (req, res) => {
       employmentResults,
       inflationResults,
       interestResults,
-      retailSentimentResults
+      retailSentimentResults,
     ] = await Promise.all([
       // Latest COT data for all assets
       pool.execute(`
@@ -4678,8 +4693,8 @@ app.get("/api/economic-data/all", async (req, res) => {
           GROUP BY asset_code
         ) c2 ON c1.asset_code = c2.asset_code AND c1.created_at = c2.max_created
       `),
-      
-      // Latest GDP data for all assets  
+
+      // Latest GDP data for all assets
       pool.execute(`
         SELECT g1.* FROM gdp_growth g1
         INNER JOIN (
@@ -4688,7 +4703,7 @@ app.get("/api/economic-data/all", async (req, res) => {
           GROUP BY asset_code
         ) g2 ON g1.asset_code = g2.asset_code AND g1.created_at = g2.max_created
       `),
-      
+
       // Latest Manufacturing PMI data for all assets
       pool.execute(`
         SELECT m1.* FROM mpmi m1
@@ -4698,7 +4713,7 @@ app.get("/api/economic-data/all", async (req, res) => {
           GROUP BY asset_code
         ) m2 ON m1.asset_code = m2.asset_code AND m1.created_at = m2.max_created
       `),
-      
+
       // Latest Services PMI data for all assets
       pool.execute(`
         SELECT s1.* FROM spmi s1
@@ -4708,7 +4723,7 @@ app.get("/api/economic-data/all", async (req, res) => {
           GROUP BY asset_code
         ) s2 ON s1.asset_code = s2.asset_code AND s1.created_at = s2.max_created
       `),
-      
+
       // Latest Retail Sales data for all assets
       pool.execute(`
         SELECT r1.* FROM retail_sales r1
@@ -4718,7 +4733,7 @@ app.get("/api/economic-data/all", async (req, res) => {
           GROUP BY asset_code
         ) r2 ON r1.asset_code = r2.asset_code AND r1.created_at = r2.max_created
       `),
-      
+
       // Latest Unemployment data for all assets
       pool.execute(`
         SELECT u1.* FROM unemployment_rate u1
@@ -4728,7 +4743,7 @@ app.get("/api/economic-data/all", async (req, res) => {
           GROUP BY asset_code
         ) u2 ON u1.asset_code = u2.asset_code AND u1.created_at = u2.max_created
       `),
-      
+
       // Latest Employment Change data for all assets
       pool.execute(`
         SELECT e1.* FROM employment_change e1
@@ -4738,7 +4753,7 @@ app.get("/api/economic-data/all", async (req, res) => {
           GROUP BY asset_code
         ) e2 ON e1.asset_code = e2.asset_code AND e1.created_at = e2.max_created
       `),
-      
+
       // Latest Core Inflation data for all assets
       pool.execute(`
         SELECT i1.* FROM core_inflation i1
@@ -4748,7 +4763,7 @@ app.get("/api/economic-data/all", async (req, res) => {
           GROUP BY asset_code
         ) i2 ON i1.asset_code = i2.asset_code AND i1.created_at = i2.max_created
       `),
-      
+
       // Latest Interest Rate data for all assets
       pool.execute(`
         SELECT i1.* FROM interest_rate i1
@@ -4758,7 +4773,7 @@ app.get("/api/economic-data/all", async (req, res) => {
           GROUP BY asset_code
         ) i2 ON i1.asset_code = i2.asset_code AND i1.created_at = i2.max_created
       `),
-      
+
       // Latest Retail Sentiment data for all asset pairs
       pool.execute(`
         SELECT rs1.* FROM retail_sentiment rs1
@@ -4767,7 +4782,7 @@ app.get("/api/economic-data/all", async (req, res) => {
           FROM retail_sentiment 
           GROUP BY asset_pair_code
         ) rs2 ON rs1.asset_pair_code = rs2.asset_pair_code AND rs1.created_at = rs2.max_created
-      `)
+      `),
     ]);
 
     const executionTime = Date.now() - startTime;
@@ -4783,12 +4798,17 @@ app.get("/api/economic-data/all", async (req, res) => {
       employment: employmentResults[0] || [],
       inflation: inflationResults[0] || [],
       interest: interestResults[0] || [],
-      retailSentiment: retailSentimentResults[0] || []
+      retailSentiment: retailSentimentResults[0] || [],
     };
 
-    const totalRecords = Object.values(megaData).reduce((sum, records) => sum + records.length, 0);
+    const totalRecords = Object.values(megaData).reduce(
+      (sum, records) => sum + records.length,
+      0
+    );
 
-    console.log(`🚀 MEGA BULK SUCCESS: ${totalRecords} total records in ${executionTime}ms`);
+    console.log(
+      `🚀 MEGA BULK SUCCESS: ${totalRecords} total records in ${executionTime}ms`
+    );
     console.log(`📊 Records by type:`, {
       cot: megaData.cot.length,
       gdp: megaData.gdp.length,
@@ -4799,7 +4819,7 @@ app.get("/api/economic-data/all", async (req, res) => {
       employment: megaData.employment.length,
       inflation: megaData.inflation.length,
       interest: megaData.interest.length,
-      retailSentiment: megaData.retailSentiment.length
+      retailSentiment: megaData.retailSentiment.length,
     });
 
     res.json({
@@ -4817,16 +4837,15 @@ app.get("/api/economic-data/all", async (req, res) => {
         employment: megaData.employment.length,
         inflation: megaData.inflation.length,
         interest: megaData.interest.length,
-        retailSentiment: megaData.retailSentiment.length
-      }
+        retailSentiment: megaData.retailSentiment.length,
+      },
     });
-
   } catch (error) {
     console.error("❌ MEGA BULK economic data error:", error);
     res.status(500).json({
       success: false,
       error: "Server error fetching mega bulk economic data",
-      details: error.message
+      details: error.message,
     });
   }
 });
@@ -4861,13 +4880,15 @@ app.get("/api/asset-pairs", async (req, res) => {
       updated_at: pair.updated_at,
     }));
 
-    console.log(`✅ Retrieved ${assetPairs.length} asset pairs in ${executionTime}ms`);
+    console.log(
+      `✅ Retrieved ${assetPairs.length} asset pairs in ${executionTime}ms`
+    );
 
     res.json({
       success: true,
       data: assetPairOptions,
       count: assetPairs.length,
-      executionTimeMs: executionTime
+      executionTimeMs: executionTime,
     });
   } catch (error) {
     console.error("❌ Optimized asset pairs error:", error);
@@ -4929,23 +4950,25 @@ Run these CREATE INDEX statements in your MySQL database to dramatically improve
 app.get("/api/performance/test", async (req, res) => {
   try {
     console.log("🔬 Running performance test...");
-    
+
     const startTime = Date.now();
-    
+
     // Test the mega bulk endpoint
-    const megaResponse = await fetch("http://localhost:3000/api/economic-data/all");
+    const megaResponse = await fetch(
+      "http://localhost:3000/api/economic-data/all"
+    );
     const megaData = await megaResponse.json();
-    
+
     const megaTime = Date.now() - startTime;
-    
+
     // Test asset pairs
     const pairsStartTime = Date.now();
     const pairsResponse = await fetch("http://localhost:3000/api/asset-pairs");
     const pairsData = await pairsResponse.json();
     const pairsTime = Date.now() - pairsStartTime;
-    
+
     const totalTime = Date.now() - startTime;
-    
+
     res.json({
       success: true,
       performanceResults: {
@@ -4954,18 +4977,20 @@ app.get("/api/performance/test", async (req, res) => {
         assetPairsTime: pairsTime,
         totalRecords: megaData.totalRecords || 0,
         assetPairsCount: pairsData.count || 0,
-        recommendation: totalTime < 1000 ? "🚀 EXCELLENT PERFORMANCE" : 
-                      totalTime < 2000 ? "✅ Good Performance" : 
-                      "⚠️ Consider adding database indexes"
-      }
+        recommendation:
+          totalTime < 1000
+            ? "🚀 EXCELLENT PERFORMANCE"
+            : totalTime < 2000
+            ? "✅ Good Performance"
+            : "⚠️ Consider adding database indexes",
+      },
     });
-    
   } catch (error) {
     console.error("❌ Performance test error:", error);
     res.status(500).json({
       success: false,
       error: "Performance test failed",
-      details: error.message
+      details: error.message,
     });
   }
 });
@@ -4977,8 +5002,6 @@ app.get("/api/performance/test", async (req, res) => {
 // CURRENCY PROFILE API ROUTE - COMPLETE VERSION
 // ====================
 // Add this to your server.js file, before the "Start server" section
-
-
 
 // API FOR POSTING TO THE HISTORY
 // ====================
@@ -5043,8 +5066,10 @@ app.post("/api/history/cot", async (req, res) => {
 
     // Calculate additional fields for history
     const totalContracts = newLongContracts + newShortContracts;
-    const longPercent = totalContracts > 0 ? (newLongContracts / totalContracts) * 100 : 0;
-    const shortPercent = totalContracts > 0 ? (newShortContracts / totalContracts) * 100 : 0;
+    const longPercent =
+      totalContracts > 0 ? (newLongContracts / totalContracts) * 100 : 0;
+    const shortPercent =
+      totalContracts > 0 ? (newShortContracts / totalContracts) * 100 : 0;
     const netPosition = newLongContracts - newShortContracts;
 
     const [result] = await pool.execute(
@@ -5431,7 +5456,7 @@ app.post("/api/history/interest", async (req, res) => {
     const { recordId } = req.body;
     console.log("📊 History API called with:", req.body);
     console.log("🔍 RecordId received:", recordId);
-    
+
     let query, params;
     if (recordId) {
       console.log("📋 Querying specific record ID:", recordId);
@@ -5447,23 +5472,27 @@ app.post("/api/history/interest", async (req, res) => {
                LIMIT 1`;
       params = [];
     }
-    
+
     console.log("🔍 Executing query:", query, "with params:", params);
     const [rows] = await pool.execute(query, params);
     console.log("🔍 Query results:", rows);
-    
+
     if (rows.length === 0) {
       console.error("❌ No interest rate data found");
       return res.status(404).json({
         success: false,
         error: "No interest rate data available",
         query: query,
-        params: params
+        params: params,
       });
     }
 
     const { asset_code, interest_rate, change_in_interest } = rows[0];
-    console.log("📋 Data to copy:", { asset_code, interest_rate, change_in_interest });
+    console.log("📋 Data to copy:", {
+      asset_code,
+      interest_rate,
+      change_in_interest,
+    });
 
     const [insertResult] = await pool.execute(
       `INSERT INTO interest_rate_history (asset_code, interest_rate, change_in_interest, created_at, updated_at)
@@ -5471,20 +5500,23 @@ app.post("/api/history/interest", async (req, res) => {
       [asset_code.toUpperCase(), interest_rate, change_in_interest]
     );
 
-    console.log("✅ Successfully inserted into history with ID:", insertResult.insertId);
+    console.log(
+      "✅ Successfully inserted into history with ID:",
+      insertResult.insertId
+    );
 
     res.status(201).json({
       success: true,
       message: "Interest rate copied to history successfully",
       historyId: insertResult.insertId,
-      copiedData: { asset_code, interest_rate, change_in_interest }
+      copiedData: { asset_code, interest_rate, change_in_interest },
     });
   } catch (error) {
     console.error("❌ Error in history API:", error);
     res.status(500).json({
       success: false,
       error: "Server error copying interest rate to history",
-      details: error.message
+      details: error.message,
     });
   }
 });
@@ -5494,8 +5526,6 @@ app.post("/api/history/interest", async (req, res) => {
 // END HISTORY DATA API ROUTES
 // ====================
 // Get detailed currency profile for an asset pair
-
-
 
 // ====================
 // HISTORICAL DATA GET API ROUTES - Add these to your existing api-server.js
@@ -5587,7 +5617,9 @@ app.get("/api/economic-data/employment-history", async (req, res) => {
 
     const [data] = await pool.execute(query, params);
 
-    console.log(`✅ Retrieved ${data.length} Employment Change history records`);
+    console.log(
+      `✅ Retrieved ${data.length} Employment Change history records`
+    );
 
     res.json({
       success: true,
@@ -5638,7 +5670,9 @@ app.get("/api/economic-data/unemployment-history", async (req, res) => {
 
     const [data] = await pool.execute(query, params);
 
-    console.log(`✅ Retrieved ${data.length} Unemployment Rate history records`);
+    console.log(
+      `✅ Retrieved ${data.length} Unemployment Rate history records`
+    );
 
     res.json({
       success: true,
@@ -5740,7 +5774,9 @@ app.get("/api/economic-data/mpmi-history", async (req, res) => {
 
     const [data] = await pool.execute(query, params);
 
-    console.log(`✅ Retrieved ${data.length} Manufacturing PMI history records`);
+    console.log(
+      `✅ Retrieved ${data.length} Manufacturing PMI history records`
+    );
 
     res.json({
       success: true,

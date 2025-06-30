@@ -90,7 +90,6 @@ const useResponsive = () => {
 };
 
 const SettingsWindow = ({
-
   isOpen,
   onClose,
   onApplySettings,
@@ -100,7 +99,7 @@ const SettingsWindow = ({
   const [settings, setSettings] = useState(currentSettings);
   const [loading, setLoading] = useState(false);
   const { mobile, tablet } = useResponsive();
-   const BASE_URL = import.meta.env.VITE_API_BASE_URL;
+  const BASE_URL = import.meta.env.VITE_API_BASE_URL;
   useEffect(() => {
     setSettings(currentSettings);
   }, [currentSettings]);
@@ -948,8 +947,8 @@ const TradingDashboard = () => {
     { id: "setups", label: "Top Setups", icon: TrendingUp },
     { id: "economic", label: "Economic Calendar", icon: Calendar },
     { id: "profile", label: "Profile Dashboard", icon: User },
-     { id: "history", label: "Economic History", icon: User },
-      { id: "currency profile", label: "Currency Profile", icon: User },
+    { id: "history", label: "Economic History", icon: User },
+    // { id: "currency profile", label: "Currency Profile", icon: User },
   ];
   useEffect(() => {
     if (assetPairCode != null) {
@@ -1167,7 +1166,7 @@ const TradingDashboard = () => {
     },
     navButtonInactive: {
       backgroundColor: "transparent",
-      color:styles.textTopsetup,
+      color: styles.textTopsetup,
     },
     mainContent: {
       flex: 1,

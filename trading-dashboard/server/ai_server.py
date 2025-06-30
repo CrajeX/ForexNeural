@@ -651,7 +651,6 @@ class CurrencyProfileAI:
             return default
 
     def extract_economic_data_from_profile(self, profile_data):
-        """Extract economic data from currency profile format with robust error handling"""
         try:
             print(f"[EXTRACT] Starting data extraction")
             
@@ -682,7 +681,7 @@ class CurrencyProfileAI:
                 'indicators': {}
             }
             
-            # Process each indicator safely
+            # Process each indicator safely with enhanced employment/unemployment handling
             for indicator in breakdown:
                 try:
                     indicator_name = self.safe_get(indicator, 'name', '')
@@ -692,12 +691,39 @@ class CurrencyProfileAI:
                     
                     print(f"[INDICATOR] Processing: {indicator_name} (Score: {indicator_score})")
                     
-                    # Store indicator data
-                    extracted_data['indicators'][indicator_name] = {
+                    # Enhanced data extraction for employment and unemployment
+                    processed_data = {
                         'score': indicator_score,
                         'base_data': base_data,
                         'quote_data': quote_data
                     }
+                    
+                    # Special handling for Employment Change
+                    if 'Employment Change' in indicator_name:
+                        processed_data['employment_analysis'] = {
+                            'base_change': self.safe_numeric(base_data.get('Employment Change', 0)),
+                            'base_forecast': self.safe_numeric(base_data.get('Forecast', 0)),
+                            'base_result': base_data.get('Result', 'N/A'),
+                            'quote_change': self.safe_numeric(quote_data.get('Employment Change', 0)),
+                            'quote_forecast': self.safe_numeric(quote_data.get('Forecast', 0)),
+                            'quote_result': quote_data.get('Result', 'N/A'),
+                        }
+                        print(f"[EMPLOYMENT] Base: {processed_data['employment_analysis']['base_change']}, Quote: {processed_data['employment_analysis']['quote_change']}")
+                    
+                    # Special handling for Unemployment Rate
+                    elif 'Unemployment Rate' in indicator_name:
+                        processed_data['unemployment_analysis'] = {
+                            'base_rate': self.safe_numeric(base_data.get('Unemployment Rate', 0)),
+                            'base_forecast': self.safe_numeric(base_data.get('Forecast', 0)),
+                            'base_result': base_data.get('Result', 'N/A'),
+                            'quote_rate': self.safe_numeric(quote_data.get('Unemployment Rate', 0)),
+                            'quote_forecast': self.safe_numeric(quote_data.get('Forecast', 0)),
+                            'quote_result': quote_data.get('Result', 'N/A'),
+                        }
+                        print(f"[UNEMPLOYMENT] Base: {processed_data['unemployment_analysis']['base_rate']}%, Quote: {processed_data['unemployment_analysis']['quote_rate']}%")
+                    
+                    # Store indicator data
+                    extracted_data['indicators'][indicator_name] = processed_data
                     
                 except Exception as e:
                     print(f"[ERROR] Error processing indicator {indicator_name}: {e}")
@@ -768,16 +794,47 @@ class CurrencyProfileAI:
             print(f"[TRACEBACK] {traceback.format_exc()}")
             # Return fallback analysis
             return self.create_fallback_analysis(asset_pair_code)
-
+    def debug_score_extraction(self, profile_data):
+        """Debug function to trace score extraction"""
+        try:
+            print(f"[DEBUG] === SCORE EXTRACTION DEBUG ===")
+            
+            breakdown = profile_data.get('breakdown', [])
+            print(f"[DEBUG] Total indicators in breakdown: {len(breakdown)}")
+            
+            for i, indicator in enumerate(breakdown):
+                name = indicator.get('name', 'Unknown')
+                score = indicator.get('score', 0)
+                weight_key = self.map_indicator_to_weight_key(name)
+                
+                print(f"[DEBUG] Indicator {i+1}: {name}")
+                print(f"[DEBUG]   - Score: {score}")
+                print(f"[DEBUG]   - Maps to: {weight_key}")
+                
+                if 'Employment' in name:
+                    base_data = indicator.get('baseData', {})
+                    quote_data = indicator.get('quoteData', {})
+                    print(f"[DEBUG]   - Base Employment Change: {base_data.get('Employment Change', 'N/A')}")
+                    print(f"[DEBUG]   - Quote Employment Change: {quote_data.get('Employment Change', 'N/A')}")
+                    print(f"[DEBUG]   - Base Result: {base_data.get('Result', 'N/A')}")
+                    print(f"[DEBUG]   - Quote Result: {quote_data.get('Result', 'N/A')}")
+            
+            print(f"[DEBUG] === END DEBUG ===")
+            
+        except Exception as e:
+            print(f"[DEBUG] Error in debug function: {e}")
     def calculate_enhanced_analysis(self, extracted_data):
-        """Calculate enhanced analysis metrics"""
+        """Calculate enhanced analysis metrics with proper unemployment score extraction"""
         try:
             indicators = extracted_data.get('indicators', {})
             
-            # Calculate weighted scores
-            weighted_scores = {}
+            # Initialize score aggregation
+            score_aggregation = {}
+            individual_scores = {}
             total_weight = 0
             weighted_sum = 0
+            
+            print(f"[ANALYSIS] Processing {len(indicators)} indicators for score calculation")
             
             for indicator_name, indicator_data in indicators.items():
                 score = indicator_data.get('score', 0)
@@ -786,35 +843,61 @@ class CurrencyProfileAI:
                 weight_key = self.map_indicator_to_weight_key(indicator_name)
                 weight = self.indicator_weights.get(weight_key, 1.0)
                 
-                weighted_scores[weight_key] = score
-                weighted_sum += score * weight
-                total_weight += weight
+                print(f"[SCORES] {indicator_name} -> {weight_key}: Score={score}")
+                
+                # IMPORTANT: Don't aggregate employment and unemployment - keep separate
+                if weight_key in ['employment', 'unemployment']:
+                    # Keep employment and unemployment separate
+                    individual_scores[weight_key] = score
+                    weighted_sum += score * weight
+                    total_weight += weight
+                    print(f"[SCORES] Separate {weight_key}: {score}")
+                else:
+                    # Aggregate other indicators that might have multiple entries
+                    if weight_key in score_aggregation:
+                        score_aggregation[weight_key] += score
+                        print(f"[SCORES] Aggregating {weight_key}: {score_aggregation[weight_key] - score} + {score} = {score_aggregation[weight_key]}")
+                    else:
+                        score_aggregation[weight_key] = score
+                        print(f"[SCORES] Initial {weight_key}: {score}")
+                    
+                    # Calculate weighted sum
+                    weighted_sum += score * weight
+                    total_weight += weight
+            
+            # Add aggregated scores to individual scores
+            individual_scores.update(score_aggregation)
+            
+            print(f"[ANALYSIS] Final individual scores: {individual_scores}")
+            print(f"[ANALYSIS] Employment score: {individual_scores.get('employment', 'NOT FOUND')}")
+            print(f"[ANALYSIS] Unemployment score: {individual_scores.get('unemployment', 'NOT FOUND')}")
             
             final_weighted_score = weighted_sum / total_weight if total_weight > 0 else 0
             
             # Calculate conviction (0-10 scale)
-            conviction = self.calculate_conviction(weighted_scores, extracted_data['total_score'])
+            conviction = self.calculate_conviction(individual_scores, extracted_data['total_score'])
             
-            # Generate insights
+            # Generate insights with unemployment
             insights = self.generate_insights(indicators, extracted_data)
             
             # Generate detailed analysis
             detailed_analysis = {
-                'consistency': self.analyze_consistency(weighted_scores),
-                'risk_level': self.assess_risk_level(weighted_scores, conviction),
+                'consistency': self.analyze_consistency(individual_scores),
+                'risk_level': self.assess_risk_level(individual_scores, conviction),
                 'momentum_factors': self.identify_momentum_factors(indicators)
             }
             
             return {
                 'weighted_score': final_weighted_score,
                 'conviction': conviction,
-                'individual_scores': weighted_scores,
+                'individual_scores': individual_scores,
                 'insights': insights,
                 'detailed_analysis': detailed_analysis
             }
             
         except Exception as e:
             print(f"[ERROR] Error in enhanced analysis: {e}")
+            print(f"[TRACEBACK] {traceback.format_exc()}")
             return {
                 'weighted_score': extracted_data.get('total_score', 0),
                 'conviction': 5.0,
@@ -824,24 +907,24 @@ class CurrencyProfileAI:
             }
 
     def map_indicator_to_weight_key(self, indicator_name):
-        """Map indicator names to weight keys"""
+        """Map indicator names to weight keys with enhanced unemployment detection"""
         indicator_name = indicator_name.lower()
         
         if 'interest' in indicator_name:
             return 'interest_rate'
-        elif 'inflation' in indicator_name:
+        elif 'inflation' in indicator_name or 'core inflation' in indicator_name:
             return 'inflation'
-        elif 'employment' in indicator_name:
+        elif 'employment change' in indicator_name and 'unemployment' not in indicator_name:
             return 'employment'
+        elif 'unemployment rate' in indicator_name or ('unemployment' in indicator_name and 'employment change' not in indicator_name):
+            return 'unemployment'  # CRITICAL: Separate unemployment from employment
         elif 'gdp' in indicator_name:
             return 'gdp'
-        elif 'cot' in indicator_name:
+        elif 'cot' in indicator_name or 'commitment' in indicator_name:
             return 'cot'
-        elif 'unemployment' in indicator_name:
-            return 'unemployment'
-        elif 'manufacturing' in indicator_name:
+        elif 'manufacturing' in indicator_name or 'mpmi' in indicator_name:
             return 'mpmi'
-        elif 'services' in indicator_name:
+        elif 'services' in indicator_name or 'spmi' in indicator_name:
             return 'spmi'
         elif 'retail sales' in indicator_name:
             return 'retail'
@@ -881,22 +964,76 @@ class CurrencyProfileAI:
             return 5.0
 
     def generate_insights(self, indicators, extracted_data):
-        """Generate market insights"""
+        """Generate market insights with enhanced unemployment analysis"""
         insights = []
         
         try:
-            # Count strong signals
+            # Count strong signals and generate insights
             strong_bullish = 0
             strong_bearish = 0
+            employment_insights = []
+            
+            print(f"[INSIGHTS] Processing {len(indicators)} indicators")
             
             for indicator_name, indicator_data in indicators.items():
                 score = indicator_data.get('score', 0)
-                if score >= 2:
-                    strong_bullish += 1
-                    insights.append(f"STRONG: {indicator_name} showing very bullish signals")
-                elif score <= -2:
-                    strong_bearish += 1
-                    insights.append(f"STRONG: {indicator_name} showing very bearish signals")
+                base_data = indicator_data.get('base_data', {})
+                quote_data = indicator_data.get('quote_data', {})
+                
+                print(f"[INSIGHTS] {indicator_name}: Score={score}")
+                
+                # Enhanced employment analysis
+                if 'Employment Change' in indicator_name:
+                    base_change = self.safe_numeric(base_data.get('Employment Change', 0))
+                    quote_change = self.safe_numeric(quote_data.get('Employment Change', 0))
+                    base_result = base_data.get('Result', 'N/A')
+                    quote_result = quote_data.get('Result', 'N/A')
+                    
+                    if base_change != 0 or quote_change != 0:
+                        employment_insights.append(f"EMPLOYMENT: Base {base_change:+.0f}K vs Quote {quote_change:+.0f}K jobs")
+                    
+                    if score >= 1:
+                        strong_bullish += 1
+                        insights.append(f"EMPLOYMENT STRENGTH: Base currency job market outperforming (Score: {score})")
+                    elif score <= -1:
+                        strong_bearish += 1
+                        insights.append(f"EMPLOYMENT WEAKNESS: Base currency employment disappointing (Score: {score})")
+                
+                # ENHANCED UNEMPLOYMENT ANALYSIS - SEPARATE FROM EMPLOYMENT
+                elif 'Unemployment Rate' in indicator_name:
+                    base_rate = self.safe_numeric(base_data.get('Unemployment Rate', 0))
+                    quote_rate = self.safe_numeric(quote_data.get('Unemployment Rate', 0))
+                    base_result = base_data.get('Result', 'N/A')
+                    quote_result = quote_data.get('Result', 'N/A')
+                    
+                    if base_rate != 0 or quote_rate != 0:
+                        employment_insights.append(f"UNEMPLOYMENT: Base {base_rate:.1f}% vs Quote {quote_rate:.1f}%")
+                    
+                    if score >= 1:
+                        strong_bullish += 1
+                        insights.append(f"UNEMPLOYMENT STRENGTH: Base currency unemployment better than expected (Score: {score})")
+                    elif score <= -1:
+                        strong_bearish += 1
+                        insights.append(f"UNEMPLOYMENT WEAKNESS: Base currency unemployment disappointing (Score: {score})")
+                    elif score != 0:
+                        insights.append(f"UNEMPLOYMENT: Mixed unemployment signals (Score: {score})")
+                    
+                    print(f"[UNEMPLOYMENT_INSIGHT] Base: {base_rate}% ({base_result}), Quote: {quote_rate}% ({quote_result}), Score: {score}")
+                
+                # Other indicators
+                else:
+                    if score >= 2:
+                        strong_bullish += 1
+                        insights.append(f"STRONG: {indicator_name} very bullish (Score: {score})")
+                    elif score <= -2:
+                        strong_bearish += 1
+                        insights.append(f"STRONG: {indicator_name} very bearish (Score: {score})")
+                    elif abs(score) >= 1:
+                        direction = "bullish" if score > 0 else "bearish"
+                        insights.append(f"MODERATE: {indicator_name} showing {direction} bias (Score: {score})")
+            
+            # Add employment insights at the beginning
+            insights = employment_insights + insights
             
             # Overall assessment
             total_score = extracted_data.get('total_score', 0)
@@ -907,20 +1044,20 @@ class CurrencyProfileAI:
             elif abs(total_score) <= 2:
                 insights.append("NEUTRAL: Mixed fundamental signals suggest range-bound conditions")
             
-            # Add specific insights based on key indicators
-            if 'Interest Rates' in indicators:
-                insights.append("MONETARY: Interest rate policy is a key driver for this pair")
+            # Add momentum insights
+            if strong_bullish > 2:
+                insights.append("MOMENTUM: Multiple indicators showing bullish momentum")
+            elif strong_bearish > 2:
+                insights.append("MOMENTUM: Multiple indicators showing bearish momentum")
             
-            if strong_bullish > 3:
-                insights.append("MOMENTUM: Multiple indicators showing strong bullish momentum")
-            elif strong_bearish > 3:
-                insights.append("MOMENTUM: Multiple indicators showing strong bearish momentum")
+            print(f"[INSIGHTS] Generated {len(insights)} insights")
                 
         except Exception as e:
             print(f"[ERROR] Error generating insights: {e}")
-            insights = ["Enhanced fundamental analysis completed"]
+            print(f"[TRACEBACK] {traceback.format_exc()}")
+            insights = ["Enhanced analysis completed"]
         
-        return insights[:5]  # Limit to top 5 insights
+        return insights[:8]
 
     def analyze_consistency(self, weighted_scores):
         """Analyze consistency across indicators"""

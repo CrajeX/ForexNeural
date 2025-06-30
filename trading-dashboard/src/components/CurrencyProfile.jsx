@@ -98,56 +98,100 @@ const CurrencyProfile = ({ assetPairCode: propAssetPairCode }) => {
       setLoading(false);
     }
   };
-
-  // AI Integration - Fetch AI insights
-  // AI Integration - Fetch AI insights with profile data
-const fetchAiInsight = async () => {
-  if (!assetPairCode || !profileData) {
-    console.log("[AI] Missing assetPairCode or profileData, skipping AI fetch");
-    return;
-  }
-
-  setAiLoading(true);
-  setAiError(null);
-
-  try {
-    console.log("[AI] Sending profile data to enhanced AI service");
-    console.log("[AI] Profile data keys:", Object.keys(profileData));
-    console.log("[AI] Breakdown indicators:", profileData.breakdown?.length || 0);
-    
-    // Send profileData directly to AI service via POST
-    const response = await fetch(
-      `http://${BASE_URL}:5000/api/ai-insight/${assetPairCode}`,
-      {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          profileData: profileData
-        })
-      }
+  // Debug function to log employment/unemployment data
+  const debugEmploymentData = () => {
+    console.log(
+      "🔍 DEBUG: Full profileData breakdown:",
+      profileData?.breakdown
     );
-    
-    const result = await response.json();
 
-    if (result.success) {
-      setAiInsight(result.data);
-      console.log("[AI] Enhanced AI analysis received");
-      console.log("[AI] Conviction:", result.data.conviction);
-      console.log("[AI] Weighted Score:", result.data.weighted_score);
-      console.log("[AI] Insights count:", result.data.insights?.length || 0);
-    } else {
-      setAiError(result.error || "Failed to fetch enhanced AI insights");
-      console.error("[AI] AI service error:", result.error);
+    profileData?.breakdown?.forEach((indicator, index) => {
+      console.log(`🔍 DEBUG: Indicator ${index}:`, {
+        name: indicator.name,
+        score: indicator.score,
+        baseData: indicator.baseData,
+        quoteData: indicator.quoteData,
+      });
+
+      if (
+        indicator.name.includes("Employment") ||
+        indicator.name.includes("Unemployment")
+      ) {
+        console.log(`🔍 DEBUG: LABOR DATA for ${indicator.name}:`, {
+          baseData: indicator.baseData,
+          quoteData: indicator.quoteData,
+          score: indicator.score,
+        });
+      }
+    });
+  };
+  const fetchAiInsight = async () => {
+    if (!assetPairCode || !profileData) {
+      console.log(
+        "[AI] Missing assetPairCode or profileData, skipping AI fetch"
+      );
+      return;
     }
-  } catch (error) {
-    console.error("[AI] AI Insight fetch error:", error);
-    setAiError("Unable to connect to enhanced AI service");
-  } finally {
-    setAiLoading(false);
-  }
-};
+
+    // Add debugging
+    debugEmploymentData();
+
+    setAiLoading(true);
+    setAiError(null);
+
+    try {
+      console.log("[AI] Sending profile data to enhanced AI service");
+      console.log("[AI] Profile data keys:", Object.keys(profileData));
+      console.log(
+        "[AI] Breakdown indicators:",
+        profileData.breakdown?.length || 0
+      );
+
+      // Log employment/unemployment data specifically
+      const empData = getEconomicData();
+      console.log("[AI] Employment data being sent:", {
+        employment: empData.employment,
+        unemployment: empData.unemployment,
+      });
+
+      // Send profileData directly to AI service via POST
+      const response = await fetch(
+        `http://${BASE_URL}:5000/api/ai-insight/${assetPairCode}`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            profileData: profileData,
+          }),
+        }
+      );
+
+      const result = await response.json();
+
+      if (result.success) {
+        setAiInsight(result.data);
+        console.log("[AI] Enhanced AI analysis received");
+        console.log("[AI] Conviction:", result.data.conviction);
+        console.log(
+          "[AI] Recommendation:",
+          result.data.employment_recommendation
+        );
+        console.log("[AI] Weighted Score:", result.data.weighted_score);
+        console.log("[AI] Insights count:", result.data.insights?.length || 0);
+        console.log("[AI] Individual scores:", result.data.individual_scores);
+      } else {
+        setAiError(result.error || "Failed to fetch enhanced AI insights");
+        console.error("[AI] AI service error:", result.error);
+      }
+    } catch (error) {
+      console.error("[AI] AI Insight fetch error:", error);
+      setAiError("Unable to connect to enhanced AI service");
+    } finally {
+      setAiLoading(false);
+    }
+  };
 
   const getScoreColor = (score) => {
     if (score >= 2) return "#1E8449"; // Very Bullish
@@ -375,12 +419,12 @@ const fetchAiInsight = async () => {
       };
 
     return {
-      baseChange: empIndicator?.baseData?.["Employment Change"] || 0,
-      baseForecast: empIndicator?.baseData?.["Forecast"] || 0,
-      baseResult: empIndicator?.baseData?.["Result"] || "N/A",
-      quoteChange: empIndicator?.quoteData?.["Employment Change"] || 0,
-      quoteForecast: empIndicator?.quoteData?.["Forecast"] || 0,
-      quoteResult: empIndicator?.quoteData?.["Result"] || "N/A",
+      baseChange: empIndicator?.baseData?.["Employment Change"] ?? 0,
+      baseForecast: empIndicator?.baseData?.["Forecast"] ?? 0,
+      baseResult: empIndicator?.baseData?.["Result"] ?? "N/A",
+      quoteChange: empIndicator?.quoteData?.["Employment Change"] ?? 0,
+      quoteForecast: empIndicator?.quoteData?.["Forecast"] ?? 0,
+      quoteResult: empIndicator?.quoteData?.["Result"] ?? "N/A",
     };
   };
 
@@ -399,15 +443,14 @@ const fetchAiInsight = async () => {
       };
 
     return {
-      baseRate: unempIndicator?.baseData?.["Unemployment Rate"] || 0,
-      baseForecast: unempIndicator?.baseData?.["Forecast"] || 0,
-      baseResult: unempIndicator?.baseData?.["Result"] || "N/A",
-      quoteRate: unempIndicator?.quoteData?.["Unemployment Rate"] || 0,
-      quoteForecast: unempIndicator?.quoteData?.["Forecast"] || 0,
-      quoteResult: unempIndicator?.quoteData?.["Result"] || "N/A",
+      baseRate: unempIndicator?.baseData?.["Unemployment Rate"] ?? 0,
+      baseForecast: unempIndicator?.baseData?.["Forecast"] ?? 0,
+      baseResult: unempIndicator?.baseData?.["Result"] ?? "N/A",
+      quoteRate: unempIndicator?.quoteData?.["Unemployment Rate"] ?? 0,
+      quoteForecast: unempIndicator?.quoteData?.["Forecast"] ?? 0,
+      quoteResult: unempIndicator?.quoteData?.["Result"] ?? "N/A",
     };
   };
-
   const extractGDPData = () => {
     const gdpIndicator = profileData?.breakdown?.find(
       (ind) => ind.name === "GDP Growth"
@@ -608,16 +651,14 @@ const fetchAiInsight = async () => {
           .replace("COT (Commitment of Traders)", "COT")
           .replace("Manufacturing PMI", "mPMI")
           .replace("Services PMI", "sPMI")
-          .replace("Employment Change", "Emp. Change")
-          .replace("Unemployment Rate", "Unemployment")
+          .replace("Employment Change", "Employment")
+          .replace("Unemployment Rate", "Unemployment") // ENSURE UNEMPLOYMENT IS LABELED CORRECTLY
           .replace("Retail Sales", "Retail Sales")
           .replace("Interest Rates", "Interest Rate")
           .replace("Retail Position", "Retail Pos"),
         score: indicator.score || 0,
       }));
     }
-
-    // Return empty array if no profileData
     return [];
   };
 
@@ -734,7 +775,7 @@ const fetchAiInsight = async () => {
                     marginBottom: "4px",
                   }}
                 >
-                   Executive Summary
+                  Executive Summary
                 </div>
                 <div
                   style={{
@@ -765,7 +806,7 @@ const fetchAiInsight = async () => {
                   marginBottom: "4px",
                 }}
               >
-                 AI Recommendation
+                AI Recommendation
               </div>
               <div style={{ color: "#0369a1" }}>{aiInsight.recommendation}</div>
               <div
@@ -892,7 +933,7 @@ const fetchAiInsight = async () => {
                     color: "#1e293b",
                   }}
                 >
-                 Market Insights
+                  Market Insights
                 </div>
                 {aiInsight.insights.slice(0, 3).map((insight, index) => (
                   <div
@@ -975,34 +1016,75 @@ const fetchAiInsight = async () => {
                   }}
                 >
                   {Object.entries(aiInsight.individual_scores).map(
-                    ([metric, score]) => (
-                      <div
-                        key={metric}
-                        style={{
-                          display: "flex",
-                          justifyContent: "space-between",
-                          padding: "2px 4px",
-                          backgroundColor: "white",
-                          borderRadius: "2px",
-                        }}
-                      >
-                        <span>{metric.replace("_", " ")}</span>
-                        <span
+                    ([metric, score]) => {
+                      // Enhanced metric name formatting
+                      const formatMetricName = (metricName) => {
+                        const nameMapping = {
+                          employment: "Employment",
+                          unemployment: "Unemployment", // Ensure unemployment is properly labeled
+                          interest_rate: "Interest Rate",
+                          inflation: "Inflation",
+                          gdp: "GDP",
+                          cot: "COT",
+                          mpmi: "Mfg PMI",
+                          spmi: "Svc PMI",
+                          retail: "Retail Sales",
+                          retail_position: "Retail Position",
+                        };
+
+                        return (
+                          nameMapping[metricName] ||
+                          metricName
+                            .replace(/_/g, " ")
+                            .replace(/\b\w/g, (l) => l.toUpperCase())
+                        );
+                      };
+
+                      return (
+                        <div
+                          key={metric}
                           style={{
-                            fontWeight: "bold",
-                            color:
-                              score > 0
-                                ? "#16a34a"
-                                : score < 0
-                                ? "#dc2626"
-                                : "#64748b",
+                            display: "flex",
+                            justifyContent: "space-between",
+                            padding: "2px 4px",
+                            backgroundColor: "white",
+                            borderRadius: "2px",
+                            // Highlight unemployment for visibility
+                            border:
+                              metric === "unemployment"
+                                ? "1px solid #3b82f6"
+                                : "none",
                           }}
                         >
-                          {score > 0 ? "+" : ""}
-                          {score}
-                        </span>
-                      </div>
-                    )
+                          <span
+                            style={{
+                              fontWeight:
+                                metric === "unemployment" ? "bold" : "normal",
+                              color:
+                                metric === "unemployment"
+                                  ? "#1e40af"
+                                  : "inherit",
+                            }}
+                          >
+                            {formatMetricName(metric)}
+                          </span>
+                          <span
+                            style={{
+                              fontWeight: "bold",
+                              color:
+                                score > 0
+                                  ? "#16a34a"
+                                  : score < 0
+                                  ? "#dc2626"
+                                  : "#64748b",
+                            }}
+                          >
+                            {score > 0 ? "+" : ""}
+                            {score}
+                          </span>
+                        </div>
+                      );
+                    }
                   )}
                 </div>
               </div>
