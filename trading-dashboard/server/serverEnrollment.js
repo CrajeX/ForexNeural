@@ -2868,7 +2868,7 @@ app.use(
       "https://atecon.netlify.app",
       "http://localhost:5174",
       "https://8con.netlify.app",
-      "http://192.168.55.103:5174",
+      "http://192.168.55.115:5174",
       "http://192.168.55.151:5174",
       BASE_URL,
     ],
