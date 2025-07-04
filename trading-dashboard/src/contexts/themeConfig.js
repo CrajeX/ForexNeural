@@ -27,7 +27,8 @@ export const DEFAULT_THEMES = {
      topsetuptableline: "white",
     primary:"white",
       rowEven:"gray",
-     rowOdd:"gray"
+     rowOdd:"gray",
+     search:"e4eed3"
   },
   light: {
     background: '#e4eed3',
@@ -48,7 +49,8 @@ export const DEFAULT_THEMES = {
     topsetuptableline: "white",
      primary:"white",
      rowEven:"white",
-     rowOdd:"white"
+     rowOdd:"white",
+      search:"e4eed3"
   }
 };
 

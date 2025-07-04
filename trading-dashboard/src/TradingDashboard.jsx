@@ -867,7 +867,7 @@ const SettingsWindow = ({
 // Main Trading Dashboard Component with Responsive Design
 const TradingDashboard = () => {
   const { assetPairCode } = useParams(); // ✅ hook at top level
-  const [activeSection, setActiveSection] = useState("dashboard");
+  const [activeSection, setActiveSection] = useState("top setups");
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
   const { mobile, tablet, desktop, windowSize } = useResponsive();
@@ -903,17 +903,26 @@ const TradingDashboard = () => {
   const [dashboardSettings, setDashboardSettings] = useState({
     theme: "dark",
     customColors: {
-      background: "#3b82f6",
-      cardBackground: "#1f2937",
-      sidebar: "#1f2937",
-      text: "#ffffff",
-      textSecondary: "#9ca3af",
-      accent: "#3b82f6",
-      accentSecondary: "#8b5cf6",
-      success: "#10b981",
-      warning: "#f59e0b",
-      danger: "#ef4444",
-      border: "#374151",
+       background: '#6c9474',
+    cardBackground: '#17271e',
+    sidebar: '#6c9474',
+    text: '#ffffff',
+    textSecondary: '#9ca3af',
+    accent: '#ba7878',
+    accentSecondary: '#8b5cf6',
+    success: '#10b981',
+    warning: '#f59e0b',
+    danger: '#ef4444',
+    border: '#374151',
+    chart:'dark',
+    textTopsetup: 'white',
+    backgroundTopSetups:'black',
+    topSetupsBar: '#a42c3d',
+     topsetuptableline: "white",
+    primary:"white",
+      rowEven:"gray",
+     rowOdd:"gray",
+     search:"e4eed3"
     },
     sidebarWidth: 256,
     compactMode: false,
@@ -941,11 +950,11 @@ const TradingDashboard = () => {
   });
 
   const NAVIGATION_ITEMS = [
-     { id: "setups", label: "Top Setups", icon: TrendingUp },
+     { id: "top setups", label: "Top Setups", icon: TrendingUp },
     // { id: "dashboard", label: "Dashboard", icon: BarChart3 },
     { id: "alerts", label: "Alerts", icon: Bell },
     { id: "charts", label: "Charts", icon: ActivityIcon },
-    { id: "economic", label: "Economic Calendar", icon: Calendar },
+    { id: "economic calendar", label: "Economic Calendar", icon: Calendar },
     { id: "profile", label: "Profile Dashboard", icon: User },
     { id: "history", label: "Economic History", icon: User },
     // { id: "currency profile", label: "Currency Profile", icon: User },
@@ -1024,9 +1033,9 @@ const TradingDashboard = () => {
       return dashboardSettings.customColors;
     } else if (dashboardSettings.theme === "light") {
       return {
-        background: "#e4eed3",
-        cardBackground: "white",
-        sidebar: "white",
+        background: "white",
+        cardBackground: "#395537",
+        sidebar: "#6c9474",
         text: "#111827",
         textSecondary: "#6b7280",
         accent: "#6c9474",
@@ -1034,7 +1043,7 @@ const TradingDashboard = () => {
         success: "#395537",
         warning: "#f59e0b",
         danger: "#ef4444",
-        border: "#6c9474",
+        border: "#395537",
         logocolos: "black",
         searchText: "white",
       };
@@ -1050,7 +1059,7 @@ const TradingDashboard = () => {
         success: "#395537",
         warning: "#f59e0b",
         danger: "#ef4444",
-        border: "black",
+        border: "#6c9474",
         logocolos: "white",
         searchText: "black",
       };
@@ -2140,11 +2149,11 @@ const TradingDashboard = () => {
         return <TradingViewNewsWidget />;
       case "charts":
         return <TradingViewWidget />;
-      case "economic":
+      case "economic calendar":
         return <TradingViewEventsWidget />;
       case "profile":
         return <ProfilePage />;
-      case "setups":
+      case "top setups":
         return <TopSetups />;
       case "history":
         return <TradingEconomicsHistory />;

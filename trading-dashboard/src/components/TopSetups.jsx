@@ -3726,7 +3726,7 @@ const TopSetups = ({ onAssetPairClick }) => {
                 borderRadius: "6px",
                 width: "300px",
                 fontSize: "14px",
-                backgroundColor: theme.surface,
+                backgroundColor: theme.search,
                 color: theme.text,
               }}
             />

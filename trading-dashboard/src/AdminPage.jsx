@@ -665,7 +665,7 @@ const SettingsWindow = ({ isOpen, onClose, onApplySettings, currentSettings }) =
 const TradingDashboard = () => {
  
   const { assetPairCode } = useParams(); // ✅ hook at top level
-  const [activeSection, setActiveSection] = useState('dashboard');
+  const [activeSection, setActiveSection] = useState('top setups');
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
   const { mobile, tablet, desktop, windowSize } = useResponsive();
@@ -701,17 +701,26 @@ const TradingDashboard = () => {
   const [dashboardSettings, setDashboardSettings] = useState({
     theme: 'dark',
     customColors: {
-      background: '#3b82f6',
-      cardBackground: '#1f2937',
-      sidebar: '#1f2937',
-      text: '#ffffff',
-      textSecondary: '#9ca3af',
-      accent: '#3b82f6',
-      accentSecondary: '#8b5cf6',
-      success: '#10b981',
-      warning: '#f59e0b',
-      danger: '#ef4444',
-      border: '#374151'
+      background: '#6c9474',
+    cardBackground: '#17271e',
+    sidebar: '#6c9474',
+    text: '#ffffff',
+    textSecondary: '#9ca3af',
+    accent: '#ba7878',
+    accentSecondary: '#8b5cf6',
+    success: '#10b981',
+    warning: '#f59e0b',
+    danger: '#ef4444',
+    border: '#374151',
+    chart:'dark',
+    textTopsetup: 'white',
+    backgroundTopSetups:'black',
+    topSetupsBar: '#a42c3d',
+     topsetuptableline: "white",
+    primary:"white",
+      rowEven:"gray",
+     rowOdd:"gray",
+     search:"e4eed3"
     },
     sidebarWidth: 256,
     compactMode: false,
@@ -744,8 +753,8 @@ const TradingDashboard = () => {
     { id: 'alerts', label: 'Alerts', icon: Bell },
     { id: 'charts', label: 'Charts', icon: ActivityIcon },
    
-    { id: 'economic', label: 'Economic Calendar', icon: Calendar },
-    { id: 'dataentry', label: 'Data Entry', icon: User },
+    { id: 'economic calendar', label: 'Economic Calendar', icon: Calendar },
+    { id: 'data entry', label: 'Data Entry', icon: User },
      { id: "history", label: "Economic History", icon: User },
   ];
    useEffect(() => {
@@ -1676,7 +1685,7 @@ const TopSetupsSection = () => {
         return (
            <TradingViewWidget />
         );
-      case 'economic':
+      case 'economic calendar':
         return (
           <TradingViewEventsWidget />
         );
@@ -1684,7 +1693,7 @@ const TopSetupsSection = () => {
         return (
           <TopSetups/>
         );
-      case 'dataentry':
+      case 'data entry':
         return (
           <CombinedEconomicDataForm/>
         );
