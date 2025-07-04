@@ -3424,7 +3424,7 @@ const TopSetups = ({ onAssetPairClick }) => {
   const styles = {
     container: {
       padding: "24px",
-      backgroundColor: theme.background,
+      backgroundColor: theme.backgroundTopSetups,
       minHeight: "100vh",
       color: theme.text,
     },
@@ -3435,8 +3435,8 @@ const TopSetups = ({ onAssetPairClick }) => {
     tableContainer: {
       backgroundColor: theme.surface,
       boxShadow: theme.mode === 'dark' 
-        ? "0 10px 15px -3px rgba(0, 0, 0, 0.3), 0 4px 6px -2px rgba(0, 0, 0, 0.1)"
-        : "0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)",
+        ? "0 10px 15px -3px rgba(255, 255, 255, 0.3), 0 4px 6px -2px rgba(0, 0, 0, 0.1)"
+        : "0 10px 15px -3px rgba(255, 255, 255, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)",
       overflow: "hidden",
       border: `1px solid ${theme.border}`,
       borderRadius: "8px",
@@ -3446,20 +3446,24 @@ const TopSetups = ({ onAssetPairClick }) => {
     },
     table: {
       width: "100%",
+    
       borderCollapse: "collapse",
     },
     thead: {
-      backgroundColor: theme.accent,
+      backgroundColor:  theme.topSetupsBar,
       borderBottom: `1px solid ${theme.border}`,
     },
     th: {
       padding: "8px 12px",
+      
       textAlign: "left",
       fontWeight: "500",
       color: theme.text,
       fontSize: "14px",
+      
     },
     thCenter: {
+               outline: `${theme.topsetuptableline} solid 0.1rem`,
       padding: "8px 12px",
       textAlign: "center",
       fontWeight: "500",
@@ -3470,6 +3474,7 @@ const TopSetups = ({ onAssetPairClick }) => {
     thAsset: {
       padding: "8px 12px",
       textAlign: "left",
+      
       fontWeight: "500",
       color: theme.text,
       fontSize: "14px",
@@ -3486,22 +3491,29 @@ const TopSetups = ({ onAssetPairClick }) => {
     tr: {
       borderBottom: `1px solid ${theme.border}`,
       cursor: "pointer",
+      
+         outline: `${theme.topsetuptableline} solid 1px`,
     },
     trEven: {
       borderBottom: `1px solid ${theme.border}`,
       backgroundColor: theme.accent,
       cursor: "pointer",
+      
     },
     td: {
+      backgroundColor:theme.backgroundTopSetups,
       padding: "12px",
+      
     },
     tdCenter: {
       padding: "2px",
       textAlign: "center",
+      
     },
     assetCode: {
       fontWeight: "500",
       color: theme.primary,
+      
     },
     assetDescription: {
       fontSize: "12px",
@@ -3515,12 +3527,14 @@ const TopSetups = ({ onAssetPairClick }) => {
       color: "white",
       fontSize: "16px",
       fontWeight: "700",
+      
     },
     metricCell: {
       color: theme.text,
       fontSize: "14px",
       fontWeight: "700",
       textAlign: "center",
+      
     },
     // Pagination styles
     paginationContainer: {
@@ -3534,6 +3548,7 @@ const TopSetups = ({ onAssetPairClick }) => {
     paginationInfo: {
       fontSize: "14px",
       color: theme.textTopsetups,
+      
     },
     paginationControls: {
       display: "flex",
@@ -3738,8 +3753,8 @@ const TopSetups = ({ onAssetPairClick }) => {
               onClick={forceRefresh}
               disabled={loading}
               style={{
-                backgroundColor: loading ? theme.textTopsetups : theme.primary,
-                color: "white",
+                backgroundColor: loading ? theme.surface : theme.surface,
+                color: "black",
                 border: "none",
                 borderRadius: "6px",
                 padding: "8px 16px",
@@ -3747,7 +3762,7 @@ const TopSetups = ({ onAssetPairClick }) => {
                 cursor: loading ? "not-allowed" : "pointer",
               }}
             >
-              {loading ? "Refreshing..." : "🚀 Refresh"}
+              {loading ? "Refreshing..." : "Refresh"}
             </button>
           </div>
           
@@ -3783,10 +3798,10 @@ const TopSetups = ({ onAssetPairClick }) => {
                 : '0 0 16px 6px rgba(255, 255, 255, 0.5)'} !important; // white glow in light mode
             }
             .asset-pair-row-even {
-              background-color: ${theme.accent} !important;
+              background-color: ${theme.rowEven} !important;
             }
             .asset-pair-row-odd {
-              background-color: ${theme.surface} !important;
+              background-color: ${theme.rowOdd} !important;
             }
             .pagination-btn {
               transition: all 0.2s ease !important;
@@ -3797,7 +3812,7 @@ const TopSetups = ({ onAssetPairClick }) => {
             }
             .pagination-btn-active {
               background-color: ${theme.primary} !important;
-              color: white !important;
+              color: ${theme.topSetupsBar} !important;
               border-color: ${theme.primary} !important;
             }
             @keyframes spin { 

@@ -2857,7 +2857,7 @@ const app = express();
 const PORT = 3001;
 const JWT_SECRET =
   process.env.JWT_SECRET || crypto.randomBytes(64).toString("hex");
-const BASE_URL = process.env.VITE_API_BASE_URL;
+const BASE_URL = process.env.FRONTEND_URL;
 // ============================================================================
 // MIDDLEWARE CONFIGURATION
 // ============================================================================
@@ -2869,7 +2869,7 @@ app.use(
       "http://localhost:5174",
       "https://8con.netlify.app",
       "http://192.168.55.115:5174",
-      "http://192.168.55.151:5174",
+      "http://192.168.55.121:5174",
       BASE_URL,
     ],
     credentials: true,

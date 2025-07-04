@@ -941,10 +941,10 @@ const TradingDashboard = () => {
   });
 
   const NAVIGATION_ITEMS = [
-    { id: "dashboard", label: "Dashboard", icon: BarChart3 },
+     { id: "setups", label: "Top Setups", icon: TrendingUp },
+    // { id: "dashboard", label: "Dashboard", icon: BarChart3 },
     { id: "alerts", label: "Alerts", icon: Bell },
     { id: "charts", label: "Charts", icon: ActivityIcon },
-    { id: "setups", label: "Top Setups", icon: TrendingUp },
     { id: "economic", label: "Economic Calendar", icon: Calendar },
     { id: "profile", label: "Profile Dashboard", icon: User },
     { id: "history", label: "Economic History", icon: User },
@@ -1025,8 +1025,8 @@ const TradingDashboard = () => {
     } else if (dashboardSettings.theme === "light") {
       return {
         background: "#e4eed3",
-        cardBackground: "#e4eed",
-        sidebar: "#e4eed3",
+        cardBackground: "white",
+        sidebar: "white",
         text: "#111827",
         textSecondary: "#6b7280",
         accent: "#6c9474",
@@ -1041,7 +1041,7 @@ const TradingDashboard = () => {
     } else {
       return {
         background: "#395537",
-        cardBackground: "#6c9474",
+        cardBackground: "#395537",
         sidebar: "#17271e",
         text: "white",
         textSecondary: "white",

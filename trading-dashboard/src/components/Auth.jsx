@@ -762,18 +762,7 @@ const LoginSignupPage = () => {
           )}
 
           {/* Additional Links */}
-          <div
-            style={{
-              marginTop: "24px",
-              textAlign: "center",
-              fontSize: "14px",
-              color: "#6b7280",
-            }}
-          >
-            <a href="#" style={{ color: colors.text, textDecoration: "none" }}>
-              Forgot your password?
-            </a>
-          </div>
+        
         </div>
       </div>
 

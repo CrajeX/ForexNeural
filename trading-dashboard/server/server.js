@@ -11,7 +11,7 @@ import { fileURLToPath } from "url";
 // ES6 module __dirname equivalent
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-const BASE_URL = process.env.VITE_API_BASE_URL;
+const BASE_URL = process.env.FRONTEND_URL;
 dotenv.config();
 
 const app = express();
@@ -23,9 +23,9 @@ app.use(
   cors({
     origin: [
       "http://192.168.55.115:5174",
-      "http://192.168.55.151:5174",
+      "http://192.168.55.121:5174",
       "http://localhost:5174",
-      BASE_URL,
+      `http://${BASE_URL}:5174`,
       "https://8con.netlify.app",
     ],
     credentials: true,

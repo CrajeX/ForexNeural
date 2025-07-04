@@ -1,3 +1,5 @@
+import TopSetups from "../components/TopSetups";
+
 // themeConfig.js - Enhanced theme configuration and utilities
 export const THEME_MODES = {
   DARK: 'dark',
@@ -20,6 +22,12 @@ export const DEFAULT_THEMES = {
     border: '#374151',
     chart:'dark',
     textTopsetup: 'white',
+    backgroundTopSetups:'black',
+    topSetupsBar: '#a42c3d',
+     topsetuptableline: "white",
+    primary:"white",
+      rowEven:"gray",
+     rowOdd:"gray"
   },
   light: {
     background: '#e4eed3',
@@ -33,8 +41,14 @@ export const DEFAULT_THEMES = {
     warning: '#f59e0b',
     danger: '#ef4444',
     border: '#e5e7eb',
-     chart:'light',
-      textTopsetup: 'black',
+    chart:'light',
+    textTopsetup: 'black',
+    backgroundTopSetups:'#e4eed3',
+    topSetupsBar: '#ba7878',
+    topsetuptableline: "white",
+     primary:"white",
+     rowEven:"white",
+     rowOdd:"white"
   }
 };
 
