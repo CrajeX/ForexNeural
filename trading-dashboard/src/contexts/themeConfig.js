@@ -28,7 +28,8 @@ export const DEFAULT_THEMES = {
     primary:"white",
       rowEven:"gray",
      rowOdd:"gray",
-     search:"e4eed3"
+     search:"e4eed3",
+     headerText:"white"
   },
   light: {
     background: '#e4eed3',
@@ -50,7 +51,8 @@ export const DEFAULT_THEMES = {
      primary:"white",
      rowEven:"white",
      rowOdd:"white",
-      search:"e4eed3"
+      search:"e4eed3",
+       headerText:"white"
   }
 };
 

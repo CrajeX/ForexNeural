@@ -961,7 +961,7 @@ headerContent: {
     headerTitle: {
       fontSize: mobile ? '18px' : tablet ? '20px' : dashboardSettings.fontSize === 'large' ? '28px' : dashboardSettings.fontSize === 'small' ? '20px' : '24px',
       fontWeight: 'bold',
-      color: colors.text,
+        color: colors.headerText,
       textTransform: 'capitalize',
       margin: 0
     },
@@ -1137,24 +1137,7 @@ headerContent: {
             <h1 style={dynamicStyles.headerTitle}>
               {activeSection}
             </h1>
-            {!mobile && (
-              <div style={{ 
-                display: 'flex', 
-                alignItems: 'center', 
-                gap: '8px', 
-                fontSize: '14px', 
-                color: colors.textSecondary,
-                marginTop: '4px'
-              }}>
-                <div style={{ 
-                  width: '8px', 
-                  height: '8px', 
-                  backgroundColor: colors.success, 
-                  borderRadius: '50%' 
-                }} />
-                Dashboard View
-              </div>
-            )}
+          
           </div>
         </div>
         
@@ -1169,7 +1152,7 @@ headerContent: {
               backgroundColor: colors.cardBackground,
               borderRadius: `${dashboardSettings.cardBorderRadius}px`,
               border: `1px solid ${colors.cardBackground}`,
-              color: colors.textSecondary,
+                color: colors.headerText,
               cursor: 'pointer',
               transition: dashboardSettings.enableAnimations ? 'color 0.2s' : 'none'
             }}

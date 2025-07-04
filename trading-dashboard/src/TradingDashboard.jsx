@@ -1046,6 +1046,7 @@ const TradingDashboard = () => {
         border: "#395537",
         logocolos: "black",
         searchText: "white",
+         headerText:"white"
       };
     } else {
       return {
@@ -1062,6 +1063,7 @@ const TradingDashboard = () => {
         border: "#6c9474",
         logocolos: "white",
         searchText: "black",
+         headerText:"white"
       };
     }
   };
@@ -1227,7 +1229,7 @@ const TradingDashboard = () => {
         ? "20px"
         : "24px",
       fontWeight: "bold",
-      color: colors.text,
+      color: colors.headerText,
       textTransform: "capitalize",
       margin: 0,
     },
@@ -1415,28 +1417,7 @@ const TradingDashboard = () => {
 
           <div>
             <h1 style={dynamicStyles.headerTitle}>{activeSection}</h1>
-            {!mobile && (
-              <div
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "8px",
-                  fontSize: "14px",
-                  color: colors.textSecondary,
-                  marginTop: "4px",
-                }}
-              >
-                <div
-                  style={{
-                    width: "8px",
-                    height: "8px",
-                    backgroundColor: colors.success,
-                    borderRadius: "50%",
-                  }}
-                />
-                Dashboard View
-              </div>
-            )}
+          
           </div>
         </div>
 
@@ -1448,7 +1429,7 @@ const TradingDashboard = () => {
               backgroundColor: colors.cardBackground,
               borderRadius: `${dashboardSettings.cardBorderRadius}px`,
               border: `1px solid ${colors.cardBackground}`,
-              color: colors.textSecondary,
+                color: colors.headerText,
               cursor: "pointer",
               transition: dashboardSettings.enableAnimations
                 ? "color 0.2s"
@@ -2174,7 +2155,7 @@ const TradingDashboard = () => {
             <div style={dynamicStyles.card}>
               <h2
                 style={{
-                  color: colors.text,
+                  color: colors.headerText,
                   marginBottom: "16px",
                   textTransform: "capitalize",
                   fontSize: mobile ? "18px" : "24px",
