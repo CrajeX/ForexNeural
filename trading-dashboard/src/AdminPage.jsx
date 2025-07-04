@@ -748,7 +748,7 @@ const TradingDashboard = () => {
   });
 
   const NAVIGATION_ITEMS = [
-     { id: 'setups', label: 'Top Setups', icon: TrendingUp },
+     { id: 'top setups', label: 'Top Setups', icon: TrendingUp },
     // { id: 'dashboard', label: 'Dashboard', icon: BarChart3 },
     { id: 'alerts', label: 'Alerts', icon: Bell },
     { id: 'charts', label: 'Charts', icon: ActivityIcon },
@@ -1672,7 +1672,7 @@ const TopSetupsSection = () => {
         return (
           <TradingViewEventsWidget />
         );
-      case 'setups':
+      case 'top setups':
         return (
           <TopSetups/>
         );
